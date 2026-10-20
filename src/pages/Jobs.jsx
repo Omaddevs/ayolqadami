@@ -3,13 +3,29 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import {
-  ArrowLeft, Briefcase, CheckCircle, Clock, CurrencyCircleDollar, Export, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, SealCheck, Sparkle, UsersThree,
+  ArrowLeft, Briefcase, Buildings, EyeSlash, CheckCircle, Phone, TelegramLogo, Clock, CurrencyCircleDollar, Export, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, SealCheck, Sparkle, UsersThree,
 } from '@phosphor-icons/react'
 import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Sheet, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
 import { CATEGORIES, JOB_TYPES, catIcon, catName, salaryText } from '../data/mock'
+import { WORK_MODES, WORK_TIME } from '../data/resume'
 
 const PER_PAGE = 20
+
+// Vakansiya joylash ustasi orqali kiritilgan qo'shimcha ma'lumotlar (eski vakansiyalarda bo'lmaydi)
+function jobFacts(job) {
+  const pick = (list, ids) => list.filter((o) => ids?.includes(o.id)).map((o) => o.label).join(', ')
+  return [
+    ["Bo'sh o'rinlar", job.count > 1 && `${job.count} ta`],
+    ['Manzil', [job.district, job.address].filter(Boolean).join(', ')],
+    ['Ish soatlari', job.hours],
+    ['Ish vaqti', pick(WORK_TIME, job.workTime)],
+    ['Ish usuli', pick(WORK_MODES, job.workMode)],
+    ["Ta'lim", job.education],
+    ['Tillar', job.langs?.map((l) => `${l.lang}${l.level && l.level !== 'native' ? ` (${l.level} va yuqori)` : ''}`).join(', ')],
+    ['Haydovchilik guvohnomasi', job.driving?.length > 0 && job.driving.join(', ')],
+  ].filter(([, v]) => v)
+}
 
 const SORTS = [
   { value: 'new', label: 'Avval yangilari', icon: Clock },
@@ -24,8 +40,8 @@ export function Jobs() {
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState(params.get('q') || '')
   const cat = params.get('cat') || ''
-  const [type, setType] = useState('')
-  const [sort, setSort] = useState('new')
+  const [type, setType] = useState(params.get('type') || '')
+  const [sort, setSort] = useState(params.get('sort') || 'new')
 
   const setCat = (id) => {
     const p = new URLSearchParams(params)
@@ -112,8 +128,8 @@ export function Jobs() {
 export function JobDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { allJobs, user, saved, toggleSave, applications, apply, notify } = useApp()
-  const job = allJobs.find((j) => j.id === id)
+  const { jobsAll, user, saved, toggleSave, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
+  const job = jobsAll.find((j) => j.id === id)
   const [open, setOpen] = useState(false)
   const [letter, setLetter] = useState('')
 
@@ -135,6 +151,9 @@ export function JobDetail() {
     } catch { /* foydalanuvchi bekor qildi */ }
   }
   const back = () => (window.history.length > 1 ? nav(-1) : nav('/jobs'))
+  const facts = jobFacts(job)
+  const contactPhone = job.contact?.ways?.includes('phone') && job.contact.phone
+  const contactTg = job.contact?.ways?.includes('telegram') && job.contact.telegram
 
   return (
     <div className="page jd">
@@ -142,7 +161,7 @@ export function JobDetail() {
         <button className="jd-round" onClick={back} aria-label="Orqaga"><ArrowLeft size={20} weight="bold" /></button>
         <h1><Info size={18} weight="fill" /> Vakansiya</h1>
         <div className="jd-top-right">
-          <button className={`jd-round ${isSaved ? 'saved' : ''}`} onClick={() => toggleSave(job.id)} aria-label="Saqlash" aria-pressed={isSaved}>
+          <button className={`jd-round ${isSaved ? 'saved' : ''}`} onClick={() => requireAuth(() => toggleSave(job.id))} aria-label="Saqlash" aria-pressed={isSaved}>
             <Heart size={20} weight={isSaved ? 'fill' : 'bold'} />
           </button>
           <button className="jd-round" onClick={share} aria-label="Ulashish"><Export size={20} weight="bold" /></button>
@@ -154,7 +173,7 @@ export function JobDetail() {
           <CompanyLogo name={job.company} color={job.color} size={58} />
           <h2>{job.title}</h2>
           <span className="jd-sub">
-            {job.company}
+            <Link to={`/companies/${encodeURIComponent(job.company)}`} className="jd-company-link">{job.company}</Link>
             {!job.own && <SealCheck size={16} weight="fill" className="verified" aria-label="Tasdiqlangan" />}
             <i>•</i>{job.type}
           </span>
@@ -182,14 +201,29 @@ export function JobDetail() {
           </section>
         )}
 
-        <section className="jd-card">
-          <h3>Ko'nikmalar</h3>
-          <div className="jd-skills">{job.skills.map((s) => <span key={s}>{s}</span>)}</div>
-        </section>
+        {facts.length > 0 && (
+          <section className="jd-card">
+            <h3>Ish sharoiti</h3>
+            <dl className="jd-facts">{facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+          </section>
+        )}
+
+        {job.skills?.length > 0 && (
+          <section className="jd-card">
+            <h3>Ko'nikmalar</h3>
+            <div className="jd-skills">{job.skills.map((s) => <span key={s}>{s}</span>)}</div>
+          </section>
+        )}
 
         <section className="jd-card jd-text">
           <h3>Vakansiya haqida</h3>
           <p>{job.description}</p>
+          {job.duties?.length > 0 && (
+            <>
+              <h4>Vazifalar</h4>
+              <ul>{job.duties.map((r) => <li key={r}>{r}</li>)}</ul>
+            </>
+          )}
           {job.requirements?.length > 0 && (
             <>
               <h4>Talablar</h4>
@@ -203,21 +237,48 @@ export function JobDetail() {
             </>
           )}
         </section>
+
+        {user?.role !== 'employer' && (contactPhone || contactTg) && (
+          <section className="jd-card">
+            <h3>Bog'lanish</h3>
+            {job.contact.name && <p className="jd-contact-name">{job.contact.name}</p>}
+            <div className="jd-contact">
+              {contactPhone && <a className="btn btn-soft" href={`tel:${contactPhone.replace(/\s/g, '')}`}><Phone size={18} weight="fill" /> {contactPhone}</a>}
+              {contactTg && <a className="btn btn-soft" href={`https://t.me/${contactTg.replace(/^@/, '')}`} target="_blank" rel="noreferrer"><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
+            </div>
+          </section>
+        )}
+
+        {user?.role !== 'employer' && !job.own && (
+          <section className="jd-card jd-hide">
+            <p>Bu vakansiya sizga mos emasmi? Uni ro'yxatlardan yashiring — Sozlamalar orqali qaytarish mumkin.</p>
+            <div className="jd-hide-btns">
+              <button type="button" disabled={hiddenJobs.includes(job.id)}
+                onClick={() => { hideJob(job.id); notify('Vakansiya yashirildi'); back() }}>
+                <EyeSlash size={18} weight="bold" /> {hiddenJobs.includes(job.id) ? 'Yashirilgan' : 'Vakansiyani yashirish'}
+              </button>
+              <button type="button" disabled={hiddenCompanies.includes(job.company)}
+                onClick={() => { hideCompany(job.company); notify(`«${job.company}» vakansiyalari yashirildi`); back() }}>
+                <Buildings size={18} weight="bold" /> {hiddenCompanies.includes(job.company) ? 'Kompaniya yashirilgan' : 'Kompaniyani yashirish'}
+              </button>
+            </div>
+          </section>
+        )}
       </div>
 
-      {user.role === 'seeker' && (
+      {user?.role !== 'employer' && (
         <div className="jd-cta">
           <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-cta-ai" aria-label="QadamAI moslik">
             <Sparkle size={22} weight="fill" />
           </Link>
-          <button className="jd-cta-main" disabled={applied} onClick={() => setOpen(true)}>
+          <button className="jd-cta-main" disabled={applied} onClick={() => requireAuth(() => setOpen(true))}>
             {applied ? <><CheckCircle size={20} weight="fill" /> Ariza yuborilgan</> : <>Ariza topshirish <PaperPlaneTilt size={19} weight="fill" /></>}
           </button>
         </div>
       )}
-      {user.role === 'employer' && job.own && (
+      {user?.role === 'employer' && job.own && (
         <div className="jd-cta">
-          <button className="jd-cta-main" onClick={() => nav(`/qadam-ai?q=${encodeURIComponent(job.title + ' ' + job.skills.join(' '))}`)}>
+          <button className="jd-cta-main" onClick={() => nav(`/qadam-ai?q=${encodeURIComponent(job.title + ' ' + (job.skills || []).join(' '))}`)}>
             <Sparkle size={20} weight="fill" /> QadamAI bilan nomzod topish
           </button>
         </div>

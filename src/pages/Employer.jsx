@@ -1,169 +1,156 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import Icon from '../components/Icons'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Icon3D from '../components/Icon3D'
-import { Avatar, Empty, TopBar } from '../components/UI'
-import { ResumeView } from './Profile'
+import { Avatar, Empty, Select, Sheet, TopBar } from '../components/UI'
+import CandidateCard from '../components/CandidateCard'
+import { Check2, Chips, Field } from '../components/Wizard'
+import {
+  Baby, Briefcase, Broom, Cake, CaretRight, Check, Coins, CookingPot, DotsThreeCircle, Factory, Flower, ForkKnife, Globe, GraduationCap,
+  HandHeart, Heart, House, Laptop, MagnifyingGlass, MapPin, Megaphone, PaperPlaneTilt, Scales, ShoppingBag, SlidersHorizontal, Sparkle,
+  SquaresFour, Star, Stethoscope, Suitcase, Truck, Wrench,
+} from '@phosphor-icons/react'
+import ResumeView, { age, expText, fullName, placeText, statusOf } from '../components/ResumeView'
 import { useApp } from '../context/AppContext'
-import { CANDIDATES, CATEGORIES, CITIES, JOB_TYPES, catName, formatSum } from '../data/mock'
+import { CANDIDATES, CATEGORIES, catName } from '../data/mock'
+
+// Kategoriya pill'lari uchun chiziqli ikonkalar (namunadagidek)
+const CAT_ICONS = {
+  office: Briefcase, edu: GraduationCap, med: Stethoscope, nanny: Baby, housekeeper: House, cleaning: Broom, cook: CookingPot,
+  caregiver: HandHeart, sales: ShoppingBag, beauty: Flower, it: Laptop, home: Wrench, remote: Globe, production: Factory,
+  food: ForkKnife, marketing: Megaphone, finance: Coins, law: Scales, logistics: Truck, other: DotsThreeCircle,
+}
+const EXP_MIN = [{ id: 0, label: 'Farqi yo\'q' }, { id: 1, label: '1+ yil' }, { id: 3, label: '3+ yil' }, { id: 5, label: '5+ yil' }]
+const CITY_OPTS = [...new Set(CANDIDATES.map((c) => c.city))].sort((a, b) => a.localeCompare(b))
+const NO_FILTER = { city: '', exp: 0, active: false }
 
 export function Candidates() {
   const [params] = useSearchParams()
   const [cat, setCat] = useState(params.get('cat') || '')
   const [q, setQ] = useState('')
+  const [f, setF] = useState(NO_FILTER)
+  const [draft, setDraft] = useState(NO_FILTER) // filtr oynasidagi qoralama — "Ko'rsatish" bosilganda qo'llanadi
+  const [sheet, setSheet] = useState(false)
+  const fCount = (f.city ? 1 : 0) + (f.exp ? 1 : 0) + (f.active ? 1 : 0)
   const list = useMemo(() => {
-    const nq = q.toLowerCase()
+    const nq = q.toLowerCase().trim()
     return CANDIDATES.filter((c) => (!cat || c.category === cat) &&
+      (!f.city || c.city === f.city) && c.years >= f.exp && (!f.active || c.searchStatus === 'active') &&
       (!nq || `${c.name} ${c.headline} ${c.skills.join(' ')} ${c.city}`.toLowerCase().includes(nq)))
-  }, [cat, q])
+  }, [cat, q, f])
 
   return (
-    <div className="page">
-      <TopBar title="Nomzodlar" back={false} right={<Link to="/qadam-ai" className="icon-btn ai" aria-label="QadamAI"><Icon name="sparkle" /></Link>} />
+    <div className="page cands-page">
+      <header className="cands-head">
+        <div className="grow">
+          <h1>Nomzodlar</h1>
+          <span>Sizning jamoangiz uchun eng yaxshi nomzodlar</span>
+        </div>
+        <Link to="/qadam-ai" className="cands-ai-btn" aria-label="QadamAI"><Sparkle size={22} /></Link>
+      </header>
       <div className="page-body">
-        <Link to="/qadam-ai" className="ai-cta">
+        <Link to="/qadam-ai" className="ai-cta cands-cta">
           <Icon3D name="sparkle" size={64} />
           <div className="grow"><b>QadamAI bilan izlang</b><span>Talablarni yozing — mos nomzodlarni foiz bilan ko'rsatamiz</span></div>
-          <Icon name="right" />
+          <CaretRight size={20} weight="bold" />
         </Link>
-        <div className="search search-solid">
-          <Icon name="search" size={22} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ism, kasb yoki ko'nikma" />
+        <div className="cands-search">
+          <label className="search">
+            <MagnifyingGlass size={20} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ism, kasb yoki ko'nikma" />
+          </label>
+          <button type="button" className="cands-filter" aria-label="Filtr" onClick={() => { setDraft(f); setSheet(true) }}>
+            <SlidersHorizontal size={22} />
+            {fCount > 0 && <i>{fCount}</i>}
+          </button>
         </div>
-        <div className="pill-row">
-          <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}>Barchasi</button>
-          {CATEGORIES.map((c) => (
-            <button key={c.id} className={`pill ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}><Icon3D name={c.icon} size={22} /> {c.short}</button>
-          ))}
+        <div className="pill-row cands-pills">
+          <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}><SquaresFour size={18} /> Barchasi</button>
+          {CATEGORIES.map((c) => {
+            const Ic = CAT_ICONS[c.id] || Briefcase
+            return <button key={c.id} className={`pill ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}><Ic size={18} /> {c.short}</button>
+          })}
         </div>
         {list.length ? (
-          <div className="list-grid">
-            {list.map((c) => (
-              <Link key={c.id} to={`/candidates/${c.id}`} className="cand-card">
-                <div className="cand-top">
-                  <Avatar name={c.name} color={c.color} size={52} />
-                  <div className="grow"><b>{c.name}</b><span className="muted">{c.headline}</span></div>
-                </div>
-                <div className="cand-meta muted">
-                  <span><Icon name="pin" size={14} /> {c.city}</span>
-                  <span><Icon name="briefcase" size={14} /> {c.years} yil</span>
-                  <span><Icon name="wallet" size={14} /> {formatSum(c.salary)}</span>
-                </div>
-                <div className="chips">{c.skills.slice(0, 3).map((s) => <span key={s} className="chip">{s}</span>)}</div>
-              </Link>
-            ))}
-          </div>
+          <div className="list-grid cands-list">{list.map((c) => <CandidateCard key={c.id} c={c} list />)}</div>
         ) : <Empty icon="users" title="Nomzod topilmadi" />}
       </div>
+
+      <Sheet open={sheet} onClose={() => setSheet(false)} title="Filtr">
+        <div className="cands-sheet">
+          <Field as="div" label="Shahar">
+            <Select value={draft.city} options={[{ value: '', label: 'Barcha shaharlar' }, ...CITY_OPTS]} placeholder="Barcha shaharlar"
+              onChange={(v) => setDraft((d) => ({ ...d, city: v }))} />
+          </Field>
+          <Field as="div" label="Tajriba">
+            <Chips options={EXP_MIN} isOn={(id) => draft.exp === id} onPick={(id) => setDraft((d) => ({ ...d, exp: id }))} />
+          </Field>
+          <Check2 checked={draft.active} onChange={(v) => setDraft((d) => ({ ...d, active: v }))}>Faqat faol ish qidirayotganlar</Check2>
+          <div className="cands-sheet-btns">
+            <button type="button" className="btn btn-ghost" onClick={() => { setDraft(NO_FILTER); setF(NO_FILTER); setSheet(false) }}>Tozalash</button>
+            <button type="button" className="btn btn-primary grow" onClick={() => { setF(draft); setSheet(false) }}>Ko'rsatish</button>
+          </div>
+        </div>
+      </Sheet>
     </div>
   )
 }
 
 export function CandidateDetail() {
   const { id } = useParams()
-  const { user, invites, invite, notify } = useApp()
+  const { user, invites, invite, notify, savedCands, toggleSaveCand } = useApp()
   const c = CANDIDATES.find((x) => x.id === id)
   if (!c) return <div className="page"><TopBar title="Nomzod" /><Empty title="Topilmadi" /></div>
   const invited = invites.includes(c.id)
+  const saved = savedCands.includes(c.id)
+  const status = statusOf(c)
+  const years = age(c.birthDate)
+  const exp = expText(c)
+  const employer = user?.role === 'employer'
 
   return (
-    <div className="page detail">
+    <div className="page detail cv-page">
       <TopBar title="Rezyume" />
       <div className="page-body">
-        <div className="detail-hero">
-          <Avatar name={c.name} color={c.color} size={84} radius={28} />
-          <h1>{c.name}</h1>
-          <span className="muted">{c.headline}</span>
-          <div className="chips center">
-            <span className="chip chip-primary">{catName(c.category)}</span>
-            <span className="chip"><Icon name="pin" size={14} /> {c.city}</span>
-            <span className="chip">{c.years} yil tajriba</span>
+        <div className="cv-hero">
+          <img className="cv-hero-art" src="/ayolqadami-mark.png" alt="" aria-hidden="true" />
+          <span className="cv-ava">
+            <Avatar name={c.name} color={c.color} size={88} radius={28} />
+            {status?.id === 'active' && <i className="cv-online" aria-label="Faol" />}
+          </span>
+          <h1>{fullName(c)}</h1>
+          <span className="cv-headline">{c.headline}</span>
+          <span className="cv-pill"><Star size={14} weight="fill" /> {catName(c.category)}</span>
+          <div className="cv-meta-row">
+            {years != null && <span><Cake size={16} /> {years} yosh</span>}
+            {placeText(c) && <span><MapPin size={16} /> {placeText(c)}</span>}
+            {exp && <span><Suitcase size={16} /> {exp}</span>}
           </div>
+          {(status || employer) && (
+            <div className="cv-hero-foot">
+              {status && (
+                <div className={`cv-state s-${status.id}`}>
+                  <b><i />{status.id === 'active' ? 'Hozirda faol' : status.label}</b>
+                  <small>{status.id === 'active' ? 'Ish qidiryapti' : status.hint}</small>
+                </div>
+              )}
+              {employer && (
+                <div className="cv-hero-acts">
+                  <button type="button" className={`cv-like ${saved ? 'on' : ''}`} aria-pressed={saved}
+                    aria-label={saved ? 'Saqlanganlardan olib tashlash' : 'Saqlash'}
+                    onClick={() => { toggleSaveCand(c.id); notify(saved ? 'Saqlanganlardan olib tashlandi' : 'Nomzod saqlandi') }}>
+                    <Heart size={20} weight={saved ? 'fill' : 'regular'} />
+                  </button>
+                  <button type="button" className="btn btn-primary cv-invite" disabled={invited}
+                    onClick={() => { invite(c.id); notify('Taklif yuborildi') }}>
+                    {invited ? <><Check size={18} weight="bold" /> Yuborilgan</> : <><PaperPlaneTilt size={18} weight="fill" /> Taklif yuborish</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="info-grid">
-          <div><Icon name="wallet" size={18} /><span>{formatSum(c.salary)} so'm</span></div>
-          <div><Icon name="briefcase" size={18} /><span>{c.format.join(', ')}</span></div>
-        </div>
-        <ResumeView p={c} />
+        <ResumeView p={c} contacts={employer} />
       </div>
-      {user.role === 'employer' && (
-        <div className="action-bar">
-          <a className="btn btn-soft" href="tel:+998000000000"><Icon name="phone" size={18} /></a>
-          <button className="btn btn-primary grow" disabled={invited} onClick={() => { invite(c.id); notify('Taklif yuborildi') }}>
-            {invited ? <><Icon name="check" size={18} /> Taklif yuborilgan</> : 'Suhbatga taklif qilish'}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export function PostJob() {
-  const { user, postJob, notify } = useApp()
-  const nav = useNavigate()
-  const [f, setF] = useState({
-    title: '', category: user.industry || user.category || 'it', city: user.city || 'Toshkent', type: "To'liq stavka",
-    salaryFrom: '', salaryTo: '', experience: 0, description: '', requirements: '', skills: '', tags: [],
-  })
-  const [err, setErr] = useState('')
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
-  const PERKS = ['Onalar uchun qulay', 'Moslashuvchan grafik', 'Faqat kunduzgi smena', "Tajribasiz qabul", "O'qitib olamiz", '100% masofaviy']
-  const togglePerk = (t) => setF({ ...f, tags: f.tags.includes(t) ? f.tags.filter((x) => x !== t) : [...f.tags, t] })
-  const num = (v) => Number(String(v).replace(/\D/g, '')) || 0
-
-  const submit = (e) => {
-    e.preventDefault()
-    if (f.title.trim().length < 3) return setErr('Lavozim nomini kiriting')
-    if (f.description.trim().length < 20) return setErr("Tavsif kamida 20 belgidan iborat bo'lsin")
-    postJob({
-      ...f, title: f.title.trim(), company: user.company || user.name, color: user.color || '#6366F6',
-      salaryFrom: num(f.salaryFrom), salaryTo: num(f.salaryTo), experience: Number(f.experience),
-      requirements: f.requirements.split('\n').map((x) => x.trim()).filter(Boolean),
-      skills: f.skills.split(',').map((x) => x.trim()).filter(Boolean), conditions: [],
-    })
-    notify("Vakansiya e'lon qilindi!")
-    nav('/applications')
-  }
-
-  return (
-    <div className="page">
-      <TopBar title="Vakansiya joylash" />
-      <form className="page-body form" onSubmit={submit}>
-        <div className="edit-banner">
-          <Icon3D name="plus" size={84} />
-          <div><b>Yangi vakansiya</b><span className="muted">E'lon darhol ish izlovchilarga va QadamAI tavsiyalariga chiqadi</span></div>
-        </div>
-        <fieldset className="card-set">
-          <legend>Asosiy</legend>
-          <label className="field"><span>Lavozim</span><input value={f.title} onChange={set('title')} placeholder="Masalan: Buxgalter" /></label>
-          <div className="field-row">
-            <label className="field"><span>Soha</span><select value={f.category} onChange={set('category')}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-            <label className="field"><span>Shahar</span><select value={f.city} onChange={set('city')}>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></label>
-          </div>
-          <div className="field-row">
-            <label className="field"><span>Format</span><select value={f.type} onChange={set('type')}>{JOB_TYPES.map((t) => <option key={t}>{t}</option>)}</select></label>
-            <label className="field"><span>Tajriba (yil)</span><input type="number" min="0" max="20" value={f.experience} onChange={set('experience')} /></label>
-          </div>
-          <div className="field-row">
-            <label className="field"><span>Maosh, dan</span><input value={f.salaryFrom} onChange={set('salaryFrom')} inputMode="numeric" placeholder="5 000 000" /></label>
-            <label className="field"><span>gacha</span><input value={f.salaryTo} onChange={set('salaryTo')} inputMode="numeric" placeholder="8 000 000" /></label>
-          </div>
-        </fieldset>
-        <fieldset className="card-set">
-          <legend>Tavsif</legend>
-          <label className="field"><span>Vakansiya haqida</span><textarea rows={4} value={f.description} onChange={set('description')} /></label>
-          <label className="field"><span>Talablar (har biri yangi qatorda)</span><textarea rows={3} value={f.requirements} onChange={set('requirements')} /></label>
-          <label className="field"><span>Ko'nikmalar (vergul bilan)</span><input value={f.skills} onChange={set('skills')} placeholder="Excel, 1C" /></label>
-        </fieldset>
-        <fieldset className="card-set">
-          <legend>Ayollar uchun qulayliklar</legend>
-          <div className="pill-row wrap">
-            {PERKS.map((t) => <button type="button" key={t} className={`pill pill-sm ${f.tags.includes(t) ? 'on' : ''}`} onClick={() => togglePerk(t)}>{t}</button>)}
-          </div>
-        </fieldset>
-        {err && <div className="form-error">{err}</div>}
-        <button className="btn btn-primary btn-lg btn-block" type="submit">E'lon qilish</button>
-      </form>
     </div>
   )
 }

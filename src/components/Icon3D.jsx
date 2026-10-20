@@ -438,6 +438,74 @@ const ICONS = {
     </>
   ),
 
+  // enaga: chaqaloq shishasi
+  bottle: (u) => (
+    <>
+      <Shadow u={u} cy={110} rx={26} />
+      <path d="M50 14h20l2 14H48z" fill="#F472B6" />
+      <rect x="44" y="26" width="32" height="10" rx="4" fill={`url(#${u}pd)`} />
+      <rect x="40" y="34" width="40" height="72" rx="14" fill="#3730C9" transform="translate(2 2)" />
+      <rect x="40" y="34" width="40" height="72" rx="14" fill={`url(#${u}w)`} />
+      <path d="M40 66h40v26a14 14 0 0 1-14 14H54a14 14 0 0 1-14-14z" fill={`url(#${u}pl)`} />
+      {[0, 1, 2].map((r) => <rect key={r} x="64" y={46 + r * 12} width="10" height="3" rx="1.5" fill="#7C7FF8" opacity=".8" />)}
+      <rect x="45" y="40" width="6" height="56" rx="3" fill="#fff" opacity=".6" />
+    </>
+  ),
+  // uy xizmatchisi: uy
+  house: (u) => (
+    <>
+      <Shadow u={u} cy={108} rx={40} />
+      <rect x="24" y="52" width="72" height="52" rx="8" fill="#3730C9" transform="translate(3 2)" />
+      <rect x="24" y="52" width="72" height="52" rx="8" fill={`url(#${u}w)`} />
+      <path d="M14 58 60 18l46 40c3 3 0 8-4 6L60 30 18 64c-4 2-7-3-4-6z" fill={`url(#${u}p)`} />
+      <rect x="78" y="22" width="12" height="22" rx="3" fill={`url(#${u}pd)`} />
+      <rect x="50" y="72" width="20" height="32" rx="5" fill={`url(#${u}p)`} />
+      <circle cx="65" cy="88" r="2" fill="#fff" />
+      <rect x="32" y="66" width="12" height="12" rx="3" fill={`url(#${u}pl)`} />
+      <rect x="76" y="66" width="12" height="12" rx="3" fill={`url(#${u}pl)`} />
+      <path d="M30 50 58 26" stroke="#fff" strokeWidth="4" strokeLinecap="round" opacity=".45" />
+    </>
+  ),
+  // tozalik: purkagich + pufakchalar
+  spray: (u) => (
+    <>
+      <Shadow u={u} cy={110} rx={30} />
+      <path d="M40 20h30l14 8-4 6-12-4H40z" fill={`url(#${u}pd)`} />
+      <rect x="44" y="30" width="22" height="14" rx="3" fill={`url(#${u}p)`} />
+      <path d="M38 44h34c6 0 10 6 10 12v42a8 8 0 0 1-8 8H36a8 8 0 0 1-8-8V58c0-8 4-14 10-14z" fill="#3730C9" transform="translate(2 2)" />
+      <path d="M38 44h34c6 0 10 6 10 12v42a8 8 0 0 1-8 8H36a8 8 0 0 1-8-8V58c0-8 4-14 10-14z" fill={`url(#${u}p)`} />
+      <rect x="36" y="64" width="38" height="24" rx="5" fill={`url(#${u}w)`} />
+      <path d="M44 76h22" stroke="#7C7FF8" strokeWidth="3" strokeLinecap="round" />
+      <rect x="33" y="50" width="6" height="48" rx="3" fill="#fff" opacity=".3" />
+      <circle cx="96" cy="24" r="8" fill={`url(#${u}w)`} stroke="#B4B7FF" strokeWidth="2" />
+      <circle cx="104" cy="42" r="5" fill={`url(#${u}w)`} stroke="#B4B7FF" strokeWidth="2" />
+      <circle cx="94" cy="54" r="4" fill={`url(#${u}w)`} stroke="#B4B7FF" strokeWidth="2" />
+    </>
+  ),
+  // oshpaz: qozon + bug'
+  pot: (u) => (
+    <>
+      <Shadow u={u} cy={108} rx={40} />
+      <path d="M44 30c-4-6 4-10 0-16M60 30c-4-6 4-10 0-16M76 30c-4-6 4-10 0-16" fill="none" stroke="#B4B7FF" strokeWidth="4" strokeLinecap="round" />
+      <rect x="8" y="54" width="18" height="10" rx="5" fill={`url(#${u}pd)`} />
+      <rect x="94" y="54" width="18" height="10" rx="5" fill={`url(#${u}pd)`} />
+      <path d="M20 48h80v34c0 14-10 22-24 22H44c-14 0-24-8-24-22z" fill="#3730C9" transform="translate(2 2)" />
+      <path d="M20 48h80v34c0 14-10 22-24 22H44c-14 0-24-8-24-22z" fill={`url(#${u}p)`} />
+      <rect x="16" y="40" width="88" height="12" rx="6" fill={`url(#${u}pl)`} />
+      <rect x="52" y="32" width="16" height="10" rx="4" fill={`url(#${u}gold)`} />
+      <rect x="28" y="58" width="8" height="34" rx="4" fill="#fff" opacity=".3" />
+    </>
+  ),
+  // parvarishchi: yurak
+  heart: (u) => (
+    <>
+      <Shadow u={u} cy={108} rx={34} />
+      <path d="M60 100C24 76 12 58 12 40c0-14 11-24 24-24 10 0 18 6 24 14 6-8 14-14 24-14 13 0 24 10 24 24 0 18-12 36-48 60z" fill="#3730C9" transform="translate(2 3)" />
+      <path d="M60 100C24 76 12 58 12 40c0-14 11-24 24-24 10 0 18 6 24 14 6-8 14-14 24-14 13 0 24 10 24 24 0 18-12 36-48 60z" fill={`url(#${u}p)`} />
+      <path d="M48 54h8v-8h8v8h8v8h-8v8h-8v-8h-8z" fill={`url(#${u}w)`} />
+      <ellipse cx="34" cy="34" rx="10" ry="6" fill="#fff" opacity=".4" transform="rotate(-35 34 34)" />
+    </>
+  ),
   target: (u) => (
     <>
       <Shadow u={u} cy={108} rx={34} />

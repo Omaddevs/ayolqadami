@@ -5,6 +5,8 @@ import App from './App'
 import { AppProvider } from './context/AppContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import './styles/global.css'
+import './styles/pages-extra.css'
+import './styles/resume.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -2,6 +2,11 @@ export const CATEGORIES = [
   { id: 'office', name: 'Ofis ishlari', short: 'Ofis', icon: 'folder' },
   { id: 'edu', name: "Ta'lim va pedagogika", short: "Ta'lim", icon: 'gradcap' },
   { id: 'med', name: "Tibbiyot va sog'liqni saqlash", short: 'Tibbiyot', icon: 'stethoscope' },
+  { id: 'nanny', name: 'Enaga va bola parvarishi', short: 'Enaga', icon: 'bottle' },
+  { id: 'housekeeper', name: 'Uy xizmatchisi', short: 'Uy xizmatchisi', icon: 'house' },
+  { id: 'cleaning', name: 'Tozalik xodimi', short: 'Tozalik', icon: 'spray' },
+  { id: 'cook', name: 'Oshpaz (uy va oshxona)', short: 'Oshpaz', icon: 'pot' },
+  { id: 'caregiver', name: 'Keksalar va bemorlar parvarishi', short: 'Parvarishchi', icon: 'heart' },
   { id: 'sales', name: 'Savdo va mijozlar bilan ishlash', short: 'Savdo', icon: 'bag' },
   { id: 'beauty', name: "Go'zallik va parvarish", short: "Go'zallik", icon: 'lipstick' },
   { id: 'it', name: 'IT va dizayn', short: 'IT va dizayn', icon: 'laptop' },
@@ -17,7 +22,7 @@ export const CATEGORIES = [
 ]
 
 export const CITIES = [
-  'Toshkent', 'Samarqand', 'Buxoro', 'Andijon', "Farg'ona", 'Namangan', 'Navoiy', 'Qarshi', 'Nukus', 'Urganch', 'Jizzax', 'Termiz',
+  'Toshkent', 'Samarqand', 'Buxoro', 'Andijon', "Farg'ona", 'Namangan', 'Navoiy', 'Qarshi', 'Nukus', 'Urganch', 'Jizzax', 'Guliston', 'Termiz',
 ]
 
 export const JOB_TYPES = ["To'liq stavka", 'Yarim stavka', 'Masofaviy', 'Gibrid']
@@ -136,6 +141,11 @@ const CAT_TEXT = {
   production: { req: ['Tikuv mashinasida ishlash', 'Andoza bilan ishlash', 'Aniqlik va puxtalik'], cond: ['Ishbay qo\'shimcha haq', 'Bepul tushlik', 'Uyga yaqin sex'] },
   sales: { req: ["Muloqotga ochiqlik", "Sotuv yoki mijozlar bilan ishlash tajribasi", 'Kompyuterdan foydalanish'], cond: ['Oylik + foiz', 'Karyera o\'sishi', "Treninglar"] },
   beauty: { req: ['Tegishli sertifikat', 'Kamida 1 yillik amaliyot', 'Mijozlarga e\'tibor'], cond: ['Foizli ish haqi', 'Bepul malaka oshirish', "Qulay jadval"] },
+  nanny: { req: ["Bolalar bilan ishlash tajribasi", "Tibbiy ma'lumotnoma", 'Mehribonlik va sabr-toqat'], cond: ["Oila bilan kelishilgan jadval", 'Tushlik oila hisobidan', "Tavsiyanoma bilan ishga olinadi"] },
+  housekeeper: { req: ["Uy yumushlarida tajriba", 'Tartiblilik va ishonchlilik', 'Tavsiyanoma (afzallik)'], cond: ['Haftalik dam olish kuni', 'Tushlik beriladi', "Yo'l haqi qoplanadi"] },
+  cleaning: { req: ["Tozalash vositalari bilan ishlash", "Mas'uliyat va puxtalik", 'Jismoniy chidamlilik'], cond: ['Ish vositalari beriladi', 'Qulay smena', "Har kuni yoki haftalik to'lov"] },
+  cook: { req: ["Milliy va Yevropa taomlarini tayyorlash", 'Gigiyena qoidalarini bilish', 'Tibbiy daftarcha'], cond: ['Bepul ovqat', 'Qulay jadval', 'Rasmiy ishga joylash (oshxonalarda)'] },
+  caregiver: { req: ["Keksalar yoki bemorlarni parvarish qilish tajribasi", 'Birinchi yordam asoslari', 'Mehribonlik va sabr'], cond: ['Kelishilgan jadval', 'Tushlik beriladi', "Tibbiy maslahat bilan qo'llab-quvvatlash"] },
   finance: { req: ["Iqtisodiy ma'lumot", '1C va Excel bilimi', 'Aniqlik va tartiblilik'], cond: ['Rasmiy ishga joylash', 'Ijtimoiy paket', 'Yillik bonus'] },
 }
 
@@ -170,6 +180,16 @@ const EXTRA = [
   ['Moliyaviy tahlilchi', 'Invest Group', '#B45309', 'finance', 'Toshkent', 10000000, 15000000, 'Gibrid', 3, ['Moslashuvchan grafik'], '4 kun oldin', 9, ['Moliyaviy model', 'Excel', 'IFRS']],
   ['Grafik dizayner', 'Samo Design', '#14B8A6', 'it', 'Toshkent', 6000000, 10000000, 'Masofaviy', 1, ['Uydan ishlash'], '5 soat oldin', 31, ['Photoshop', 'Illustrator', 'Brending']],
   ['Interyer dizayner', 'Uy Dizayn', '#0D9488', 'it', 'Navoiy', 7000000, 12000000, 'Gibrid', 2, ['Moslashuvchan grafik'], '6 kun oldin', 11, ['3ds Max', 'AutoCAD', 'SketchUp']],
+  ['Enaga (2 yoshli bolaga)', 'Xususiy oila', '#F472B6', 'nanny', 'Toshkent', 4000000, 6000000, "To'liq stavka", 1, ['Onalar uchun qulay'], '1 soat oldin', 19, ['Bola parvarishi', "O'yin mashg'ulotlari", 'Ovqatlantirish']],
+  ['Enaga (yarim kun)', 'Xususiy oila', '#EC4899', 'nanny', 'Samarqand', 2500000, 3500000, 'Yarim stavka', 0, ['Yarim kunlik', 'Uyga yaqin'], '5 soat oldin', 11, ['Bola parvarishi', 'Sayr', 'Uy vazifalari']],
+  ['Uy xizmatchisi', 'Xususiy oila', '#8B5CF6', 'housekeeper', 'Toshkent', 3500000, 5000000, "To'liq stavka", 1, ['Tushlik beriladi'], '3 soat oldin', 14, ['Tozalash', 'Dazmollash', 'Ovqat tayyorlash']],
+  ["Uy yumushlari bo'yicha yordamchi", 'Xususiy oila', '#A855F7', 'housekeeper', 'Namangan', 2500000, 3500000, 'Yarim stavka', 0, ['Haftada 3 kun'], 'Kecha', 8, ['Tozalash', 'Kir yuvish']],
+  ['Ofis tozalik xodimi', 'Clean Pro', '#14B8A6', 'cleaning', 'Toshkent', 3000000, 4000000, 'Yarim stavka', 0, ['Tajriba shart emas', 'Ertalabki smena'], '2 soat oldin', 27, ['Tozalash', 'Tartib']],
+  ['Tozalik xodimi (savdo markazi)', 'Toza Makon', '#0D9488', 'cleaning', 'Toshkent', 3200000, 4200000, "To'liq stavka", 0, ['Rasmiy ishga joylash'], '6 soat oldin', 31, ['Tozalash', 'Gigiyena']],
+  ['Uy oshpazi', 'Xususiy oila', '#F59E0B', 'cook', 'Toshkent', 4500000, 7000000, "To'liq stavka", 2, ['Tushlik beriladi'], '4 soat oldin', 9, ['Milliy taomlar', 'Shirinliklar']],
+  ['Oshpaz yordamchisi', 'Lazzat Oshxonasi', '#EA580C', 'cook', 'Andijon', 3000000, 4000000, "To'liq stavka", 0, ['Bepul ovqat', 'Tajriba shart emas'], 'Kecha', 22, ['Taom tayyorlash', 'Gigiyena']],
+  ['Keksalar parvarishchisi', 'Xususiy oila', '#10B981', 'caregiver', 'Buxoro', 3500000, 5000000, "To'liq stavka", 1, ['Uyga yaqin'], '2 kun oldin', 6, ['Parvarish', 'Dori berish', 'Birinchi yordam']],
+  ['Bemor parvarishchisi (sidelka)', 'Mehr uyi', '#059669', 'caregiver', 'Toshkent', 4000000, 6000000, 'Yarim stavka', 1, ['Moslashuvchan grafik'], '3 kun oldin', 10, ['Parvarish', 'Gigiyena', 'Muloqot']],
 ]
 
 const EXTRA_JOBS = EXTRA.map(([title, company, color, category, city, salaryFrom, salaryTo, type, experience, tags, posted, applicants, skills], i) => ({
@@ -181,80 +201,9 @@ const EXTRA_JOBS = EXTRA.map(([title, company, color, category, city, salaryFrom
 
 export const JOBS = [...BASE_JOBS, ...EXTRA_JOBS]
 
-const AV = ['#6366F6', '#EC4899', '#F59E0B', '#10B981', '#8B5CF6', '#14B8A6', '#EF4444', '#3B82F6']
 
-export const CANDIDATES = [
-  {
-    id: 'c1', name: 'Malika Rahimova', headline: 'Frontend dasturchi', category: 'it', city: 'Toshkent', years: 3,
-    skills: ['React', 'JavaScript', 'TypeScript', 'CSS', 'Figma'], salary: 12000000, format: ['Gibrid', 'Masofaviy'],
-    about: "3 yildan beri React bilan ishlayman. Kichik qizim bor, shuning uchun gibrid formatni afzal ko'raman.",
-    experience: [{ role: 'Frontend dasturchi', company: 'Click Soft', period: '2022 – hozir' }, { role: 'Stajyor', company: 'IT Park', period: '2021 – 2022' }],
-    education: 'TATU, Dasturiy injiniring', languages: ["O'zbek", 'Rus', 'Ingliz (B2)'], color: AV[0],
-  },
-  {
-    id: 'c2', name: 'Dilnoza Karimova', headline: 'Buxgalter, 1C mutaxassisi', category: 'finance', city: 'Toshkent', years: 6,
-    skills: ['1C', 'Buxgalteriya', 'Soliq hisoboti', 'Excel', 'Audit'], salary: 10000000, format: ["To'liq stavka"],
-    about: "6 yillik buxgalterlik tajribasi, soliq hisobotlari va 1C bo'yicha mutaxassis.",
-    experience: [{ role: 'Bosh buxgalter', company: 'Agro Invest', period: '2020 – hozir' }, { role: 'Buxgalter', company: 'Savdo Group', period: '2018 – 2020' }],
-    education: 'TDIU, Buxgalteriya hisobi', languages: ["O'zbek", 'Rus'], color: AV[2],
-  },
-  {
-    id: 'c3', name: 'Zarina Toshpulatova', headline: 'Hamshira', category: 'med', city: 'Samarqand', years: 4,
-    skills: ['Hamshiralik', 'Birinchi yordam', 'Bemor parvarishi', 'Laboratoriya'], salary: 6000000, format: ["To'liq stavka"],
-    about: "Terapiya va pediatriya bo'limlarida 4 yil ishlaganman.",
-    experience: [{ role: 'Hamshira', company: 'Samarqand viloyat shifoxonasi', period: '2020 – hozir' }],
-    education: 'Samarqand tibbiyot kolleji', languages: ["O'zbek", 'Rus', 'Tojik'], color: AV[3],
-  },
-  {
-    id: 'c4', name: 'Nodira Yusupova', headline: "Ingliz tili o'qituvchisi, IELTS 8.0", category: 'edu', city: 'Toshkent', years: 5,
-    skills: ['Ingliz tili', 'IELTS', "O'qitish metodikasi", 'Onlayn darslar'], salary: 9000000, format: ['Yarim stavka', 'Masofaviy'],
-    about: "IELTS 8.0. 200 dan ortiq o'quvchini imtihonga tayyorlaganman.",
-    experience: [{ role: "O'qituvchi", company: 'Cambridge LC', period: '2019 – hozir' }],
-    education: "O'zDJTU, Filologiya", languages: ["O'zbek", 'Ingliz (C1)', 'Rus'], color: AV[6],
-  },
-  {
-    id: 'c5', name: 'Gulnora Ergasheva', headline: 'Tikuvchi-bichuvchi', category: 'production', city: "Farg'ona", years: 8,
-    skills: ['Tikuvchilik', 'Bichish', 'Overlok', 'Konstruksiyalash'], salary: 6000000, format: ["To'liq stavka", 'Yarim stavka'],
-    about: '8 yillik tajriba, ayollar va bolalar kiyimlari tikish.',
-    experience: [{ role: 'Tikuvchi', company: "Farg'ona Tekstil", period: '2016 – hozir' }],
-    education: "Farg'ona yengil sanoat kolleji", languages: ["O'zbek"], color: AV[4],
-  },
-  {
-    id: 'c6', name: 'Sevara Aliyeva', headline: 'SMM va kontent menejer', category: 'sales', city: 'Buxoro', years: 2,
-    skills: ['SMM', 'Instagram', 'Kontent', 'Canva', 'Target reklama'], salary: 6000000, format: ['Masofaviy'],
-    about: "Uydan ishlayman, 10 dan ortiq brendning sahifalarini yuritganman.",
-    experience: [{ role: 'SMM menejer', company: 'Freelance', period: '2022 – hozir' }],
-    education: 'BuxDU, Jurnalistika', languages: ["O'zbek", 'Rus', 'Ingliz (B1)'], color: AV[1],
-  },
-  {
-    id: 'c7', name: 'Kamola Saidova', headline: 'UI/UX dizayner', category: 'it', city: 'Toshkent', years: 4,
-    skills: ['Figma', 'UI dizayn', 'UX tadqiqot', 'Prototiplash', 'Adobe Illustrator'], salary: 14000000, format: ['Masofaviy', 'Gibrid'],
-    about: 'Fintech va e-commerce mahsulotlari uchun interfeyslar loyihalayman.',
-    experience: [{ role: 'Product dizayner', company: 'Uzum Studio', period: '2021 – hozir' }],
-    education: 'Milliy rassomlik va dizayn instituti', languages: ["O'zbek", 'Ingliz (B2)', 'Rus'], color: AV[5],
-  },
-  {
-    id: 'c8', name: 'Shahnoza Mirzayeva', headline: 'Python dasturchi (Junior)', category: 'it', city: 'Samarqand', years: 1,
-    skills: ['Python', 'Django', 'SQL', 'Git'], salary: 7000000, format: ['Masofaviy'],
-    about: "AyolQadami 'Python noldan' kursini tamomlaganman, stajirovkaga tayyorman.",
-    experience: [{ role: 'Stajyor', company: 'Startup Hub', period: '2025 – hozir' }],
-    education: 'SamDU, Matematika', languages: ["O'zbek", 'Ingliz (B1)'], color: AV[7],
-  },
-  {
-    id: 'c9', name: 'Madina Qodirova', headline: 'Kosmetolog', category: 'beauty', city: 'Buxoro', years: 5,
-    skills: ['Kosmetologiya', 'Yuz parvarishi', 'Mijozlar bilan ishlash'], salary: 9000000, format: ["To'liq stavka"],
-    about: 'Litsenziyalangan kosmetolog, 5 yillik tajriba.',
-    experience: [{ role: 'Kosmetolog', company: 'Lola Beauty', period: '2019 – hozir' }],
-    education: 'Buxoro tibbiyot kolleji', languages: ["O'zbek", 'Rus'], color: AV[1],
-  },
-  {
-    id: 'c10', name: 'Feruza Nazarova', headline: "Sotuv bo'yicha menejer", category: 'sales', city: 'Andijon', years: 3,
-    skills: ['Sotuv', 'Muloqot', 'CRM', 'Telefon orqali sotuv'], salary: 7000000, format: ["To'liq stavka"],
-    about: "Rejani doimiy ravishda 120% bajaraman.",
-    experience: [{ role: 'Sotuv menejeri', company: 'Mebel Market', period: '2021 – hozir' }],
-    education: 'AndDU, Iqtisodiyot', languages: ["O'zbek", 'Rus'], color: AV[2],
-  },
-]
+// To'liq rezyumeli demo nomzodlar
+export { CANDIDATES } from './candidates'
 
 export const COURSES = [
   {

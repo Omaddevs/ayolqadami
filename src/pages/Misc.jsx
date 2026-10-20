@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Bell, BookOpen, CaretRight, Gear, Lifebuoy, WarningCircle, Buildings } from '@phosphor-icons/react'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import { Empty, JobCard, TopBar } from '../components/UI'
@@ -7,7 +8,7 @@ import { useApp } from '../context/AppContext'
 import { EVENTS, NOTIFICATIONS } from '../data/mock'
 
 export function Applications() {
-  const { user, allJobs, applications, saved, posted, removeJob, notify } = useApp()
+  const { user, jobsAll: allJobs, applications, saved, posted, removeJob, notify } = useApp()
   const [params] = useSearchParams()
   const [tab, setTab] = useState(params.get('tab') || 'apps')
 
@@ -120,6 +121,58 @@ export function Notifications() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// Guruhlangan ro'yxat (iOS uslubi): har guruh — yumaloq karta.
+// item: { label, icon, to | onClick, value? (o'ngdagi kulrang qiymat), danger?, rotate? }
+export function MoreList({ groups }) {
+  return (
+    <div className="more-groups">
+      {groups.map((g, i) => (
+        <div key={i} className="more-group">
+          {g.map(({ label, icon: Ico, to, onClick, danger, rotate, value }) => {
+            const inner = (
+              <>
+                <Ico size={26} weight="regular" className="more-ico" style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined} />
+                <span className="grow more-label">{label}</span>
+                {value && <span className="more-value">{value}</span>}
+                <CaretRight size={20} weight="bold" className="more-caret" />
+              </>
+            )
+            const cls = `more-item ${danger ? 'danger' : ''}`
+            return to
+              ? <Link key={label} to={to} className={cls}>{inner}</Link>
+              : <button key={label} type="button" className={cls} onClick={onClick}>{inner}</button>
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function More() {
+  const { notify } = useApp()
+  return (
+    <div className="page more">
+      <TopBar title="Qo'shimcha" />
+      <div className="page-body">
+        <MoreList groups={[
+          [
+            { label: 'Sozlamalar', icon: Gear, to: '/settings' },
+            { label: 'Bildirishnomalar', icon: Bell, to: '/notifications', rotate: 28 },
+          ],
+          [
+            { label: 'Kompaniyalar', icon: Buildings, to: '/companies' },
+            { label: 'Maqolalar', icon: BookOpen, to: '/articles' },
+          ],
+          [
+            { label: 'Ilova haqida', icon: WarningCircle, onClick: () => notify('Tez orada') },
+            { label: 'Texnik yordam', icon: Lifebuoy, to: '/support' },
+          ],
+        ]} />
       </div>
     </div>
   )

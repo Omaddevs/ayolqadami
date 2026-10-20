@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
-import { Avatar, JobCard, SectionHead } from '../components/UI'
+import { JobCard, SectionHead, Sheet } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
 import { useApp } from '../context/AppContext'
-import { Bell, ChatCircleText, Heart, MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
-import { CANDIDATES, NOTIFICATIONS, catName } from '../data/mock'
+import { Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
+import CandidateCard from '../components/CandidateCard'
+import { CANDIDATES, CATEGORIES, JOB_TYPES, NOTIFICATIONS } from '../data/mock'
 
 // Bosh sahifa bannerlari — yangi banner qo'shish uchun rasmni public/banners/ ga qo'yib, shu ro'yxatga yozing
 const BANNERS = [
@@ -81,8 +82,22 @@ export default function Home() {
   const { user, allJobs, applications, posted, saved } = useApp()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
-  const isEmp = user.role === 'employer'
+  const isEmp = user?.role === 'employer'
   const closeSearch = useCallback(() => setOpen(false), [])
+  const nav = useNavigate()
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [fCat, setFCat] = useState('')
+  const [fType, setFType] = useState('')
+  const [fSort, setFSort] = useState('new')
+  const applyFilters = () => {
+    const p = new URLSearchParams()
+    if (fCat) p.set('cat', fCat)
+    if (!isEmp && fType) p.set('type', fType)
+    if (!isEmp && fSort !== 'new') p.set('sort', fSort)
+    const qs = p.toString()
+    setFilterOpen(false)
+    nav(`${isEmp ? '/candidates' : '/jobs'}${qs ? `?${qs}` : ''}`)
+  }
   const openSearch = () => {
     setOpen(true)
     // fokus shu bosish ichida beriladi — iOS'da klaviatura darhol ochiladi
@@ -103,7 +118,8 @@ export default function Home() {
         { to: '/events', label: 'Tadbirlar', icon: 'calendar', img: '/tadbirlar.png' },
       ]
 
-  const recommended = allJobs.filter((j) => !user.category || j.category === user.category).concat(allJobs).slice(0, 4)
+  const myCats = user?.categories?.length ? user.categories : user?.category ? [user.category] : []
+  const recommended = allJobs.filter((j) => !myCats.length || myCats.includes(j.category)).concat(allJobs).slice(0, 4)
   const uniqueRec = [...new Map(recommended.map((j) => [j.id, j])).values()].slice(0, 4)
 
   return (
@@ -151,9 +167,9 @@ export default function Home() {
             <MagnifyingGlass size={22} />
             <span>{isEmp ? "Kasb, ko'nikma, ism" : "Lavozim, kalit so'zlar"}</span>
           </button>
-          <Link to={isEmp ? '/candidates' : '/jobs'} className="search-btn" aria-label="Filtrlar">
+          <button type="button" className="search-btn" aria-label="Filtrlar" onClick={() => setFilterOpen(true)}>
             <SlidersHorizontal size={22} />
-          </Link>
+          </button>
           {!isEmp && (
             <Link to="/applications?tab=saved" className="search-btn" aria-label="Saqlanganlar">
               <Heart size={22} />
@@ -168,7 +184,7 @@ export default function Home() {
             <Link to="/post-job" className="fcard fcard-big">
               <b>Vakansiya joylash</b>
               <span>E'lon bering, arizalar oling</span>
-              <Icon3D name="plus" size={128} className="fcard-art big" />
+              <img src="/vacancy-plus.png" alt="" className="fcard-art plus-art" draggable="false" />
             </Link>
           ) : (
             <Link to="/profile/edit" className="fcard fcard-big">
@@ -201,21 +217,21 @@ export default function Home() {
 
         {isEmp ? (
           <>
-            <SectionHead title="Tavsiya etilgan nomzodlar" to="/candidates" />
-            <div className="list-grid">
-              {CANDIDATES.filter((c) => !user.category || c.category === user.category).concat(CANDIDATES).slice(0, 4)
-                .filter((c, i, a) => a.findIndex((x) => x.id === c.id) === i)
-                .map((c) => (
-                  <Link key={c.id} to={`/candidates/${c.id}`} className="person-card">
-                    <Avatar name={c.name} color={c.color} size={48} />
-                    <div className="grow">
-                      <b>{c.name}</b>
-                      <span className="muted">{c.headline} · {c.years} yil</span>
-                    </div>
-                    <span className="chip">{catName(c.category)}</span>
-                  </Link>
-                ))}
-            </div>
+            <section className="rec-box">
+              <div className="rec-head">
+                <span className="rec-ico"><Fire size={24} weight="fill" /></span>
+                <div className="grow">
+                  <h2>Tavsiya etilgan nomzodlar</h2>
+                  <span>Sizning talabingizga mos nomzodlar</span>
+                </div>
+                <Link to="/candidates" className="rec-all">Barchasi <CaretRight size={14} weight="bold" /></Link>
+              </div>
+              <div className="rec-list">
+                {CANDIDATES.filter((c) => !myCats.length || myCats.includes(c.category)).concat(CANDIDATES).slice(0, 4)
+                  .filter((c, i, a) => a.findIndex((x) => x.id === c.id) === i)
+                  .map((c) => <CandidateCard key={c.id} c={c} />)}
+              </div>
+            </section>
           </>
         ) : (
           <>
@@ -230,6 +246,40 @@ export default function Home() {
       </section>
 
       <SearchSheet open={open} onClose={closeSearch} isEmp={isEmp} jobs={allJobs} inputRef={inputRef} />
+
+      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filtrlar">
+        <span className="search-panel-title">Soha</span>
+        <div className="pill-row wrap">
+          <button type="button" className={`pill ${!fCat ? 'on' : ''}`} onClick={() => setFCat('')}>Barchasi</button>
+          {CATEGORIES.map((c) => (
+            <button key={c.id} type="button" className={`pill ${fCat === c.id ? 'on' : ''}`} onClick={() => setFCat(c.id)}>
+              <Icon3D name={c.icon} size={22} /> {c.short}
+            </button>
+          ))}
+        </div>
+        {!isEmp && (
+          <>
+            <span className="search-panel-title">Ish formati</span>
+            <div className="pill-row wrap">
+              {['', ...JOB_TYPES].map((t) => (
+                <button key={t || 'all'} type="button" className={`pill pill-sm ${fType === t ? 'on' : ''}`} onClick={() => setFType(t)}>
+                  {t || 'Har qanday format'}
+                </button>
+              ))}
+            </div>
+            <span className="search-panel-title">Saralash</span>
+            <div className="pill-row wrap">
+              {[['new', 'Avval yangilari'], ['salary', "Maosh bo'yicha"], ['few', 'Kam arizali']].map(([v, l]) => (
+                <button key={v} type="button" className={`pill pill-sm ${fSort === v ? 'on' : ''}`} onClick={() => setFSort(v)}>{l}</button>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="filter-actions">
+          <button type="button" className="btn btn-soft btn-lg" onClick={() => { setFCat(''); setFType(''); setFSort('new') }}>Tozalash</button>
+          <button type="button" className="btn btn-primary btn-lg" onClick={applyFilters}>Natijalarni ko'rish</button>
+        </div>
+      </Sheet>
     </div>
   )
 }

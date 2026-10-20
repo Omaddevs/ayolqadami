@@ -42,17 +42,17 @@ export function Courses() {
 
 export function CourseDetail() {
   const { id } = useParams()
-  const { courses, enroll, notify } = useApp()
+  const { courses, enroll, notify, requireAuth } = useApp()
   const [pay, setPay] = useState(false)
   const c = COURSES.find((x) => x.id === id)
   if (!c) return <div className="page"><TopBar title="Kurs" /><Empty title="Kurs topilmadi" /></div>
   const enrolled = courses.includes(c.id)
 
-  const join = () => {
+  const join = () => requireAuth(() => {
     enroll(c.id)
     setPay(false)
     notify(c.price ? "To'lov qabul qilindi, kursga yozildingiz!" : 'Kursga yozildingiz!')
-  }
+  })
 
   return (
     <div className="page detail">

@@ -85,16 +85,44 @@ export function matchJobs(text, profile, jobs = JOBS) {
   return { analysis: a, results: results.sort((x, y) => y.score - x.score).filter((r) => r.score >= 45).slice(0, 5) }
 }
 
+// Misol so'rovlar: pre + hl (ajratilgan qism) + post = to'liq matn; icon/tone — UI uchun
+const P = (icon, tone, pre, hl, post = '') => ({ icon, tone, pre, hl, post, text: pre + hl + post })
+
 export const EMPLOYER_PROMPTS = [
-  'Toshkentda 3 yillik tajribali React dasturchi kerak',
-  'Buxgalter, 1C va soliq hisobotini biladigan, 5 yil tajriba',
-  "Masofaviy SMM menejer, Instagram va Canva",
-  "IELTS bo'yicha ingliz tili o'qituvchisi",
+  P('briefcase', 'violet', 'Toshkentda 3 yillik tajribali ', 'React dasturchi', ' kerak'),
+  P('calculator', 'pink', '', 'Buxgalter', ', 1C va soliq hisobotini biladigan, 5 yil tajriba'),
+  P('megaphone', 'sky', 'Masofaviy ', 'SMM menejer', ', Instagram va Canva'),
+  P('cap', 'indigo', "IELTS bo'yicha ", "Ingliz tili o'qituvchisi"),
+  P('stethoscope', 'mint', 'Klinikaga tajribali ', 'hamshira', ', smenali ish'),
+  P('scissors', 'amber', 'Tikuv sexiga ', 'tikuvchi', ', overlok bilan ishlay oladigan'),
+  P('palette', 'pink', 'Figma biladigan ', 'UI/UX dizayner', ', portfolio bilan'),
+  P('headset', 'sky', 'Call-markazga ', 'operator', ", rus va o'zbek tilida"),
 ]
 
 export const SEEKER_PROMPTS = [
-  'Uydan ishlash mumkin bo\'lgan ish',
-  'Frontend dasturchi, React',
-  "Toshkentda ingliz tili o'qituvchisi",
-  'Tajribasiz qabul qilinadigan ish',
+  P('house', 'violet', '', 'Uydan ishlash', " mumkin bo'lgan ish"),
+  P('code', 'indigo', '', 'Frontend dasturchi', ', React'),
+  P('cap', 'sky', 'Toshkentda ', "ingliz tili o'qituvchisi"),
+  P('sprout', 'mint', '', 'Tajribasiz', ' qabul qilinadigan ish'),
+  P('clock', 'amber', '', 'Yarim stavka', ', kunduzgi smena'),
+  P('megaphone', 'pink', 'Masofaviy ', 'SMM', ' yoki kontent ishi'),
 ]
+
+// Joylanayotgan vakansiyaga mos nomzodlar (tuzilgan ma'lumot bo'yicha, matnsiz)
+export function matchForVacancy(job) {
+  const want = (job.skills || []).map((s) => s.toLowerCase())
+  const remote = job.type === 'Masofaviy'
+  return CANDIDATES.map((c) => {
+    let score = 30
+    const reasons = []
+    if (job.category && c.category === job.category) { score += 30; reasons.push('Soha mos') }
+    const hits = c.skills.filter((s) => want.includes(s.toLowerCase()))
+    if (hits.length) { score += Math.min(hits.length * 9, 27); reasons.push(`Ko'nikmalar: ${hits.join(', ')}`) }
+    const need = job.experience || 0
+    if (c.years >= need) { score += 6; if (need) reasons.push(`${c.years} yil tajriba`) } else score -= (need - c.years) * 5
+    if (job.city && c.city === job.city) { score += 8; reasons.push(c.city) } else if (!remote) score -= 8
+    if (remote && c.format.includes('Masofaviy')) { score += 6; reasons.push('Masofaviy ishlashga tayyor') }
+    if (job.salaryTo && c.salary > job.salaryTo * 1.2) score -= 8
+    return { item: c, score: clamp(score), reasons }
+  }).filter((r) => r.score >= 55).sort((x, y) => y.score - x.score)
+}

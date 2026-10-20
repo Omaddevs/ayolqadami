@@ -1,17 +1,22 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Briefcase, CaretDown, CaretLeft, CaretRight, Check, Heart, House, Plus, SealCheck, SortAscending, Sparkle, User, UsersThree } from '@phosphor-icons/react'
+import { createPortal } from 'react-dom'
+import { Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, Check, Heart, House, MapTrifold, Plus, SealCheck, SortAscending, Sparkle, UsersThree } from '@phosphor-icons/react'
 import Icon from './Icons'
 import Icon3D from './Icon3D'
 import { useApp } from '../context/AppContext'
 import { catName, salaryText, formatSum } from '../data/mock'
 
-export function Avatar({ name = '', color = '#6366F6', size = 40, radius }) {
+/* photo — foydalanuvchi yuklagan rasm; silhouette — rasm yo'q bo'lsa harflar o'rniga standart ayol siluyeti */
+export function Avatar({ name = '', color = '#6366F6', size = 40, radius, photo, silhouette }) {
   const initials = name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
+  if (silhouette && !photo) color = '#5B57F0' // siluet doim loyiha rangida
   return (
     <div className="avatar" style={{ width: size, height: size, fontSize: size * 0.38, borderRadius: radius ?? size * 0.32,
       background: `linear-gradient(135deg, ${color}AA, ${color})` }}>
-      {initials || '?'}
+      {photo ? <img className="avatar-img" src={photo} alt="" />
+        : silhouette ? <img className="avatar-sil" src="/avatar-default.svg" alt="" />
+        : initials || '?'}
     </div>
   )
 }
@@ -24,6 +29,27 @@ export function CompanyLogo({ name, color, size = 46 }) {
   )
 }
 
+// Profil ikonkasi: uzun sochli ayol yuzi (Phosphor ikonkalari bilan bir xil API: size, weight)
+export function WomanFace({ size = 24, weight = 'regular', className, style }) {
+  const fill = weight === 'fill'
+  return (
+    <svg className={className} style={style} width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
+      stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      {fill ? (
+        <path fill="currentColor" stroke="none" fillRule="evenodd"
+          d="M12 2.6C7.5 2.6 4.6 5.8 4.6 10.4v5c0 2.3-.6 3.8-1.7 4.9 2.1.4 4.1-.1 5.5-1.3h7.2c1.4 1.2 3.4 1.7 5.5 1.3-1.1-1.1-1.7-2.6-1.7-4.9v-5c0-4.6-2.9-7.8-7.4-7.8zM12 7.4c-1.2 1.9-3.2 3-5.3 3.2-.1.4-.1.9-.1 1.4 0 3 2.4 5.6 5.4 5.6s5.4-2.6 5.4-5.6c0-.5 0-1-.1-1.4-1.3-.6-2.5-1.7-3.3-3.2z" />
+      ) : (
+        <>
+          <path d="M8.2 19.1c-1.4 1.1-3.3 1.5-5.2 1.2 1.1-1.1 1.7-2.6 1.7-4.9v-5c0-4.6 2.9-7.8 7.3-7.8s7.3 3.2 7.3 7.8v5c0 2.3.6 3.8 1.7 4.9-1.9.3-3.8-.1-5.2-1.2" />
+          <path d="M6.7 10.5c2.3-.2 4.2-1.3 5.4-3.2.8 1.5 2 2.6 3.3 3.2" />
+          <path d="M6.6 11.6c0 3.1 2.4 5.8 5.4 5.8s5.4-2.7 5.4-5.8" />
+        </>
+      )}
+      <path d="M10.2 14.2c1 .8 2.6.8 3.6 0" stroke={fill ? 'currentColor' : undefined} />
+    </svg>
+  )
+}
+
 export function navItems(role) {
   return role === 'employer'
     ? [
@@ -31,16 +57,19 @@ export function navItems(role) {
         { to: '/candidates', icon: 'users', ph: UsersThree, label: 'Nomzodlar' },
         { to: '/post-job', icon: 'plus', ph: Plus, label: 'Joylash', fab: true },
         { to: '/qadam-ai', icon: 'sparkle', ph: Sparkle, label: 'QadamAI' },
-        { to: '/profile', icon: 'user', ph: User, label: 'Profil' },
+        { to: '/profile', icon: 'user', ph: WomanFace, label: 'Profil' },
       ]
     : [
         { to: '/', icon: 'home', ph: House, label: 'Bosh sahifa', tab: 'Asosiy', end: true },
         { to: '/jobs', icon: 'briefcase', ph: Briefcase, label: 'Vakansiyalar', tab: 'Ishlar' },
-        { to: '/profile/edit', icon: 'plus', ph: Plus, label: 'Rezyume', fab: true },
-        { to: '/courses', icon: 'book', ph: BookOpen, label: 'Kurslar' },
-        { to: '/profile', icon: 'user', ph: User, label: 'Profil', end: true },
+        { to: '/companies', icon: 'building', ph: Buildings, label: 'Kompaniyalar', tab: 'Kompaniya' },
+        { to: '/map', icon: 'pin', ph: MapTrifold, label: 'Xarita' },
+        { to: '/profile', icon: 'user', ph: WomanFace, label: 'Profil', end: true },
       ]
 }
+
+// Chat sahifalarida tab bar ko'rsatilmaydi — yozish maydoni pastga tushadi, orqaga tugmasi yetarli
+const CHAT_ROUTES = ['/qadam-ai', '/support']
 
 const isOn = (it, pathname) => (it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(it.to + '/'))
 
@@ -158,10 +187,11 @@ export function Layout() {
   const { user, toast } = useApp()
   const { pathname } = useLocation()
   const items = navItems(user?.role)
+  const chat = CHAT_ROUTES.includes(pathname)
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
   return (
-    <div className="shell">
+    <div className={`shell ${chat ? 'no-tabs' : ''}`}>
       <aside className="sidebar">
         <Link to="/" className="brand">
           <img src="/logo.png" alt="" />
@@ -170,10 +200,10 @@ export function Layout() {
         <nav>
           {items.map((it) => (
             <NavLink key={it.to} to={it.to} end={it.end} className="side-link">
-              <Icon name={it.icon} size={20} /> {it.fab ? (user?.role === 'employer' ? 'Vakansiya joylash' : 'Rezyumeni tahrirlash') : it.label}
+              <Icon name={it.icon} size={20} /> {it.fab ? 'Vakansiya joylash' : it.label}
             </NavLink>
           ))}
-          {user?.role === 'seeker' && (
+          {user?.role !== 'employer' && (
             <NavLink to="/qadam-ai" className="side-link"><Icon name="sparkle" size={20} /> QadamAI</NavLink>
           )}
           {user?.role === 'employer' && (
@@ -194,7 +224,7 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <TabBar items={items} pathname={pathname} />
+      {!chat && <TabBar items={items} pathname={pathname} />}
 
       {toast && <div className="toast" key={toast.id}><Icon name="check" size={18} /> {toast.text}</div>}
     </div>
@@ -263,6 +293,182 @@ export function Dropdown({ value, options, onChange, label }) {
   )
 }
 
+/* Forma uchun tanlov maydoni (native select o'rniga). options: ['Toshkent', ...] yoki [{ value, label }]
+   Menyu portal orqali chiziladi — fieldset/sheet ichida kesilib qolmaydi, joy bo'lmasa tepaga ochiladi */
+export function Select({ value, options, onChange, placeholder = 'Tanlang' }) {
+  const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
+  const [open, setOpen] = useState(false)
+  const [focus, setFocus] = useState(-1)
+  const [pos, setPos] = useState(null)
+  const btnRef = useRef(null)
+  const menuRef = useRef(null)
+  const current = opts.find((o) => o.value === value)
+
+  const place = useCallback(() => {
+    const r = btnRef.current?.getBoundingClientRect()
+    if (!r) return
+    const gap = 6
+    const below = window.innerHeight - r.bottom - gap - 12
+    const above = r.top - gap - 12
+    const up = below < 220 && above > below
+    const width = Math.min(Math.max(r.width, 200), window.innerWidth - 24)
+    const left = Math.max(12, Math.min(r.left, window.innerWidth - width - 12))
+    setPos({ left, width, up, maxHeight: Math.min(300, up ? above : below),
+      top: up ? undefined : r.bottom + gap, bottom: up ? window.innerHeight - r.top + gap : undefined })
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    place()
+    const onDown = (e) => {
+      if (!btnRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) setOpen(false)
+    }
+    const onScroll = (e) => { if (!menuRef.current?.contains(e.target)) place() }
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', onScroll, true)
+    }
+  }, [open, place])
+
+  useEffect(() => {
+    if (!open || focus < 0) return
+    const el = menuRef.current?.children[focus]
+    el?.focus({ preventScroll: true })
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [open, focus, pos])
+
+  const close = () => { setOpen(false); btnRef.current?.focus() }
+  const toggle = () => {
+    setFocus(Math.max(0, opts.indexOf(current)))
+    setOpen((o) => !o)
+  }
+  const pick = (v) => { onChange(v); close() }
+  const onKey = (e) => {
+    if (e.key === 'Escape' || e.key === 'Tab') { if (open) { e.preventDefault(); close() } return }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!open) return toggle()
+      const d = e.key === 'ArrowDown' ? 1 : -1
+      setFocus((f) => (f + d + opts.length) % opts.length)
+    }
+  }
+
+  return (
+    <>
+      <button type="button" ref={btnRef} className={`sel-btn ${open ? 'open' : ''}`} onClick={toggle} onKeyDown={onKey}
+        aria-haspopup="listbox" aria-expanded={open}>
+        <span className={current ? 'sel-val' : 'sel-val sel-ph'}>{current ? current.label : placeholder}</span>
+        <CaretDown size={16} weight="bold" className="sel-caret" />
+      </button>
+      {open && pos && createPortal(
+        <div className={`sel-menu ${pos.up ? 'up' : ''}`} role="listbox" ref={menuRef} onKeyDown={onKey}
+          style={{ left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.maxHeight }}>
+          {opts.map((o) => {
+            const on = o.value === value
+            return (
+              <button key={o.value} type="button" role="option" aria-selected={on}
+                className={`sel-item ${on ? 'on' : ''}`} onClick={() => pick(o.value)}>
+                <span>{o.label}</span>
+                {on && <Check size={16} weight="bold" />}
+              </button>
+            )
+          })}
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
+const norm = (s) => s.toLowerCase().replace(/[ʻʼ‘’`´]/g, "'").trim()
+
+/* Combo — erkin matn kiritiladigan input + mavjud variantlar ro'yxati (yozilganga qarab filtrlanadi).
+   options: [{ value, hint? }] */
+export function Combo({ value, options, onChange, onPick, placeholder, maxLength }) {
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
+  const [pos, setPos] = useState(null)
+  const inputRef = useRef(null)
+  const menuRef = useRef(null)
+  const q = norm(value || '')
+  const list = q ? options.filter((o) => norm(o.value).includes(q)) : options
+  const show = open && pos && list.length > 0
+
+  const place = useCallback(() => {
+    const r = inputRef.current?.getBoundingClientRect()
+    if (!r) return
+    const gap = 6
+    const below = window.innerHeight - r.bottom - gap - 12
+    const above = r.top - gap - 12
+    const up = below < 220 && above > below
+    const width = Math.min(r.width, window.innerWidth - 24)
+    const left = Math.max(12, Math.min(r.left, window.innerWidth - width - 12))
+    setPos({ left, width, up, maxHeight: Math.min(300, up ? above : below),
+      top: up ? undefined : r.bottom + gap, bottom: up ? window.innerHeight - r.top + gap : undefined })
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    place()
+    const onDown = (e) => {
+      if (!inputRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) setOpen(false)
+    }
+    const onScroll = (e) => { if (!menuRef.current?.contains(e.target)) place() }
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', onScroll, true)
+    }
+  }, [open, place])
+
+  useEffect(() => {
+    if (show && active >= 0) menuRef.current?.children[active]?.scrollIntoView({ block: 'nearest' })
+  }, [show, active])
+
+  const pick = (o) => { onChange(o.value); onPick?.(o); setOpen(false); setActive(-1) }
+  const onKey = (e) => {
+    if (e.key === 'Escape') { if (show) { e.preventDefault(); setOpen(false) } return }
+    if (e.key === 'Enter' && show && active >= 0) { e.preventDefault(); return pick(list[active]) }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!open) return setOpen(true)
+      if (!list.length) return
+      const d = e.key === 'ArrowDown' ? 1 : -1
+      setActive((a) => (a + d + list.length) % list.length)
+    }
+  }
+
+  return (
+    <>
+      <input ref={inputRef} value={value} maxLength={maxLength} placeholder={placeholder} autoComplete="off"
+        role="combobox" aria-expanded={!!show} aria-autocomplete="list"
+        onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onKeyDown={onKey}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); setActive(-1) }} />
+      {show && createPortal(
+        <div className={`sel-menu ${pos.up ? 'up' : ''}`} role="listbox" ref={menuRef}
+          style={{ left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.maxHeight }}>
+          {list.map((o, i) => (
+            <button key={o.value} type="button" role="option" tabIndex={-1} aria-selected={i === active}
+              className={`sel-item ${i === active ? 'active' : ''} ${norm(o.value) === q ? 'on' : ''}`}
+              onMouseDown={(e) => e.preventDefault()} onClick={() => pick(o)}>
+              <span>{o.value}</span>
+              {o.hint && <small className="sel-hint">{o.hint}</small>}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
 export function TopBar({ title, right, back = true }) {
   const nav = useNavigate()
   return (
@@ -279,15 +485,15 @@ export function TopBar({ title, right, back = true }) {
 }
 
 export function JobCard({ job, compact }) {
-  const { user, saved, toggleSave, applications, apply, notify } = useApp()
+  const { user, saved, toggleSave, applications, apply, notify, requireAuth } = useApp()
   const nav = useNavigate()
   const isSaved = saved.includes(job.id)
   const applied = applications.some((a) => a.jobId === job.id)
   const showActions = !compact && user?.role !== 'employer' && !job.own
-  const quickApply = () => {
+  const quickApply = () => requireAuth(() => {
     apply(job.id, '')
     notify('Arizangiz yuborildi!')
-  }
+  })
 
   return (
     <article className={`job-card ${compact ? 'compact' : ''}`}>
@@ -295,7 +501,7 @@ export function JobCard({ job, compact }) {
         {/* sarlavha havolasi butun kartani bosiladigan qiladi (::after orqali) */}
         <h3><Link to={`/jobs/${job.id}`} className="job-link">{job.title}</Link></h3>
         <button type="button" className={`save-btn ${isSaved ? 'on' : ''}`} aria-label="Saqlash" aria-pressed={isSaved}
-          onClick={() => toggleSave(job.id)}>
+          onClick={() => requireAuth(() => toggleSave(job.id))}>
           <Heart size={26} weight={isSaved ? 'fill' : 'regular'} />
         </button>
       </div>
@@ -369,7 +575,8 @@ export function Empty({ icon = 'folder', title, text, action }) {
 
 export function Sheet({ open, onClose, title, children }) {
   if (!open) return null
-  return (
+  // body'ga chiqariladi: ota-elementning stacking context'i (masalan xarita) sheet'ni tab bar ostida qoldirmasligi uchun
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="sheet-handle" />
@@ -379,7 +586,8 @@ export function Sheet({ open, onClose, title, children }) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
