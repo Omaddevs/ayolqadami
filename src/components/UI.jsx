@@ -49,7 +49,7 @@ const ORB_R = 27, ORB_Y = 2, NOTCH_GAP = 6, NOTCH_D = ORB_Y + ORB_R + NOTCH_GAP,
 
 const notchPath = (w, x, d) =>
   `M0 0 H${x - NOTCH_HW} C${x - NOTCH_HW + 20} 0 ${x - 32} ${d} ${x} ${d} ` +
-  `C${x + 32} ${d} ${x + NOTCH_HW - 20} 0 ${x + NOTCH_HW} 0 H${w} V${BAR_H} H0 Z`
+  `C${x + 32} ${d} ${x + NOTCH_HW - 20} 0 ${x + NOTCH_HW} 0 H${w} V${BAR_H + 200} H0 Z`
 
 export function TabBar({ items, pathname }) {
   const active = items.findIndex((it) => isOn(it, pathname))
