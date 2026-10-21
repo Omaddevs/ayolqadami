@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useT } from '../i18n'
 
 // Atrofda suzib yuradigan xato kodi yorliqlari: joylashuv (%), burilish, rang, o'lcham.
 // `wide` — faqat keng ekranda ko'rinadi (mobilda matn ustiga tushmasin)
@@ -40,12 +41,13 @@ function ErrorScreen({ code, children, className = '' }) {
 }
 
 export default function NotFound() {
+  const t = useT()
   return (
     <ErrorScreen code="404">
-      <span className="nf-label">Xato 404</span>
-      <h1>VOY !</h1>
-      <p>Siz qidirayotgan sahifa<br />mavjud emasga o'xshaydi.</p>
-      <Link to="/" className="nf-btn">Bosh sahifaga <i /></Link>
+      <span className="nf-label">{t('Xato')} 404</span>
+      <h1>{t('VOY !')}</h1>
+      <p>{t('Siz qidirayotgan sahifa')}<br />{t("mavjud emasga o'xshaydi.")}</p>
+      <Link to="/" className="nf-btn">{t('Bosh sahifaga')} <i /></Link>
     </ErrorScreen>
   )
 }
@@ -96,16 +98,17 @@ function GuardArt() {
 
 export function Unauthorized() {
   const { user, requireAuth } = useApp()
+  const t = useT()
   const nav = useNavigate()
   return (
     <ErrorScreen code="401" className="ua">
-      <span className="nf-label">Xato 401</span>
+      <span className="nf-label">{t('Xato')} 401</span>
       <h1>401</h1>
-      <p>Bu sahifaga kirish uchun<br />avval tizimga kiring.</p>
+      <p>{t('Bu sahifaga kirish uchun')}<br />{t('avval tizimga kiring.')}</p>
       <GuardArt />
       <div className="ua-actions">
-        {!user && <button type="button" className="nf-btn solid" onClick={() => requireAuth(() => nav('/profile'))}>Kirish <i /></button>}
-        <Link to="/" className="nf-btn">Bosh sahifaga <i /></Link>
+        {!user && <button type="button" className="nf-btn solid" onClick={() => requireAuth(() => nav('/profile'))}>{t('Kirish')} <i /></button>}
+        <Link to="/" className="nf-btn">{t('Bosh sahifaga')} <i /></Link>
       </div>
     </ErrorScreen>
   )

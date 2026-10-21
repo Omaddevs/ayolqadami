@@ -1,0 +1,56 @@
+/* ============ Noutbuk ekranlari (1024–1365px) ============
+   Desktop sarlavhasi va bosh sahifa kartalari 1440px+ uchun chizilgan; tor ekranda
+   sarlavha gorizontal scroll beradi, soha kartalarida matn rasm ostida qoladi. */
+
+@media (min-width: 1024px) {
+  /* bosh sahifa soha kartalari: o'ramli konteyner (keng ekranda 6 + 7 qator saqlanadi) */
+  .dk-grid { display: block; }
+}
+
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .sh-wrap { gap: 10px; }
+  /* "Kategoriyalar" — faqat ikonka, qidiruv maydoniga joy qoladi */
+  .sh-cats-btn { width: 48px; padding: 0; justify-content: center; }
+  .sh-cats-label { display: none; }
+  .sh-search { min-width: 200px; }
+
+  /* soha kartalari: 4 ustunli grid, "Barcha kategoriyalar" — pastda to'liq kenglikdagi tugma */
+  .dk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .dk-row { display: contents; }
+  .dk-row + .dk-row { margin-top: 0; }
+  .dk-cat b, .dk-row + .dk-row .dk-cat:not(.dk-cat-all) b { max-width: 55%; }
+  .dk-cat-all { grid-column: 1 / -1; height: 60px; flex-direction: row; align-items: center; justify-content: center; gap: 10px; }
+  .dk-cat-all svg:first-child { width: 22px; height: 22px; }
+
+  .dk-intro-head { flex-wrap: wrap; align-items: flex-end; }
+  .dk-intro h1 { font-size: 34px; }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  /* CTA — faqat "+" doirasi; havolalar ixchamroq */
+  .sh-cta { padding: 0 6px; }
+  .sh-cta-label { display: none; }
+  .sh-icons { gap: 6px; }
+  .sh-ico { width: 42px; height: 42px; }
+  .sh-link-outline { padding: 0 14px; }
+  .sh-link { padding: 0 8px; }
+
+  .dk-intro h1 { font-size: 30px; }
+  .dk-tabs button, .dk-tab-soon { padding: 0 14px; }
+
+  /* bosh sahifa: xususiyat kartalari tor ustunda rasm matnni yopmasin */
+  .feature-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+  .fcard-art.resume-art, .fcard-art.ai-art, .fcard-art.books-art { width: 130px; }
+  .fcard-art.plus-art { width: 120px; }
+
+  .page-body { padding-left: 24px; padding-right: 24px; }
+  .topbar { padding-left: 24px; padding-right: 24px; }
+}
+
+/* Uzun tarjimalar (ru/en) tugma va yorliqlarda sig'sin */
+.sh-link-label, .sh-cta-label { white-space: nowrap; }
+/* mobil plitkalar tor: ru/en so'zlari uzunroq — kichikroq shrift va tilga mos bo'g'in ko'chirish */
+html:not([lang="uz"]):not([lang="uz-Cyrl"]) .tile span { font-size: 12.5px; letter-spacing: -.01em; hyphens: auto; -webkit-hyphens: auto; }
+
+/* Nomzodlar sahifasi: tanlangan soha pill'i oq fonda oq matn bo'lib ko'rinmay qolardi (.cands-pills .pill foni .pill.on dan kuchliroq) */
+.cands-pills .pill.on { background: var(--primary); }

@@ -10,6 +10,8 @@ import { Avatar, CompanyLogo, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
 import { EMPLOYER_PROMPTS, SEEKER_PROMPTS, matchCandidates, matchJobs } from '../data/qadam'
 import { catName, salaryText } from '../data/mock'
+import { tr, tx } from '../i18n'
+
 
 const PROMPT_ICONS = {
   briefcase: Briefcase, calculator: Calculator, megaphone: Megaphone, cap: GraduationCap, stethoscope: Stethoscope,
@@ -76,7 +78,7 @@ function Analysis({ a }) {
   if (!parts.length) return null
   return (
     <div className="ai-analysis">
-      <span className="muted small">Aniqlangan mezonlar:</span>
+      <span className="muted small">{tr("Aniqlangan mezonlar:")}</span>
       <div className="chips">{parts.map((p) => <span key={p} className="chip chip-primary">{p}</span>)}</div>
     </div>
   )
@@ -90,6 +92,9 @@ function Score({ v }) {
     </div>
   )
 }
+
+// *so'z* — gradient bilan ajratiladi (tarjimada so'z tartibi o'zgarishi mumkin)
+const highlight = (s) => s.split('*').map((part, i) => (i % 2 ? <span key={i} className="ai-hl">{part}</span> : part))
 
 export default function QadamAI() {
   const { user, allJobs, invites, invite, notify } = useApp()
@@ -134,26 +139,26 @@ export default function QadamAI() {
 
   return (
     <div className="page ai-page">
-      <TopBar title="QadamAI" right={<span className="ai-badge">Beta</span>} />
+      <TopBar title={tr("QadamAI")} right={<span className="ai-badge">{tr("Beta")}</span>} />
       <div className="page-body ai-body">
         {msgs.length === 0 && (
           <div className="ai-intro fade-in">
             <AiHero />
             <h2>
-              {isEmp ? <>Qanday <span className="ai-hl">mutaxassis</span> kerak?</> : <>Qanday <span className="ai-hl">ish</span> izlayapsiz?</>}
+              {highlight(isEmp ? tr('Qanday *mutaxassis* kerak?') : tr('Qanday *ish* izlayapsiz?'))}
             </h2>
             <p className="ai-lead">
               {isEmp
-                ? "Talablarni oddiy so'zlar bilan yozing — QadamAI nomzodlar bazasidan eng moslarini topib, moslik foizini ko'rsatadi."
-                : "Istagingizni yozing — QadamAI rezyumengiz va so'rovingiz asosida eng mos vakansiyalarni topadi."}
+                ? tr("Talablarni oddiy so'zlar bilan yozing — QadamAI nomzodlar bazasidan eng moslarini topib, moslik foizini ko'rsatadi.")
+                : tr("Istagingizni yozing — QadamAI rezyumengiz va so'rovingiz asosida eng mos vakansiyalarni topadi.")}
             </p>
 
             <section className="ai-examples">
               <div className="ai-examples-head">
-                <h3>Misol so'rovlar</h3>
+                <h3>{tr("Misol so'rovlar")}</h3>
                 {prompts.length > 4 && (
                   <button className="ai-more" onClick={() => setShowAll((v) => !v)}>
-                    {showAll ? "Yig'ish" : "Barchasini ko'rish"} <CaretRight size={14} weight="bold" className={showAll ? 'up' : ''} />
+                    {showAll ? tr("Yig'ish") : tr("Barchasini ko'rish")} <CaretRight size={14} weight="bold" className={showAll ? 'up' : ''} />
                   </button>
                 )}
               </div>
@@ -164,10 +169,10 @@ export default function QadamAI() {
               <div className="ai-tip">
                 <span className="ai-tip-ico"><Lightbulb size={24} weight="duotone" /></span>
                 <div className="grow">
-                  <b>Maslahat</b>
-                  <span>Qanchalik aniq yozsangiz, shunchalik mos {isEmp ? 'nomzodlarni' : 'vakansiyalarni'} topamiz.</span>
+                  <b>{tr("Maslahat")}</b>
+                  <span>{isEmp ? tr('Qanchalik aniq yozsangiz, shunchalik mos nomzodlarni topamiz.') : tr('Qanchalik aniq yozsangiz, shunchalik mos vakansiyalarni topamiz.')}</span>
                 </div>
-                <button className="ai-tip-x" aria-label="Yopish"
+                <button className="ai-tip-x" aria-label={tr("Yopish")}
                   onClick={() => { setTip(false); try { localStorage.setItem(TIP_KEY, '1') } catch { /* */ } }}>
                   <X size={18} weight="bold" />
                 </button>
@@ -179,16 +184,16 @@ export default function QadamAI() {
         <div className="chat">
           {msgs.map((m, i) =>
             m.me ? (
-              <div key={i} className="bubble me">{m.text}</div>
+              <div key={i} className="bubble me">{tx(m.text)}</div>
             ) : (
               <div key={i} className="bubble ai">
-                <div className="ai-head"><Icon3D name="sparkle" size={28} /> <b>QadamAI</b></div>
+                <div className="ai-head"><Icon3D name="sparkle" size={28} /> <b>{tr("QadamAI")}</b></div>
                 <Analysis a={m.analysis} />
                 {m.results.length === 0 ? (
-                  <p>Afsuski, aniq mos natija topilmadi. So'rovni boshqacha yozib ko'ring: soha, ko'nikma va shaharni ko'rsating.</p>
+                  <p>{tr("Afsuski, aniq mos natija topilmadi. So'rovni boshqacha yozib ko'ring: soha, ko'nikma va shaharni ko'rsating.")}</p>
                 ) : (
                   <>
-                    <p>{m.results.length} ta mos {isEmp ? 'nomzod' : 'vakansiya'} topdim:</p>
+                    <p>{isEmp ? tr('{n} ta mos nomzod topdim:', { n: m.results.length }) : tr('{n} ta mos vakansiya topdim:', { n: m.results.length })}</p>
                     <div className="match-list">
                       {m.results.map(({ item, score, reasons }) =>
                         isEmp ? (
@@ -197,15 +202,15 @@ export default function QadamAI() {
                               <Avatar name={item.name} color={item.color} size={44} />
                               <div className="grow">
                                 <b>{item.name}</b>
-                                <span className="muted">{item.headline} · {item.city}</span>
+                                <span className="muted">{tx(item.headline)} · {tx(item.city)}</span>
                               </div>
                               <Score v={score} />
                             </Link>
-                            <div className="reasons">{reasons.map((r) => <span key={r}><Icon name="check" size={13} /> {r}</span>)}</div>
+                            <div className="reasons">{reasons.map((r) => <span key={r}><Icon name="check" size={13} /> {tr(r)}</span>)}</div>
                             <button className={`btn btn-sm ${invites.includes(item.id) ? 'btn-soft' : 'btn-primary'}`}
                               disabled={invites.includes(item.id)}
-                              onClick={() => { invite(item.id); notify(`${item.name.split(' ')[0]}ga taklif yuborildi`) }}>
-                              {invites.includes(item.id) ? 'Taklif yuborilgan' : 'Suhbatga taklif qilish'}
+                              onClick={() => { invite(item.id); notify(tr("{a}ga taklif yuborildi", { a: item.name.split(' ')[0] })) }}>
+                              {invites.includes(item.id) ? tr('Taklif yuborilgan') : tr('Suhbatga taklif qilish')}
                             </button>
                           </div>
                         ) : (
@@ -213,12 +218,12 @@ export default function QadamAI() {
                             <Link to={`/jobs/${item.id}`} className="match-main">
                               <CompanyLogo name={item.company} color={item.color} size={44} />
                               <div className="grow">
-                                <b>{item.title}</b>
+                                <b>{tx(item.title)}</b>
                                 <span className="muted">{item.company} · {salaryText(item)}</span>
                               </div>
                               <Score v={score} />
                             </Link>
-                            <div className="reasons">{reasons.map((r) => <span key={r}><Icon name="check" size={13} /> {r}</span>)}</div>
+                            <div className="reasons">{reasons.map((r) => <span key={r}><Icon name="check" size={13} /> {tr(r)}</span>)}</div>
                           </div>
                         )
                       )}
@@ -230,7 +235,7 @@ export default function QadamAI() {
           )}
           {busy != null && (
             <div className="bubble ai thinking">
-              <div className="ai-head"><Icon3D name="sparkle" size={28} className="spin" /> <b>QadamAI</b></div>
+              <div className="ai-head"><Icon3D name="sparkle" size={28} className="spin" /> <b>{tr("QadamAI")}</b></div>
               {STEPS.map((s, i) => (
                 <div key={s} className={`step ${i < busy ? 'done' : i === busy ? 'now' : ''}`}>
                   <span className="step-dot">{i < busy ? <Icon name="check" size={12} stroke={3} /> : null}</span>{s}
@@ -245,8 +250,8 @@ export default function QadamAI() {
       <form className="composer ai-composer" onSubmit={(e) => { e.preventDefault(); ask(input) }}>
         <span className="ai-composer-ico"><Sparkle size={22} weight="fill" /></span>
         <input value={input} onChange={(e) => setInput(e.target.value)}
-          placeholder={isEmp ? 'Masalan: 3 yillik tajribali buxgalter…' : 'Masalan: uydan ishlash, SMM…'} />
-        <button className="send" disabled={!input.trim() || busy != null} aria-label="Yuborish"><PaperPlaneTilt size={22} weight="fill" /></button>
+          placeholder={isEmp ? tr('Masalan: 3 yillik tajribali buxgalter…') : tr('Masalan: uydan ishlash, SMM…')} />
+        <button className="send" disabled={!input.trim() || busy != null} aria-label={tr("Yuborish")}><PaperPlaneTilt size={22} weight="fill" /></button>
       </form>
     </div>
   )

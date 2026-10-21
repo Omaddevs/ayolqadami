@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, CaretDown, Check, Eye, EyeSlash, GlobeSimple, X } from '@phosphor-icons/react'
+import { ArrowLeft, CaretDown, Check, Eye, EyeSlash, GlobeSimple, TelegramLogo, X } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import Icon3D from '../components/Icon3D'
 import { useApp, findAccount } from '../context/AppContext'
@@ -7,6 +7,7 @@ import { CATEGORIES, CITIES } from '../data/mock'
 import { AUTH_LANGS, AUTH_TEXT } from '../data/authText'
 import { PHONE_PREFIX, checkUzPhone, formatUzPhone } from '../lib/phone'
 import { googleEnabled, googleSignIn, preloadGoogle } from '../lib/google'
+import { api as server, apiEnabled } from '../lib/api'
 
 const STEPS = 4
 const ROW = 46 // shahar g'ildiragidagi qator balandligi (px)
@@ -136,15 +137,96 @@ function PhoneField({ label, value, onChange, t, autoFocus }) {
   )
 }
 
+// Telegram havolasi: Mini App ichida Telegram'ning o'zi ochadi, brauzerda — yangi oynada
+const openTelegram = (url) => {
+  const wa = window.Telegram?.WebApp
+  if (wa?.initData && wa.openTelegramLink) wa.openTelegramLink(url)
+  else window.open(url, '_blank', 'noopener')
+}
+
+const RESEND_S = 30
+
+// Telefon raqamini kirish boti (Telegram) orqali tasdiqlash. onVerified(phoneToken | null) — null: serverda tasdiqlash o'chiq
+function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
+  const [session, setSession] = useState(null)
+  const [code, setCode] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [wait, setWait] = useState(0)
+  const codeErr = (c) => ({
+    code_invalid: t.errCodeInvalid, code_expired: t.errCodeExpired, code_attempts: t.errCodeAttempts, code_not_sent: t.errCodeNotSent,
+    verify_unavailable: t.errVerifyOff, rate_limited: t.errRate, network: t.errNetwork, validation: t.errCodeInvalid,
+  }[c] || t.errServer)
+
+  const start = async () => {
+    setErr(''); setBusy(true); setCode('')
+    try {
+      const r = await server.phoneStart(phone, purpose)
+      if (r.skip) return onVerified(null)
+      setSession(r)
+      setWait(RESEND_S)
+    } catch (e) {
+      // raqam band / topilmadi / bloklangan — oldingi qadamda ko'rsatiladi
+      if (['exists', 'nouser', 'blocked', 'registration_closed'].includes(e.code)) return onError(e.code)
+      setErr(codeErr(e.code))
+    } finally {
+      setBusy(false)
+    }
+  }
+  useEffect(() => { start() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (wait <= 0) return
+    const id = setTimeout(() => setWait((w) => w - 1), 1000)
+    return () => clearTimeout(id)
+  }, [wait])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!session || code.length !== 6) return
+    setErr(''); setBusy(true)
+    try {
+      const { phoneToken } = await server.phoneVerify(session.id, code)
+      onVerified(phoneToken)
+    } catch (ex) {
+      setErr(codeErr(ex.code))
+      if (ex.code === 'code_expired' || ex.code === 'code_attempts') setWait(0)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="aw-verify" onSubmit={submit} noValidate>
+      <h2>{t.verifyTitle}</h2>
+      <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>
+      <div className="aw-vphone"><small>{t.verifyFor}</small><b>{phone}</b></div>
+      <button type="button" className="aw-btn aw-tg" disabled={!session} onClick={() => openTelegram(session.botUrl)}>
+        <TelegramLogo size={20} weight="fill" /> {t.openBot}
+      </button>
+      <label className="aw-field"><span>{t.codeLabel}</span>
+        <input className="aw-code" value={code} onChange={(e) => { setErr(''); setCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
+          inputMode="numeric" autoComplete="one-time-code" placeholder={t.codePh} maxLength={6} />
+      </label>
+      {err && <div className="aw-err" role="alert">{err}</div>}
+      <button className="aw-btn" type="submit" disabled={busy || !session || code.length !== 6}>{t.verifyBtn}</button>
+      <p className="aw-foot">
+        <button type="button" onClick={start} disabled={busy || wait > 0}>{wait > 0 ? t.resendIn.replace('{s}', wait) : t.resend}</button>
+      </p>
+    </form>
+  )
+}
+
 export default function Auth() {
-  const { signUp, signIn, signInGoogle, closeAuth, notify, prefs, setPrefs } = useApp()
+  const { signUp, signIn, signInGoogle, resetPassword, closeAuth, notify, prefs, setPrefs } = useApp()
   const navigate = useNavigate()
   const closeToHome = () => { closeAuth(); navigate('/') }
   const lang = AUTH_TEXT[prefs.lang] ? prefs.lang : 'uz'
   const t = AUTH_TEXT[lang]
-  const [mode, setMode] = useState('welcome') // 'welcome' | 'login' | 'signup'
+  const [mode, setMode] = useState('welcome') // 'welcome' | 'login' | 'signup' | 'reset'
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ role: null, name: '', phone: PHONE_PREFIX, password: '', company: '', city: 'Toshkent', categories: [], otherCategory: '', email: '', photo: '', google: false })
+  const [form, setForm] = useState({ role: null, name: '', phone: PHONE_PREFIX, password: '', company: '', city: 'Toshkent', categories: [], otherCategory: '', email: '', photo: '', google: false, googleToken: '', phoneToken: '', verifiedPhone: '', terms: false })
+  const [verifying, setVerifying] = useState(false) // ro'yxatdan o'tishda raqam tasdiqlanmoqda
+  const [resetStage, setResetStage] = useState('phone') // 'phone' | 'verify' | 'password'
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k, v) => { setErr(''); setForm((f) => ({ ...f, [k]: v })) }
@@ -161,11 +243,13 @@ export default function Auth() {
   }, [closeAuth])
 
   const langPicker = <LangPicker value={lang} onChange={(id) => setPrefs({ lang: id })} label={t.lang} />
-  const go = (m) => { setErr(''); setMode(m); setStep(1) }
+  const go = (m) => { setErr(''); setMode(m); setStep(1); setVerifying(false); setResetStage('phone') }
   const back = () => {
     setErr('')
-    if (mode === 'signup' && step > 1) setStep(step - 1)
-    else go('welcome')
+    if (mode === 'signup' && verifying) setVerifying(false)
+    else if (mode === 'signup' && step > 1) setStep(step - 1)
+    else if (mode === 'reset' && resetStage !== 'phone') setResetStage('phone')
+    else go(mode === 'reset' ? 'login' : 'welcome')
   }
 
   const phoneError = () => (phoneState === 'code' ? t.errCode : phoneState !== 'ok' ? t.errPhone : '')
@@ -176,19 +260,20 @@ export default function Auth() {
     setBusy(true)
     try {
       const g = await googleSignIn()
-      if (signInGoogle(g)) return notify(t.hello)
+      if (await signInGoogle(g)) return notify(t.hello)
       // yangi foydalanuvchi: Google ma'lumotlari bilan ro'yxatdan o'tishni davom ettiramiz
-      setForm((f) => ({ ...f, name: g.name || f.name, email: g.email, photo: g.photo, google: true, password: '' }))
+      setForm((f) => ({ ...f, name: g.name || f.name, email: g.email, photo: g.photo, google: true, googleToken: g.token, password: '' }))
       go('signup')
     } catch (e) {
-      if (!/popup_closed|access_denied/.test(e.message)) notify(t.googleFail)
+      if (e.code === 'blocked') setErr(t.errBlocked)
+      else if (!/popup_closed|access_denied/.test(e.message)) notify(t.googleFail)
     } finally {
       setBusy(false)
     }
   }
 
   const infoOk = form.name.trim().length >= 3 && phoneState === 'ok' && (form.google || pwOk) && (!isEmp || form.company.trim())
-  const canNext = [!!form.role, infoOk, !!form.city, form.categories.length > 0][step - 1]
+  const canNext = [!!form.role, infoOk, !!form.city, form.categories.length > 0 && form.terms][step - 1]
   // birinchi tanlangan soha — asosiy, qolganlari qo'shimcha (jami MAX_CATS tagacha)
   const toggleCat = (id) => {
     const cur = form.categories
@@ -196,34 +281,74 @@ export default function Auth() {
     if (cur.length >= MAX_CATS) return setErr(t.catMax)
     set('categories', [...cur, id])
   }
-  const next = (e) => {
+  // server javob kodlari → foydalanuvchiga tushunarli matn
+  const authError = (code) => ({
+    nouser: t.errNoUser, badpass: t.errBadPass, google: t.errGoogleOnly, exists: t.errExists, email_exists: t.errExists,
+    blocked: t.errBlocked, rate_limited: t.errRate, network: t.errNetwork, phone_unverified: t.errUnverified, terms: t.errTerms,
+    verify_unavailable: t.errVerifyOff,
+  }[code] || t.errServer)
+
+  const next = async (e) => {
     e.preventDefault()
     if (step === 2) {
       if (isEmp && !form.company.trim()) return setErr(t.errCompany)
       if (form.name.trim().length < 3) return setErr(t.errName)
       if (phoneError()) return setErr(phoneError())
-      if (findAccount(form.phone)) return setErr(t.errExists)
+      if (!apiEnabled && findAccount(form.phone)) return setErr(t.errExists)
       if (!form.google && !pwOk) return setErr(t.errPass)
+      // raqam egasi ekanini kirish boti orqali tasdiqlaymiz (raqam o'zgarsa — qaytadan)
+      if (apiEnabled && form.verifiedPhone !== form.phone) return setVerifying(true)
     }
+    if (step === STEPS && !form.terms) return setErr(t.errTerms)
     if (!canNext) return
     if (step < STEPS) return setStep(step + 1)
-    const { password, otherCategory, ...data } = form
+    const { password, otherCategory, googleToken, phoneToken, verifiedPhone, terms, ...data } = form
     const other = data.categories.includes('other') ? otherCategory.trim() : ''
-    signUp({
+    setBusy(true)
+    const r = await signUp({
       ...data, name: data.name.trim(), company: data.company.trim(), color: isEmp ? '#6366F6' : '#5B57F0',
       category: data.categories[0], ...(isEmp && { industry: data.categories[0] }), ...(other && { otherCategory: other }),
-    }, form.google ? null : password)
+    }, form.google ? null : password, form.google ? googleToken : undefined, { phoneToken: phoneToken || undefined, acceptTerms: terms })
+    setBusy(false)
+    // tasdiqlash tokeni eskirgan — raqamni qaytadan tasdiqlash uchun 2-qadamga
+    if (r === 'phone_unverified') { setForm((f) => ({ ...f, verifiedPhone: '', phoneToken: '' })); setStep(2); return setErr(t.errUnverified) }
+    if (r !== 'ok') return setErr(authError(r))
     notify(t.hello)
   }
 
-  const login = (e) => {
+  const onSignupVerified = (token) => {
+    setForm((f) => ({ ...f, phoneToken: token || '', verifiedPhone: f.phone }))
+    setVerifying(false)
+    setStep(3)
+  }
+  // tasdiqlashni boshlashda raqam band bo'lib chiqsa — 2-qadamga xato bilan qaytamiz
+  const onVerifyError = (code) => { setVerifying(false); setErr(authError(code)) }
+
+  const resetPhone = (e) => {
+    e.preventDefault()
+    if (phoneError()) return setErr(phoneError())
+    setErr('')
+    setResetStage('verify')
+  }
+  const resetSave = async (e) => {
+    e.preventDefault()
+    if (!pwOk) return setErr(t.errPass)
+    setBusy(true)
+    const r = await resetPassword(form.phone, form.phoneToken, form.password)
+    setBusy(false)
+    if (r === 'phone_unverified') { setResetStage('verify'); return setErr(t.errUnverified) }
+    if (r !== 'ok') return setErr(authError(r))
+    notify(t.hello)
+  }
+
+  const login = async (e) => {
     e.preventDefault()
     if (phoneError()) return setErr(phoneError())
     if (!form.password) return setErr(t.errBadPass)
-    const r = signIn(form.phone, form.password)
-    if (r === 'nouser') return setErr(t.errNoUser)
-    if (r === 'badpass') return setErr(t.errBadPass)
-    if (r === 'google') return setErr(t.errGoogleOnly)
+    setBusy(true)
+    const r = await signIn(form.phone, form.password)
+    setBusy(false)
+    if (r !== 'ok') return setErr(authError(r))
     notify(t.hello)
   }
 
@@ -293,14 +418,59 @@ export default function Auth() {
               </div>
               {err && <div className="aw-err" role="alert">{err}</div>}
             </div>
-            <button className="aw-btn" type="submit" disabled={phoneState !== 'ok' || !form.password}>{t.signIn}</button>
+            <button className="aw-btn" type="submit" disabled={busy || phoneState !== 'ok' || !form.password}>{t.signIn}</button>
+            {apiEnabled && <p className="aw-foot aw-forgot"><button type="button" onClick={() => { set('password', ''); go('reset') }}>{t.forgot}</button></p>}
             <div className="aw-or"><span>{t.or}</span></div>
             {googleBtn}
             <p className="aw-foot">{t.noAccount} <button type="button" onClick={() => go('signup')}>{t.signUp}</button></p>
           </form>
         )}
 
-        {mode === 'signup' && (
+        {mode === 'reset' && (
+          <div className="aw-step fade-in" key={`reset-${resetStage}`}>
+            <Head onBack={back} right={langPicker} backLabel={t.back} />
+            <div className="aw-body">
+              {dkBrand}
+              {resetStage === 'phone' && (
+                <form onSubmit={resetPhone} noValidate>
+                  <h2>{t.resetTitle}</h2>
+                  <p className="aw-sub">{t.resetSub}</p>
+                  <div className="aw-fields"><PhoneField label={t.phone} value={form.phone} onChange={(v) => set('phone', v)} t={t} autoFocus /></div>
+                  {err && <div className="aw-err" role="alert">{err}</div>}
+                  <button className="aw-btn aw-mt" type="submit" disabled={phoneState !== 'ok'}>{t.cont}</button>
+                </form>
+              )}
+              {resetStage === 'verify' && (
+                <PhoneVerify phone={form.phone} purpose="reset" t={t}
+                  onVerified={(token) => { setForm((f) => ({ ...f, phoneToken: token || '' })); setErr(''); setResetStage('password') }}
+                  onError={(code) => { setResetStage('phone'); setErr(authError(code)) }} />
+              )}
+              {resetStage === 'password' && (
+                <form onSubmit={resetSave} noValidate>
+                  <h2>{t.resetPwTitle}</h2>
+                  <p className="aw-sub">{t.resetPwSub}</p>
+                  <div className="aw-fields">
+                    <PasswordField label={t.newPassword} value={form.password} onChange={(v) => set('password', v)} placeholder={t.newPasswordPh} autoComplete="new-password" t={t} />
+                  </div>
+                  {err && <div className="aw-err" role="alert">{err}</div>}
+                  <button className="aw-btn aw-mt" type="submit" disabled={busy || !pwOk}>{t.resetBtn}</button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+        {mode === 'signup' && verifying && (
+          <div className="aw-step fade-in" key="verify">
+            <Head step={2} onBack={back} right={langPicker} backLabel={t.back} />
+            <div className="aw-body">
+              {dkBrand}
+              <PhoneVerify phone={form.phone} purpose="register" t={t} onVerified={onSignupVerified} onError={onVerifyError} />
+            </div>
+          </div>
+        )}
+
+        {mode === 'signup' && !verifying && (
           <form className="aw-step" onSubmit={next} noValidate>
             <Head step={step} onBack={back} right={langPicker} backLabel={t.back} />
             <div className="aw-body fade-in" key={step}>
@@ -386,11 +556,15 @@ export default function Auth() {
                     <label className="aw-field aw-other fade-in"><span>{t.otherLabel}</span>
                       <input value={form.otherCategory} maxLength={60} onChange={(e) => set('otherCategory', e.target.value)} placeholder={t.otherPh} /></label>
                   )}
+                  <label className="aw-terms">
+                    <input type="checkbox" checked={form.terms} onChange={(e) => set('terms', e.target.checked)} />
+                    <span>{t.terms[0]}<a href="/terms" target="_blank" rel="noreferrer">{t.terms[1]}</a>{t.terms[2]}<a href="/privacy" target="_blank" rel="noreferrer">{t.terms[3]}</a>{t.terms[4]}</span>
+                  </label>
                   {err && <div className="aw-err" role="alert">{err}</div>}
                 </>
               )}
             </div>
-            <button className="aw-btn" type="submit" disabled={!canNext && step !== 2}>{step < STEPS ? t.next : t.create}</button>
+            <button className="aw-btn" type="submit" disabled={busy || (!canNext && step !== 2 && !(step === STEPS && form.categories.length > 0))}>{step < STEPS ? t.next : t.create}</button>
             {step === 1 && <p className="aw-foot">{t.haveAccount} <button type="button" onClick={() => go('login')}>{t.signIn}</button></p>}
           </form>
         )}

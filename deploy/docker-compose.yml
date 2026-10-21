@@ -1,0 +1,77 @@
+# AyolQadami — production (bitta VPS). Ishga tushirish: deploy/README.md
+#   cd deploy && cp .env.example .env && nano .env && docker compose up -d --build
+# Tashqariga faqat 80/443 (Caddy) ochiladi; baza va Next.js server ichki tarmoqda.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ayolqadami
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env da POSTGRES_PASSWORD kerak}
+      POSTGRES_DB: ayolqadami
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ayolqadami"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build: ../server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ../server/.env
+    environment:
+      DATABASE_URL: postgresql://ayolqadami:${POSTGRES_PASSWORD}@db:5432/ayolqadami?schema=public
+      WEB_ORIGINS: https://${WEB_DOMAIN:?deploy/.env da WEB_DOMAIN kerak},https://www.${WEB_DOMAIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      NODE_ENV: production
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        WEB_DOMAIN: ${WEB_DOMAIN}
+        VITE_API_URL: https://${API_DOMAIN:?deploy/.env da API_DOMAIN kerak}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        VITE_BOT_API_URL: ${BOT_API_ORIGIN:-}
+    restart: unless-stopped
+    depends_on: [server]
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?deploy/.env da ACME_EMAIL kerak}
+      BOT_API_ORIGIN: ${BOT_API_ORIGIN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # Kunlik zaxira nusxa: ./backups/ ga, 14 kundan eskilari o'chiriladi
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint: >
+      sh -c 'while true; do
+        pg_dump -h db -U ayolqadami -Fc ayolqadami > /backups/ayolqadami-$$(date +%F).dump &&
+        find /backups -name "*.dump" -mtime +14 -delete;
+        sleep 86400; done'
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

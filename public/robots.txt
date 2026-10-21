@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Disallow: /profile
+Disallow: /applications
+Disallow: /settings
+Disallow: /notifications
+Disallow: /post-job
+Disallow: /401

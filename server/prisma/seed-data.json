@@ -1,0 +1,2129 @@
+{
+  "jobs": [
+    {
+      "id": "j1",
+      "title": "Frontend dasturchi (React)",
+      "company": "NurTech",
+      "color": "#6366F6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 9000000,
+      "salaryTo": 15000000,
+      "type": "Gibrid",
+      "experience": 2,
+      "tags": [
+        "Moslashuvchan grafik",
+        "Onalar uchun qulay"
+      ],
+      "posted": "2 soat oldin",
+      "applicants": 24,
+      "skills": [
+        "React",
+        "JavaScript",
+        "TypeScript",
+        "CSS",
+        "Git"
+      ],
+      "description": "NurTech jamoasi mahsulotimiz veb-interfeysini rivojlantirish uchun frontend dasturchi qidirmoqda. Haftada 2 kun ofisda, qolgan kunlar uydan ishlash mumkin.",
+      "requirements": [
+        "React bilan kamida 2 yillik tajriba",
+        "TypeScript va zamonaviy CSS bilimi",
+        "REST API bilan ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Gibrid format: 3 kun uydan",
+        "Bolalar kasal bo'lganda qo'shimcha masofaviy kunlar",
+        "Yillik bonus va o'qish uchun kompensatsiya"
+      ]
+    },
+    {
+      "id": "j2",
+      "title": "Bosh buxgalter",
+      "company": "Raqamli Moliya",
+      "color": "#F59E0B",
+      "category": "finance",
+      "city": "Toshkent",
+      "salaryFrom": 8000000,
+      "salaryTo": 11000000,
+      "type": "To'liq stavka",
+      "experience": 3,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "5 soat oldin",
+      "applicants": 41,
+      "skills": [
+        "1C",
+        "Buxgalteriya",
+        "Soliq hisoboti",
+        "Excel"
+      ],
+      "description": "Kompaniyamizning moliyaviy hisobini yuritish va soliq hisobotlarini tayyorlash uchun tajribali bosh buxgalter kerak.",
+      "requirements": [
+        "1C:Buxgalteriya bilan 3+ yil tajriba",
+        "O'zbekiston soliq qonunchiligini bilish",
+        "Excel'da ilg'or daraja"
+      ],
+      "conditions": [
+        "09:00 – 18:00, dushanba – juma",
+        "Tushlik va transport kompensatsiyasi",
+        "Ijtimoiy paket"
+      ]
+    },
+    {
+      "id": "j3",
+      "title": "Hamshira (kunduzgi smena)",
+      "company": "Zarafshon Med",
+      "color": "#10B981",
+      "category": "med",
+      "city": "Samarqand",
+      "salaryFrom": 5000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Faqat kunduzgi smena",
+        "Onalar uchun qulay"
+      ],
+      "posted": "Kecha",
+      "applicants": 12,
+      "skills": [
+        "Hamshiralik",
+        "Birinchi yordam",
+        "Bemor parvarishi"
+      ],
+      "description": "Xususiy klinikamizning terapiya bo'limiga mehribon va mas'uliyatli hamshira taklif qilamiz. Tungi navbatchilik yo'q.",
+      "requirements": [
+        "O'rta tibbiy ma'lumot",
+        "Hamshiralik sertifikati",
+        "Kamida 1 yil tajriba"
+      ],
+      "conditions": [
+        "Faqat kunduzgi smena 08:00 – 17:00",
+        "Bepul tibbiy xizmat oila uchun",
+        "Malaka oshirish kurslari"
+      ]
+    },
+    {
+      "id": "j4",
+      "title": "Ingliz tili o'qituvchisi",
+      "company": "Bilim Markazi",
+      "color": "#EF4444",
+      "category": "edu",
+      "city": "Toshkent",
+      "salaryFrom": 6000000,
+      "salaryTo": 10000000,
+      "type": "Yarim stavka",
+      "experience": 1,
+      "tags": [
+        "Yarim kun",
+        "Moslashuvchan grafik"
+      ],
+      "posted": "Kecha",
+      "applicants": 33,
+      "skills": [
+        "Ingliz tili",
+        "IELTS",
+        "O'qitish metodikasi"
+      ],
+      "description": "Bolalar va kattalar guruhlari uchun ingliz tili o'qituvchisi kerak. Darslar jadvalini o'zingiz tanlaysiz.",
+      "requirements": [
+        "IELTS 7.0 yoki undan yuqori",
+        "O'qitish tajribasi afzallik",
+        "Bolalar bilan ishlashni yoqtirish"
+      ],
+      "conditions": [
+        "Haftada 12–20 soat",
+        "Darslarni o'zingiz rejalashtirasiz",
+        "Natijaga qarab bonus"
+      ]
+    },
+    {
+      "id": "j5",
+      "title": "Tikuvchi-bichuvchi",
+      "company": "Gulnor Textile",
+      "color": "#8B5CF6",
+      "category": "production",
+      "city": "Farg'ona",
+      "salaryFrom": 4000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Tajribasiz qabul",
+        "O'qitib olamiz"
+      ],
+      "posted": "2 kun oldin",
+      "applicants": 18,
+      "skills": [
+        "Tikuvchilik",
+        "Bichish",
+        "Overlok"
+      ],
+      "description": "Ayollar kiyimlari ishlab chiqaruvchi tikuv sexiga tikuvchilar kerak. Tajribasizlarni 1 oy davomida bepul o'qitamiz.",
+      "requirements": [
+        "Tikuv mashinasida ishlash istagi",
+        "Ehtiyotkorlik va sabr"
+      ],
+      "conditions": [
+        "Ishbay + belgilangan oylik",
+        "Bepul tushlik",
+        "Bolalar bog'chasi to'lovi uchun yordam"
+      ]
+    },
+    {
+      "id": "j6",
+      "title": "SMM menejer",
+      "company": "Orzu Beauty",
+      "color": "#EC4899",
+      "category": "sales",
+      "city": "Toshkent",
+      "salaryFrom": 5000000,
+      "salaryTo": 8000000,
+      "type": "Masofaviy",
+      "experience": 1,
+      "tags": [
+        "100% masofaviy",
+        "Onalar uchun qulay"
+      ],
+      "posted": "3 kun oldin",
+      "applicants": 57,
+      "skills": [
+        "SMM",
+        "Instagram",
+        "Kontent",
+        "Canva",
+        "Target reklama"
+      ],
+      "description": "Go'zallik saloni brendimiz uchun ijtimoiy tarmoqlarni yurituvchi SMM menejer qidirmoqdamiz. To'liq uydan ishlash.",
+      "requirements": [
+        "Instagram va Telegram bilan ishlash tajribasi",
+        "Kontent-reja tuzish",
+        "Target reklama asoslari"
+      ],
+      "conditions": [
+        "Uydan ishlash",
+        "Moslashuvchan ish vaqti",
+        "KPI bonuslari"
+      ]
+    },
+    {
+      "id": "j7",
+      "title": "UI/UX dizayner",
+      "company": "Samo Design",
+      "color": "#14B8A6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 10000000,
+      "salaryTo": 16000000,
+      "type": "Masofaviy",
+      "experience": 2,
+      "tags": [
+        "100% masofaviy"
+      ],
+      "posted": "4 kun oldin",
+      "applicants": 29,
+      "skills": [
+        "Figma",
+        "UI dizayn",
+        "UX tadqiqot",
+        "Prototiplash"
+      ],
+      "description": "Mobil va veb ilovalar uchun interfeyslar loyihalovchi dizayner kerak. Xalqaro mijozlar bilan ishlash.",
+      "requirements": [
+        "Figma bilan 2+ yil tajriba",
+        "Portfolio",
+        "Ingliz tili — o'rta daraja"
+      ],
+      "conditions": [
+        "Masofaviy ish",
+        "Zamonaviy texnika beriladi",
+        "Konferensiyalar uchun budjet"
+      ]
+    },
+    {
+      "id": "j8",
+      "title": "Kosmetolog",
+      "company": "Orzu Beauty",
+      "color": "#EC4899",
+      "category": "beauty",
+      "city": "Buxoro",
+      "salaryFrom": 6000000,
+      "salaryTo": 12000000,
+      "type": "To'liq stavka",
+      "experience": 2,
+      "tags": [
+        "Foizli ish haqi"
+      ],
+      "posted": "5 kun oldin",
+      "applicants": 9,
+      "skills": [
+        "Kosmetologiya",
+        "Yuz parvarishi",
+        "Mijozlar bilan ishlash"
+      ],
+      "description": "Yangi ochilgan go'zallik salonimizga tajribali kosmetolog taklif qilamiz.",
+      "requirements": [
+        "Kosmetologiya sertifikati",
+        "Kamida 2 yil tajriba"
+      ],
+      "conditions": [
+        "Foiz + belgilangan oylik",
+        "Zamonaviy uskunalar",
+        "Malaka oshirish xorijda"
+      ]
+    },
+    {
+      "id": "j9",
+      "title": "Sotuv bo'yicha menejer",
+      "company": "Ipak Yo'li Savdo",
+      "color": "#3B82F6",
+      "category": "sales",
+      "city": "Andijon",
+      "salaryFrom": 4500000,
+      "salaryTo": 9000000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Tajribasiz qabul",
+        "Bonuslar"
+      ],
+      "posted": "1 hafta oldin",
+      "applicants": 22,
+      "skills": [
+        "Sotuv",
+        "Muloqot",
+        "CRM",
+        "Telefon orqali sotuv"
+      ],
+      "description": "Uy-ro'zg'or buyumlari do'konlari tarmog'i sotuv menejerlarini ishga oladi.",
+      "requirements": [
+        "Muloqotga kirishuvchanlik",
+        "Kompyuter savodxonligi"
+      ],
+      "conditions": [
+        "Oylik + sotuvdan foiz",
+        "Bepul o'qitish",
+        "Martaba o'sishi"
+      ]
+    },
+    {
+      "id": "j10",
+      "title": "Python dasturchi (Junior)",
+      "company": "NurTech",
+      "color": "#6366F6",
+      "category": "it",
+      "city": "Samarqand",
+      "salaryFrom": 6000000,
+      "salaryTo": 9000000,
+      "type": "Masofaviy",
+      "experience": 0,
+      "tags": [
+        "Junior",
+        "Mentor bilan ishlash"
+      ],
+      "posted": "1 hafta oldin",
+      "applicants": 64,
+      "skills": [
+        "Python",
+        "Django",
+        "SQL",
+        "Git"
+      ],
+      "description": "Dasturlash kursini tugatgan ayollar uchun stajirovkadan keyin doimiy ishga o'tish imkoniyati.",
+      "requirements": [
+        "Python asoslari",
+        "SQL bo'yicha boshlang'ich bilim",
+        "O'rganishga ishtiyoq"
+      ],
+      "conditions": [
+        "Shaxsiy mentor",
+        "Masofaviy ish",
+        "3 oydan keyin oylik oshiriladi"
+      ]
+    },
+    {
+      "id": "j11",
+      "title": "Mobil dasturchi (Flutter)",
+      "company": "NurTech",
+      "color": "#6366F6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 10000000,
+      "salaryTo": 16000000,
+      "type": "Gibrid",
+      "experience": 2,
+      "tags": [
+        "Onalar uchun qulay"
+      ],
+      "posted": "3 soat oldin",
+      "applicants": 18,
+      "skills": [
+        "Flutter",
+        "Dart",
+        "Firebase"
+      ],
+      "description": "NurTech jamoasiga «Mobil dasturchi (Flutter)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, gibrid formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j12",
+      "title": "QA muhandis (manual)",
+      "company": "SoftLine",
+      "color": "#3B82F6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 6000000,
+      "salaryTo": 9000000,
+      "type": "Masofaviy",
+      "experience": 1,
+      "tags": [
+        "Uydan ishlash"
+      ],
+      "posted": "4 soat oldin",
+      "applicants": 33,
+      "skills": [
+        "Testlash",
+        "Jira",
+        "Postman"
+      ],
+      "description": "SoftLine jamoasiga «QA muhandis (manual)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j13",
+      "title": "Ma'lumotlar tahlilchisi",
+      "company": "DataHub",
+      "color": "#14B8A6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 9000000,
+      "salaryTo": 14000000,
+      "type": "Gibrid",
+      "experience": 1,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "6 soat oldin",
+      "applicants": 27,
+      "skills": [
+        "SQL",
+        "Python",
+        "Power BI"
+      ],
+      "description": "DataHub jamoasiga «Ma'lumotlar tahlilchisi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, gibrid formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j14",
+      "title": "IT yordam mutaxassisi",
+      "company": "Bank Ishonch",
+      "color": "#0EA5E9",
+      "category": "it",
+      "city": "Buxoro",
+      "salaryFrom": 5000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "Kecha",
+      "applicants": 15,
+      "skills": [
+        "Windows",
+        "Tarmoqlar",
+        "Helpdesk"
+      ],
+      "description": "Bank Ishonch jamoasiga «IT yordam mutaxassisi» lavozimiga xodim taklif qilinadi. Buxoro shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j15",
+      "title": "Backend dasturchi (Node.js)",
+      "company": "PayGo",
+      "color": "#8B5CF6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 12000000,
+      "salaryTo": 20000000,
+      "type": "Masofaviy",
+      "experience": 3,
+      "tags": [
+        "Uydan ishlash"
+      ],
+      "posted": "Kecha",
+      "applicants": 22,
+      "skills": [
+        "Node.js",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "description": "PayGo jamoasiga «Backend dasturchi (Node.js)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j16",
+      "title": "Pediatr hamshira",
+      "company": "Shifo Plus",
+      "color": "#10B981",
+      "category": "med",
+      "city": "Andijon",
+      "salaryFrom": 4500000,
+      "salaryTo": 6500000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Faqat kunduzgi smena"
+      ],
+      "posted": "2 soat oldin",
+      "applicants": 9,
+      "skills": [
+        "Pediatriya",
+        "Emlash",
+        "Bemor parvarishi"
+      ],
+      "description": "Shifo Plus jamoasiga «Pediatr hamshira» lavozimiga xodim taklif qilinadi. Andijon shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tibbiy ma'lumot va sertifikat",
+        "Mas'uliyat va e'tiborlilik",
+        "Bemorlar bilan muloqot madaniyati"
+      ],
+      "conditions": [
+        "Kunduzgi smena",
+        "Bepul tibbiy ko'rik",
+        "Rasmiy ishga joylash"
+      ]
+    },
+    {
+      "id": "j17",
+      "title": "Farmatsevt",
+      "company": "Dori-Darmon",
+      "color": "#22C55E",
+      "category": "med",
+      "city": "Namangan",
+      "salaryFrom": 4000000,
+      "salaryTo": 6000000,
+      "type": "Yarim stavka",
+      "experience": 0,
+      "tags": [
+        "Yarim kunlik"
+      ],
+      "posted": "5 soat oldin",
+      "applicants": 14,
+      "skills": [
+        "Farmatsevtika",
+        "Kassa",
+        "Maslahat berish"
+      ],
+      "description": "Dori-Darmon jamoasiga «Farmatsevt» lavozimiga xodim taklif qilinadi. Namangan shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Tibbiy ma'lumot va sertifikat",
+        "Mas'uliyat va e'tiborlilik",
+        "Bemorlar bilan muloqot madaniyati"
+      ],
+      "conditions": [
+        "Kunduzgi smena",
+        "Bepul tibbiy ko'rik",
+        "Rasmiy ishga joylash"
+      ]
+    },
+    {
+      "id": "j18",
+      "title": "Laborant",
+      "company": "MedLab",
+      "color": "#059669",
+      "category": "med",
+      "city": "Toshkent",
+      "salaryFrom": 5000000,
+      "salaryTo": 7500000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "2 kun oldin",
+      "applicants": 11,
+      "skills": [
+        "Laboratoriya tahlili",
+        "Gigiyena"
+      ],
+      "description": "MedLab jamoasiga «Laborant» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tibbiy ma'lumot va sertifikat",
+        "Mas'uliyat va e'tiborlilik",
+        "Bemorlar bilan muloqot madaniyati"
+      ],
+      "conditions": [
+        "Kunduzgi smena",
+        "Bepul tibbiy ko'rik",
+        "Rasmiy ishga joylash"
+      ]
+    },
+    {
+      "id": "j19",
+      "title": "Stomatolog yordamchisi",
+      "company": "Dental Art",
+      "color": "#06B6D4",
+      "category": "med",
+      "city": "Samarqand",
+      "salaryFrom": 4000000,
+      "salaryTo": 5500000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Tajriba shart emas"
+      ],
+      "posted": "3 kun oldin",
+      "applicants": 19,
+      "skills": [
+        "Sterilizatsiya",
+        "Asboblar bilan ishlash"
+      ],
+      "description": "Dental Art jamoasiga «Stomatolog yordamchisi» lavozimiga xodim taklif qilinadi. Samarqand shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tibbiy ma'lumot va sertifikat",
+        "Mas'uliyat va e'tiborlilik",
+        "Bemorlar bilan muloqot madaniyati"
+      ],
+      "conditions": [
+        "Kunduzgi smena",
+        "Bepul tibbiy ko'rik",
+        "Rasmiy ishga joylash"
+      ]
+    },
+    {
+      "id": "j20",
+      "title": "Boshlang'ich sinf o'qituvchisi",
+      "company": "Kelajak maktabi",
+      "color": "#EF4444",
+      "category": "edu",
+      "city": "Farg'ona",
+      "salaryFrom": 5000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 2,
+      "tags": [
+        "Onalar uchun qulay"
+      ],
+      "posted": "1 soat oldin",
+      "applicants": 21,
+      "skills": [
+        "Pedagogika",
+        "Metodika"
+      ],
+      "description": "Kelajak maktabi jamoasiga «Boshlang'ich sinf o'qituvchisi» lavozimiga xodim taklif qilinadi. Farg'ona shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Pedagogik ma'lumot",
+        "Bolalar bilan ishlash tajribasi",
+        "Sabr-toqat va ijodkorlik"
+      ],
+      "conditions": [
+        "Qisqa ish kuni",
+        "Yozgi ta'til",
+        "Metodik yordam"
+      ]
+    },
+    {
+      "id": "j21",
+      "title": "Matematika repetitori",
+      "company": "Bilim Markazi",
+      "color": "#F43F5E",
+      "category": "edu",
+      "city": "Toshkent",
+      "salaryFrom": 4000000,
+      "salaryTo": 8000000,
+      "type": "Yarim stavka",
+      "experience": 1,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "7 soat oldin",
+      "applicants": 30,
+      "skills": [
+        "Matematika",
+        "DTM tayyorlov"
+      ],
+      "description": "Bilim Markazi jamoasiga «Matematika repetitori» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Pedagogik ma'lumot",
+        "Bolalar bilan ishlash tajribasi",
+        "Sabr-toqat va ijodkorlik"
+      ],
+      "conditions": [
+        "Qisqa ish kuni",
+        "Yozgi ta'til",
+        "Metodik yordam"
+      ]
+    },
+    {
+      "id": "j22",
+      "title": "Bog'cha tarbiyachisi",
+      "company": "Quvonch MTT",
+      "color": "#FB7185",
+      "category": "edu",
+      "city": "Jizzax",
+      "salaryFrom": 3500000,
+      "salaryTo": 5000000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Uyga yaqin"
+      ],
+      "posted": "Kecha",
+      "applicants": 16,
+      "skills": [
+        "Tarbiya",
+        "Ijodiy mashg'ulotlar"
+      ],
+      "description": "Quvonch MTT jamoasiga «Bog'cha tarbiyachisi» lavozimiga xodim taklif qilinadi. Jizzax shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Pedagogik ma'lumot",
+        "Bolalar bilan ishlash tajribasi",
+        "Sabr-toqat va ijodkorlik"
+      ],
+      "conditions": [
+        "Qisqa ish kuni",
+        "Yozgi ta'til",
+        "Metodik yordam"
+      ]
+    },
+    {
+      "id": "j23",
+      "title": "Rus tili o'qituvchisi (online)",
+      "company": "LingvoUz",
+      "color": "#E11D48",
+      "category": "edu",
+      "city": "Nukus",
+      "salaryFrom": 4500000,
+      "salaryTo": 7000000,
+      "type": "Masofaviy",
+      "experience": 2,
+      "tags": [
+        "Uydan ishlash"
+      ],
+      "posted": "4 kun oldin",
+      "applicants": 12,
+      "skills": [
+        "Rus tili",
+        "Zoom",
+        "Metodika"
+      ],
+      "description": "LingvoUz jamoasiga «Rus tili o'qituvchisi (online)» lavozimiga xodim taklif qilinadi. Nukus shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Pedagogik ma'lumot",
+        "Bolalar bilan ishlash tajribasi",
+        "Sabr-toqat va ijodkorlik"
+      ],
+      "conditions": [
+        "Qisqa ish kuni",
+        "Yozgi ta'til",
+        "Metodik yordam"
+      ]
+    },
+    {
+      "id": "j24",
+      "title": "Logoped",
+      "company": "Nutq markazi",
+      "color": "#BE123C",
+      "category": "edu",
+      "city": "Toshkent",
+      "salaryFrom": 6000000,
+      "salaryTo": 9000000,
+      "type": "Yarim stavka",
+      "experience": 2,
+      "tags": [
+        "Yarim kunlik"
+      ],
+      "posted": "5 kun oldin",
+      "applicants": 7,
+      "skills": [
+        "Logopediya",
+        "Bolalar psixologiyasi"
+      ],
+      "description": "Nutq markazi jamoasiga «Logoped» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Pedagogik ma'lumot",
+        "Bolalar bilan ishlash tajribasi",
+        "Sabr-toqat va ijodkorlik"
+      ],
+      "conditions": [
+        "Qisqa ish kuni",
+        "Yozgi ta'til",
+        "Metodik yordam"
+      ]
+    },
+    {
+      "id": "j25",
+      "title": "Tikuvchi (ayollar kiyimi)",
+      "company": "Gulnor Textile",
+      "color": "#8B5CF6",
+      "category": "production",
+      "city": "Namangan",
+      "salaryFrom": 3500000,
+      "salaryTo": 6000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Ishbay haq"
+      ],
+      "posted": "3 soat oldin",
+      "applicants": 25,
+      "skills": [
+        "Tikuvchilik",
+        "Overlok"
+      ],
+      "description": "Gulnor Textile jamoasiga «Tikuvchi (ayollar kiyimi)» lavozimiga xodim taklif qilinadi. Namangan shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tikuv mashinasida ishlash",
+        "Andoza bilan ishlash",
+        "Aniqlik va puxtalik"
+      ],
+      "conditions": [
+        "Ishbay qo'shimcha haq",
+        "Bepul tushlik",
+        "Uyga yaqin sex"
+      ]
+    },
+    {
+      "id": "j26",
+      "title": "Konstruktor-modelyer",
+      "company": "Atlas Moda",
+      "color": "#A855F7",
+      "category": "production",
+      "city": "Toshkent",
+      "salaryFrom": 7000000,
+      "salaryTo": 10000000,
+      "type": "To'liq stavka",
+      "experience": 3,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "Kecha",
+      "applicants": 8,
+      "skills": [
+        "Konstruksiya",
+        "Andoza",
+        "Gerber"
+      ],
+      "description": "Atlas Moda jamoasiga «Konstruktor-modelyer» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tikuv mashinasida ishlash",
+        "Andoza bilan ishlash",
+        "Aniqlik va puxtalik"
+      ],
+      "conditions": [
+        "Ishbay qo'shimcha haq",
+        "Bepul tushlik",
+        "Uyga yaqin sex"
+      ]
+    },
+    {
+      "id": "j27",
+      "title": "Kashtachi (uydan)",
+      "company": "Suzana Art",
+      "color": "#C084FC",
+      "category": "production",
+      "city": "Buxoro",
+      "salaryFrom": 2500000,
+      "salaryTo": 4500000,
+      "type": "Masofaviy",
+      "experience": 0,
+      "tags": [
+        "Uydan ishlash",
+        "Onalar uchun qulay"
+      ],
+      "posted": "2 kun oldin",
+      "applicants": 34,
+      "skills": [
+        "Kashtachilik",
+        "Qo'l mehnati"
+      ],
+      "description": "Suzana Art jamoasiga «Kashtachi (uydan)» lavozimiga xodim taklif qilinadi. Buxoro shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Tikuv mashinasida ishlash",
+        "Andoza bilan ishlash",
+        "Aniqlik va puxtalik"
+      ],
+      "conditions": [
+        "Ishbay qo'shimcha haq",
+        "Bepul tushlik",
+        "Uyga yaqin sex"
+      ]
+    },
+    {
+      "id": "j28",
+      "title": "Sifat nazoratchisi (tikuv)",
+      "company": "Uz Denim",
+      "color": "#7C3AED",
+      "category": "production",
+      "city": "Andijon",
+      "salaryFrom": 4000000,
+      "salaryTo": 5500000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Bepul tushlik"
+      ],
+      "posted": "6 kun oldin",
+      "applicants": 10,
+      "skills": [
+        "Sifat nazorati",
+        "Tikuvchilik"
+      ],
+      "description": "Uz Denim jamoasiga «Sifat nazoratchisi (tikuv)» lavozimiga xodim taklif qilinadi. Andijon shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tikuv mashinasida ishlash",
+        "Andoza bilan ishlash",
+        "Aniqlik va puxtalik"
+      ],
+      "conditions": [
+        "Ishbay qo'shimcha haq",
+        "Bepul tushlik",
+        "Uyga yaqin sex"
+      ]
+    },
+    {
+      "id": "j29",
+      "title": "Kassir-sotuvchi",
+      "company": "Makro",
+      "color": "#3B82F6",
+      "category": "sales",
+      "city": "Toshkent",
+      "salaryFrom": 3500000,
+      "salaryTo": 4500000,
+      "type": "Yarim stavka",
+      "experience": 0,
+      "tags": [
+        "Tajriba shart emas"
+      ],
+      "posted": "1 soat oldin",
+      "applicants": 52,
+      "skills": [
+        "Kassa",
+        "Muloqot"
+      ],
+      "description": "Makro jamoasiga «Kassir-sotuvchi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Muloqotga ochiqlik",
+        "Sotuv yoki mijozlar bilan ishlash tajribasi",
+        "Kompyuterdan foydalanish"
+      ],
+      "conditions": [
+        "Oylik + foiz",
+        "Karyera o'sishi",
+        "Treninglar"
+      ]
+    },
+    {
+      "id": "j30",
+      "title": "Call-markaz operatori",
+      "company": "Uzum Market",
+      "color": "#7C3AED",
+      "category": "sales",
+      "city": "Toshkent",
+      "salaryFrom": 4000000,
+      "salaryTo": 6000000,
+      "type": "Masofaviy",
+      "experience": 0,
+      "tags": [
+        "Uydan ishlash",
+        "Onalar uchun qulay"
+      ],
+      "posted": "2 soat oldin",
+      "applicants": 68,
+      "skills": [
+        "Telefon orqali muloqot",
+        "CRM"
+      ],
+      "description": "Uzum Market jamoasiga «Call-markaz operatori» lavozimiga xodim taklif qilinadi. Toshkent shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Muloqotga ochiqlik",
+        "Sotuv yoki mijozlar bilan ishlash tajribasi",
+        "Kompyuterdan foydalanish"
+      ],
+      "conditions": [
+        "Oylik + foiz",
+        "Karyera o'sishi",
+        "Treninglar"
+      ]
+    },
+    {
+      "id": "j31",
+      "title": "Do'kon administratori",
+      "company": "Ipak Yo'li Savdo",
+      "color": "#2563EB",
+      "category": "sales",
+      "city": "Qarshi",
+      "salaryFrom": 5000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 2,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "Kecha",
+      "applicants": 13,
+      "skills": [
+        "Boshqaruv",
+        "Hisobot",
+        "Savdo"
+      ],
+      "description": "Ipak Yo'li Savdo jamoasiga «Do'kon administratori» lavozimiga xodim taklif qilinadi. Qarshi shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Muloqotga ochiqlik",
+        "Sotuv yoki mijozlar bilan ishlash tajribasi",
+        "Kompyuterdan foydalanish"
+      ],
+      "conditions": [
+        "Oylik + foiz",
+        "Karyera o'sishi",
+        "Treninglar"
+      ]
+    },
+    {
+      "id": "j32",
+      "title": "Instagram-do'kon menejeri",
+      "company": "Orzu Beauty",
+      "color": "#EC4899",
+      "category": "sales",
+      "city": "Samarqand",
+      "salaryFrom": 4000000,
+      "salaryTo": 7000000,
+      "type": "Masofaviy",
+      "experience": 1,
+      "tags": [
+        "Uydan ishlash"
+      ],
+      "posted": "3 kun oldin",
+      "applicants": 29,
+      "skills": [
+        "SMM",
+        "Instagram",
+        "Savdo"
+      ],
+      "description": "Orzu Beauty jamoasiga «Instagram-do'kon menejeri» lavozimiga xodim taklif qilinadi. Samarqand shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Muloqotga ochiqlik",
+        "Sotuv yoki mijozlar bilan ishlash tajribasi",
+        "Kompyuterdan foydalanish"
+      ],
+      "conditions": [
+        "Oylik + foiz",
+        "Karyera o'sishi",
+        "Treninglar"
+      ]
+    },
+    {
+      "id": "j33",
+      "title": "Sartarosh-stilist",
+      "company": "Lola Salon",
+      "color": "#EC4899",
+      "category": "beauty",
+      "city": "Toshkent",
+      "salaryFrom": 5000000,
+      "salaryTo": 10000000,
+      "type": "To'liq stavka",
+      "experience": 2,
+      "tags": [
+        "Foizli haq"
+      ],
+      "posted": "4 soat oldin",
+      "applicants": 17,
+      "skills": [
+        "Soch turmagi",
+        "Bo'yash"
+      ],
+      "description": "Lola Salon jamoasiga «Sartarosh-stilist» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tegishli sertifikat",
+        "Kamida 1 yillik amaliyot",
+        "Mijozlarga e'tibor"
+      ],
+      "conditions": [
+        "Foizli ish haqi",
+        "Bepul malaka oshirish",
+        "Qulay jadval"
+      ]
+    },
+    {
+      "id": "j34",
+      "title": "Manikyur ustasi",
+      "company": "Nail Studio",
+      "color": "#F472B6",
+      "category": "beauty",
+      "city": "Urganch",
+      "salaryFrom": 3000000,
+      "salaryTo": 6000000,
+      "type": "Yarim stavka",
+      "experience": 1,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "Kecha",
+      "applicants": 23,
+      "skills": [
+        "Manikyur",
+        "Gel-lak"
+      ],
+      "description": "Nail Studio jamoasiga «Manikyur ustasi» lavozimiga xodim taklif qilinadi. Urganch shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Tegishli sertifikat",
+        "Kamida 1 yillik amaliyot",
+        "Mijozlarga e'tibor"
+      ],
+      "conditions": [
+        "Foizli ish haqi",
+        "Bepul malaka oshirish",
+        "Qulay jadval"
+      ]
+    },
+    {
+      "id": "j35",
+      "title": "Vizajist",
+      "company": "Glamour",
+      "color": "#DB2777",
+      "category": "beauty",
+      "city": "Toshkent",
+      "salaryFrom": 4000000,
+      "salaryTo": 8000000,
+      "type": "Yarim stavka",
+      "experience": 1,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "1 hafta oldin",
+      "applicants": 15,
+      "skills": [
+        "Makiyaj",
+        "Fotosessiya"
+      ],
+      "description": "Glamour jamoasiga «Vizajist» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Tegishli sertifikat",
+        "Kamida 1 yillik amaliyot",
+        "Mijozlarga e'tibor"
+      ],
+      "conditions": [
+        "Foizli ish haqi",
+        "Bepul malaka oshirish",
+        "Qulay jadval"
+      ]
+    },
+    {
+      "id": "j36",
+      "title": "Buxgalter yordamchisi",
+      "company": "Raqamli Moliya",
+      "color": "#F59E0B",
+      "category": "finance",
+      "city": "Toshkent",
+      "salaryFrom": 4500000,
+      "salaryTo": 6500000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Tajriba shart emas"
+      ],
+      "posted": "2 soat oldin",
+      "applicants": 38,
+      "skills": [
+        "1C",
+        "Excel",
+        "Hujjatlar"
+      ],
+      "description": "Raqamli Moliya jamoasiga «Buxgalter yordamchisi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Iqtisodiy ma'lumot",
+        "1C va Excel bilimi",
+        "Aniqlik va tartiblilik"
+      ],
+      "conditions": [
+        "Rasmiy ishga joylash",
+        "Ijtimoiy paket",
+        "Yillik bonus"
+      ]
+    },
+    {
+      "id": "j37",
+      "title": "Bank operatsionisti",
+      "company": "Bank Ishonch",
+      "color": "#D97706",
+      "category": "finance",
+      "city": "Termiz",
+      "salaryFrom": 5000000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "2 kun oldin",
+      "applicants": 26,
+      "skills": [
+        "Bank xizmatlari",
+        "Kassa"
+      ],
+      "description": "Bank Ishonch jamoasiga «Bank operatsionisti» lavozimiga xodim taklif qilinadi. Termiz shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Iqtisodiy ma'lumot",
+        "1C va Excel bilimi",
+        "Aniqlik va tartiblilik"
+      ],
+      "conditions": [
+        "Rasmiy ishga joylash",
+        "Ijtimoiy paket",
+        "Yillik bonus"
+      ]
+    },
+    {
+      "id": "j38",
+      "title": "Moliyaviy tahlilchi",
+      "company": "Invest Group",
+      "color": "#B45309",
+      "category": "finance",
+      "city": "Toshkent",
+      "salaryFrom": 10000000,
+      "salaryTo": 15000000,
+      "type": "Gibrid",
+      "experience": 3,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "4 kun oldin",
+      "applicants": 9,
+      "skills": [
+        "Moliyaviy model",
+        "Excel",
+        "IFRS"
+      ],
+      "description": "Invest Group jamoasiga «Moliyaviy tahlilchi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, gibrid formatda ishlash.",
+      "requirements": [
+        "Iqtisodiy ma'lumot",
+        "1C va Excel bilimi",
+        "Aniqlik va tartiblilik"
+      ],
+      "conditions": [
+        "Rasmiy ishga joylash",
+        "Ijtimoiy paket",
+        "Yillik bonus"
+      ]
+    },
+    {
+      "id": "j39",
+      "title": "Grafik dizayner",
+      "company": "Samo Design",
+      "color": "#14B8A6",
+      "category": "it",
+      "city": "Toshkent",
+      "salaryFrom": 6000000,
+      "salaryTo": 10000000,
+      "type": "Masofaviy",
+      "experience": 1,
+      "tags": [
+        "Uydan ishlash"
+      ],
+      "posted": "5 soat oldin",
+      "applicants": 31,
+      "skills": [
+        "Photoshop",
+        "Illustrator",
+        "Brending"
+      ],
+      "description": "Samo Design jamoasiga «Grafik dizayner» lavozimiga xodim taklif qilinadi. Toshkent shahrida, masofaviy formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j40",
+      "title": "Interyer dizayner",
+      "company": "Uy Dizayn",
+      "color": "#0D9488",
+      "category": "it",
+      "city": "Navoiy",
+      "salaryFrom": 7000000,
+      "salaryTo": 12000000,
+      "type": "Gibrid",
+      "experience": 2,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "6 kun oldin",
+      "applicants": 11,
+      "skills": [
+        "3ds Max",
+        "AutoCAD",
+        "SketchUp"
+      ],
+      "description": "Uy Dizayn jamoasiga «Interyer dizayner» lavozimiga xodim taklif qilinadi. Navoiy shahrida, gibrid formatda ishlash.",
+      "requirements": [
+        "Sohada amaliy tajriba yoki portfolio",
+        "Git bilan ishlash",
+        "Jamoada ishlash ko'nikmasi"
+      ],
+      "conditions": [
+        "Moslashuvchan ish vaqti",
+        "Kurslar uchun to'lov",
+        "Zamonaviy texnika"
+      ]
+    },
+    {
+      "id": "j41",
+      "title": "Enaga (2 yoshli bolaga)",
+      "company": "Xususiy oila",
+      "color": "#F472B6",
+      "category": "nanny",
+      "city": "Toshkent",
+      "salaryFrom": 4000000,
+      "salaryTo": 6000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Onalar uchun qulay"
+      ],
+      "posted": "1 soat oldin",
+      "applicants": 19,
+      "skills": [
+        "Bola parvarishi",
+        "O'yin mashg'ulotlari",
+        "Ovqatlantirish"
+      ],
+      "description": "Xususiy oila jamoasiga «Enaga (2 yoshli bolaga)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Bolalar bilan ishlash tajribasi",
+        "Tibbiy ma'lumotnoma",
+        "Mehribonlik va sabr-toqat"
+      ],
+      "conditions": [
+        "Oila bilan kelishilgan jadval",
+        "Tushlik oila hisobidan",
+        "Tavsiyanoma bilan ishga olinadi"
+      ]
+    },
+    {
+      "id": "j42",
+      "title": "Enaga (yarim kun)",
+      "company": "Xususiy oila",
+      "color": "#EC4899",
+      "category": "nanny",
+      "city": "Samarqand",
+      "salaryFrom": 2500000,
+      "salaryTo": 3500000,
+      "type": "Yarim stavka",
+      "experience": 0,
+      "tags": [
+        "Yarim kunlik",
+        "Uyga yaqin"
+      ],
+      "posted": "5 soat oldin",
+      "applicants": 11,
+      "skills": [
+        "Bola parvarishi",
+        "Sayr",
+        "Uy vazifalari"
+      ],
+      "description": "Xususiy oila jamoasiga «Enaga (yarim kun)» lavozimiga xodim taklif qilinadi. Samarqand shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Bolalar bilan ishlash tajribasi",
+        "Tibbiy ma'lumotnoma",
+        "Mehribonlik va sabr-toqat"
+      ],
+      "conditions": [
+        "Oila bilan kelishilgan jadval",
+        "Tushlik oila hisobidan",
+        "Tavsiyanoma bilan ishga olinadi"
+      ]
+    },
+    {
+      "id": "j43",
+      "title": "Uy xizmatchisi",
+      "company": "Xususiy oila",
+      "color": "#8B5CF6",
+      "category": "housekeeper",
+      "city": "Toshkent",
+      "salaryFrom": 3500000,
+      "salaryTo": 5000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Tushlik beriladi"
+      ],
+      "posted": "3 soat oldin",
+      "applicants": 14,
+      "skills": [
+        "Tozalash",
+        "Dazmollash",
+        "Ovqat tayyorlash"
+      ],
+      "description": "Xususiy oila jamoasiga «Uy xizmatchisi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Uy yumushlarida tajriba",
+        "Tartiblilik va ishonchlilik",
+        "Tavsiyanoma (afzallik)"
+      ],
+      "conditions": [
+        "Haftalik dam olish kuni",
+        "Tushlik beriladi",
+        "Yo'l haqi qoplanadi"
+      ]
+    },
+    {
+      "id": "j44",
+      "title": "Uy yumushlari bo'yicha yordamchi",
+      "company": "Xususiy oila",
+      "color": "#A855F7",
+      "category": "housekeeper",
+      "city": "Namangan",
+      "salaryFrom": 2500000,
+      "salaryTo": 3500000,
+      "type": "Yarim stavka",
+      "experience": 0,
+      "tags": [
+        "Haftada 3 kun"
+      ],
+      "posted": "Kecha",
+      "applicants": 8,
+      "skills": [
+        "Tozalash",
+        "Kir yuvish"
+      ],
+      "description": "Xususiy oila jamoasiga «Uy yumushlari bo'yicha yordamchi» lavozimiga xodim taklif qilinadi. Namangan shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Uy yumushlarida tajriba",
+        "Tartiblilik va ishonchlilik",
+        "Tavsiyanoma (afzallik)"
+      ],
+      "conditions": [
+        "Haftalik dam olish kuni",
+        "Tushlik beriladi",
+        "Yo'l haqi qoplanadi"
+      ]
+    },
+    {
+      "id": "j45",
+      "title": "Ofis tozalik xodimi",
+      "company": "Clean Pro",
+      "color": "#14B8A6",
+      "category": "cleaning",
+      "city": "Toshkent",
+      "salaryFrom": 3000000,
+      "salaryTo": 4000000,
+      "type": "Yarim stavka",
+      "experience": 0,
+      "tags": [
+        "Tajriba shart emas",
+        "Ertalabki smena"
+      ],
+      "posted": "2 soat oldin",
+      "applicants": 27,
+      "skills": [
+        "Tozalash",
+        "Tartib"
+      ],
+      "description": "Clean Pro jamoasiga «Ofis tozalik xodimi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Tozalash vositalari bilan ishlash",
+        "Mas'uliyat va puxtalik",
+        "Jismoniy chidamlilik"
+      ],
+      "conditions": [
+        "Ish vositalari beriladi",
+        "Qulay smena",
+        "Har kuni yoki haftalik to'lov"
+      ]
+    },
+    {
+      "id": "j46",
+      "title": "Tozalik xodimi (savdo markazi)",
+      "company": "Toza Makon",
+      "color": "#0D9488",
+      "category": "cleaning",
+      "city": "Toshkent",
+      "salaryFrom": 3200000,
+      "salaryTo": 4200000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Rasmiy ishga joylash"
+      ],
+      "posted": "6 soat oldin",
+      "applicants": 31,
+      "skills": [
+        "Tozalash",
+        "Gigiyena"
+      ],
+      "description": "Toza Makon jamoasiga «Tozalik xodimi (savdo markazi)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Tozalash vositalari bilan ishlash",
+        "Mas'uliyat va puxtalik",
+        "Jismoniy chidamlilik"
+      ],
+      "conditions": [
+        "Ish vositalari beriladi",
+        "Qulay smena",
+        "Har kuni yoki haftalik to'lov"
+      ]
+    },
+    {
+      "id": "j47",
+      "title": "Uy oshpazi",
+      "company": "Xususiy oila",
+      "color": "#F59E0B",
+      "category": "cook",
+      "city": "Toshkent",
+      "salaryFrom": 4500000,
+      "salaryTo": 7000000,
+      "type": "To'liq stavka",
+      "experience": 2,
+      "tags": [
+        "Tushlik beriladi"
+      ],
+      "posted": "4 soat oldin",
+      "applicants": 9,
+      "skills": [
+        "Milliy taomlar",
+        "Shirinliklar"
+      ],
+      "description": "Xususiy oila jamoasiga «Uy oshpazi» lavozimiga xodim taklif qilinadi. Toshkent shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Milliy va Yevropa taomlarini tayyorlash",
+        "Gigiyena qoidalarini bilish",
+        "Tibbiy daftarcha"
+      ],
+      "conditions": [
+        "Bepul ovqat",
+        "Qulay jadval",
+        "Rasmiy ishga joylash (oshxonalarda)"
+      ]
+    },
+    {
+      "id": "j48",
+      "title": "Oshpaz yordamchisi",
+      "company": "Lazzat Oshxonasi",
+      "color": "#EA580C",
+      "category": "cook",
+      "city": "Andijon",
+      "salaryFrom": 3000000,
+      "salaryTo": 4000000,
+      "type": "To'liq stavka",
+      "experience": 0,
+      "tags": [
+        "Bepul ovqat",
+        "Tajriba shart emas"
+      ],
+      "posted": "Kecha",
+      "applicants": 22,
+      "skills": [
+        "Taom tayyorlash",
+        "Gigiyena"
+      ],
+      "description": "Lazzat Oshxonasi jamoasiga «Oshpaz yordamchisi» lavozimiga xodim taklif qilinadi. Andijon shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Milliy va Yevropa taomlarini tayyorlash",
+        "Gigiyena qoidalarini bilish",
+        "Tibbiy daftarcha"
+      ],
+      "conditions": [
+        "Bepul ovqat",
+        "Qulay jadval",
+        "Rasmiy ishga joylash (oshxonalarda)"
+      ]
+    },
+    {
+      "id": "j49",
+      "title": "Keksalar parvarishchisi",
+      "company": "Xususiy oila",
+      "color": "#10B981",
+      "category": "caregiver",
+      "city": "Buxoro",
+      "salaryFrom": 3500000,
+      "salaryTo": 5000000,
+      "type": "To'liq stavka",
+      "experience": 1,
+      "tags": [
+        "Uyga yaqin"
+      ],
+      "posted": "2 kun oldin",
+      "applicants": 6,
+      "skills": [
+        "Parvarish",
+        "Dori berish",
+        "Birinchi yordam"
+      ],
+      "description": "Xususiy oila jamoasiga «Keksalar parvarishchisi» lavozimiga xodim taklif qilinadi. Buxoro shahrida, to'liq stavka formatda ishlash.",
+      "requirements": [
+        "Keksalar yoki bemorlarni parvarish qilish tajribasi",
+        "Birinchi yordam asoslari",
+        "Mehribonlik va sabr"
+      ],
+      "conditions": [
+        "Kelishilgan jadval",
+        "Tushlik beriladi",
+        "Tibbiy maslahat bilan qo'llab-quvvatlash"
+      ]
+    },
+    {
+      "id": "j50",
+      "title": "Bemor parvarishchisi (sidelka)",
+      "company": "Mehr uyi",
+      "color": "#059669",
+      "category": "caregiver",
+      "city": "Toshkent",
+      "salaryFrom": 4000000,
+      "salaryTo": 6000000,
+      "type": "Yarim stavka",
+      "experience": 1,
+      "tags": [
+        "Moslashuvchan grafik"
+      ],
+      "posted": "3 kun oldin",
+      "applicants": 10,
+      "skills": [
+        "Parvarish",
+        "Gigiyena",
+        "Muloqot"
+      ],
+      "description": "Mehr uyi jamoasiga «Bemor parvarishchisi (sidelka)» lavozimiga xodim taklif qilinadi. Toshkent shahrida, yarim stavka formatda ishlash.",
+      "requirements": [
+        "Keksalar yoki bemorlarni parvarish qilish tajribasi",
+        "Birinchi yordam asoslari",
+        "Mehribonlik va sabr"
+      ],
+      "conditions": [
+        "Kelishilgan jadval",
+        "Tushlik beriladi",
+        "Tibbiy maslahat bilan qo'llab-quvvatlash"
+      ]
+    }
+  ],
+  "courses": [
+    {
+      "id": "k1",
+      "title": "Python noldan: ayollar uchun dasturlash",
+      "provider": "AyolQadami Academy",
+      "category": "it",
+      "icon": "laptop",
+      "price": 0,
+      "duration": "8 hafta",
+      "lessons": 32,
+      "level": "Boshlang'ich",
+      "rating": 4.9,
+      "students": 1840,
+      "certificate": true,
+      "format": "Onlayn",
+      "description": "Dasturlashni noldan o'rganing: Python asoslari, ma'lumotlar bilan ishlash va birinchi loyihangiz. Kurs oxirida hamkor kompaniyalarda stajirovka.",
+      "modules": [
+        "Python asoslari",
+        "O'zgaruvchilar va shartlar",
+        "Funksiyalar",
+        "Ro'yxatlar va lug'atlar",
+        "Fayllar bilan ishlash",
+        "Yakuniy loyiha"
+      ]
+    },
+    {
+      "id": "k2",
+      "title": "UI/UX dizayn: Figma bilan",
+      "provider": "Samo Design School",
+      "category": "it",
+      "icon": "palette",
+      "price": 1490000,
+      "duration": "10 hafta",
+      "lessons": 40,
+      "level": "O'rta",
+      "rating": 4.8,
+      "students": 920,
+      "certificate": true,
+      "format": "Onlayn",
+      "description": "Mobil va veb interfeyslarni loyihalashni amaliyot orqali o'rganing. Portfolio uchun 3 ta real loyiha.",
+      "modules": [
+        "Dizayn asoslari",
+        "Figma interfeysi",
+        "Auto layout",
+        "Dizayn tizimlari",
+        "Prototiplash",
+        "Portfolio"
+      ]
+    },
+    {
+      "id": "k3",
+      "title": "SMM va shaxsiy brend",
+      "provider": "Orzu Media",
+      "category": "sales",
+      "icon": "bag",
+      "price": 0,
+      "duration": "4 hafta",
+      "lessons": 16,
+      "level": "Boshlang'ich",
+      "rating": 4.7,
+      "students": 3210,
+      "certificate": true,
+      "format": "Onlayn",
+      "description": "Instagram va Telegramda sahifa yuritish, kontent-reja va uydan daromad topish.",
+      "modules": [
+        "Platformalar",
+        "Kontent-reja",
+        "Canva bilan ishlash",
+        "Target reklama asoslari"
+      ]
+    },
+    {
+      "id": "k4",
+      "title": "1C: Buxgalteriya amaliy kursi",
+      "provider": "Raqamli Moliya",
+      "category": "finance",
+      "icon": "coins",
+      "price": 890000,
+      "duration": "6 hafta",
+      "lessons": 24,
+      "level": "O'rta",
+      "rating": 4.8,
+      "students": 640,
+      "certificate": true,
+      "format": "Gibrid",
+      "description": "1C dasturida buxgalteriya hisobi, soliq hisobotlari va ish haqi hisoblash.",
+      "modules": [
+        "1C interfeysi",
+        "Birlamchi hujjatlar",
+        "Ish haqi",
+        "Soliq hisobotlari"
+      ]
+    },
+    {
+      "id": "k5",
+      "title": "Ingliz tili: IELTS 6.5+",
+      "provider": "Bilim Markazi",
+      "category": "edu",
+      "icon": "books",
+      "price": 1200000,
+      "duration": "12 hafta",
+      "lessons": 48,
+      "level": "O'rta",
+      "rating": 4.9,
+      "students": 1520,
+      "certificate": false,
+      "format": "Onlayn",
+      "description": "IELTS imtihonining barcha 4 qismi bo'yicha intensiv tayyorgarlik.",
+      "modules": [
+        "Listening",
+        "Reading",
+        "Writing Task 1 & 2",
+        "Speaking",
+        "Mock imtihonlar"
+      ]
+    },
+    {
+      "id": "k6",
+      "title": "Tikuvchilik asoslari",
+      "provider": "Gulnor Textile",
+      "category": "production",
+      "icon": "spool",
+      "price": 0,
+      "duration": "5 hafta",
+      "lessons": 20,
+      "level": "Boshlang'ich",
+      "rating": 4.6,
+      "students": 780,
+      "certificate": true,
+      "format": "Oflayn",
+      "description": "Tikuv mashinasida ishlash, bichish va oddiy kiyimlar tikish. Bitiruvchilarga ish taklifi.",
+      "modules": [
+        "Mashina bilan tanishuv",
+        "O'lchov olish",
+        "Bichish",
+        "Tikish texnikalari"
+      ]
+    },
+    {
+      "id": "k7",
+      "title": "Rezyume va suhbatga tayyorgarlik",
+      "provider": "AyolQadami Academy",
+      "category": "edu",
+      "icon": "resume",
+      "price": 0,
+      "duration": "1 hafta",
+      "lessons": 6,
+      "level": "Boshlang'ich",
+      "rating": 4.9,
+      "students": 5400,
+      "certificate": false,
+      "format": "Onlayn",
+      "description": "Kuchli rezyume yozish, ish suhbatidan muvaffaqiyatli o'tish va ish haqi bo'yicha kelishish.",
+      "modules": [
+        "Rezyume tuzilmasi",
+        "Qo'shimcha xat",
+        "Suhbat savollari",
+        "Maosh muzokarasi"
+      ]
+    },
+    {
+      "id": "k8",
+      "title": "Professional kosmetologiya",
+      "provider": "Orzu Beauty Academy",
+      "category": "beauty",
+      "icon": "lipstick",
+      "price": 2500000,
+      "duration": "3 oy",
+      "lessons": 36,
+      "level": "Boshlang'ich",
+      "rating": 4.7,
+      "students": 410,
+      "certificate": true,
+      "format": "Oflayn",
+      "description": "Yuz parvarishi, teri turlari va zamonaviy kosmetologik muolajalar.",
+      "modules": [
+        "Teri anatomiyasi",
+        "Gigiyena",
+        "Yuz parvarishi",
+        "Amaliyot"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "e1",
+      "title": "Ayollar karyera forumi 2026",
+      "date": "14 noyabr",
+      "place": "Toshkent / Onlayn",
+      "tag": "Forum",
+      "cover": [
+        "#6E6AF6",
+        "#4338CA"
+      ],
+      "img": "",
+      "desc": "50+ kompaniya, master-klasslar va jonli ish suhbatlari."
+    },
+    {
+      "id": "e2",
+      "title": "Women in Tech meetup",
+      "date": "28 noyabr",
+      "place": "IT Park, Toshkent",
+      "tag": "Meetup",
+      "cover": [
+        "#38BDF8",
+        "#4F46E5"
+      ],
+      "img": "",
+      "desc": "IT sohasidagi ayollar uchun tajriba almashish uchrashuvi."
+    },
+    {
+      "id": "e3",
+      "title": "Bo'sh ish o'rinlari yarmarkasi",
+      "date": "5 dekabr",
+      "place": "Samarqand",
+      "tag": "Yarmarka",
+      "cover": [
+        "#F472B6",
+        "#7C3AED"
+      ],
+      "img": "",
+      "desc": "Viloyat korxonalari bilan to'g'ridan-to'g'ri uchrashuv."
+    }
+  ],
+  "articles": [
+    {
+      "id": "a1",
+      "tag": "Rezyume",
+      "icon": "resume",
+      "cover": [
+        "#8286F6",
+        "#4C42EA"
+      ],
+      "date": "18 oktyabr",
+      "read": 5,
+      "title": "Rezyume: ish beruvchi birinchi 10 soniyada nimaga qaraydi",
+      "excerpt": "HR mutaxassislari rezyumeni o'qimaydi — ko'zdan kechiradi. Qaysi qatorlar e'tiborni tortadi va qaysilari sizni ro'yxatdan chiqarib yuboradi.",
+      "body": [
+        {
+          "h": "Sarlavha — eng muhim qator"
+        },
+        {
+          "p": "«Buxgalter» emas, «Buxgalter, 1C va soliq hisoboti, 4 yil tajriba». Aniq kasb va asosiy ko'nikma birinchi qatorda bo'lsa, QadamAI ham sizni mos vakansiyalarga tezroq tavsiya qiladi."
+        },
+        {
+          "h": "Vazifalar emas, natijalar"
+        },
+        {
+          "p": "«Hujjatlar bilan ishladim» o'rniga «Hujjat aylanishini elektron tizimga o'tkazdim, ish vaqti 30% qisqardi» deb yozing. Raqamlar ishonch uyg'otadi."
+        },
+        {
+          "h": "Tanaffus — yashirmang"
+        },
+        {
+          "p": "Bola parvarishi ta'tili tufayli bo'lgan tanaffusni ochiq ko'rsating va shu vaqtda o'rgangan narsalaringizni qo'shing: onlayn kurslar, frilans, ko'ngillilik. Ko'plab ish beruvchilar buni tushunadi."
+        },
+        {
+          "list": [
+            "Rasm — toza fon, tabiiy yorug'lik",
+            "Telefon va Telegram — ishlaydigan",
+            "Ko'nikmalar — vakansiyadagi so'zlar bilan bir xil",
+            "Hajm — bir-ikki sahifa"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2",
+      "tag": "Masofaviy ish",
+      "icon": "laptop",
+      "cover": [
+        "#F9A8D4",
+        "#DB2777"
+      ],
+      "date": "12 oktyabr",
+      "read": 6,
+      "title": "Uydan turib ishlash: yosh bolali onalar uchun 5 ta yo'nalish",
+      "excerpt": "Masofaviy ish — endi faqat dasturchilar uchun emas. Kontent, mijozlarni qo'llab-quvvatlash, buxgalteriya va onlayn ta'limda ham imkoniyatlar ko'p.",
+      "body": [
+        {
+          "p": "Masofaviy format ish va oila o'rtasidagi muvozanatni saqlashga yordam beradi. Quyidagi yo'nalishlarda boshlang'ich darajadan ham ish topish mumkin."
+        },
+        {
+          "list": [
+            "Mijozlarni qo'llab-quvvatlash operatori — chat va qo'ng'iroqlar",
+            "SMM va kontent menejer",
+            "Masofaviy buxgalter yoki hisobchi",
+            "Onlayn repetitor — til, matematika, maktabgacha ta'lim",
+            "Ma'lumot kiritish va onlayn-do'kon menejeri"
+          ]
+        },
+        {
+          "h": "Qayerdan boshlash kerak"
+        },
+        {
+          "p": "Rezyumeda «Ish formati» bo'limida «Masofaviy»ni belgilang — shunda vakansiyalar va QadamAI tavsiyalari shu bo'yicha saralanadi. Ko'nikma yetishmasa, «Kurslar» bo'limidagi bepul darslardan boshlang."
+        },
+        {
+          "h": "Firibgarlikdan ehtiyot bo'ling"
+        },
+        {
+          "p": "Ishga qabul qilish uchun oldindan to'lov so'ralsa yoki karta ma'lumotlari talab qilinsa — bu firibgarlik belgisi. Ishonchli kompaniyalar ishga olishdan oldin pul so'ramaydi."
+        }
+      ]
+    },
+    {
+      "id": "a3",
+      "tag": "Suhbat",
+      "icon": "coins",
+      "cover": [
+        "#FCD34D",
+        "#F59E0B"
+      ],
+      "date": "5 oktyabr",
+      "read": 4,
+      "title": "Ish suhbatida maosh haqida qanday gaplashish kerak",
+      "excerpt": "Ko'p ayollar maosh haqida birinchi bo'lib gapirishdan tortinadi. Bozor narxini bilish va o'z qiymatingizni asoslash — muzokaraning yarmi.",
+      "body": [
+        {
+          "h": "Oldindan tayyorlaning"
+        },
+        {
+          "p": "Vakansiyalar bo'limida o'z kasbingiz va shahringiz bo'yicha maoshlarni ko'rib chiqing. «Maosh bo'yicha» saralash bozordagi oraliqni tez ko'rsatadi."
+        },
+        {
+          "h": "Oraliq ayting, aniq raqam emas"
+        },
+        {
+          "p": "«Kutilayotgan maoshim — 6–7 million so'm, vazifalar hajmiga qarab» kabi javob muzokaraga joy qoldiradi."
+        },
+        {
+          "h": "Maoshdan tashqari nimalar muhim"
+        },
+        {
+          "list": [
+            "Moslashuvchan ish vaqti yoki gibrid format",
+            "Rasmiy ishga joylash va ijtimoiy paket",
+            "O'qish va kurslar uchun to'lov",
+            "Uyga yaqinlik va yo'l haqi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a4",
+      "tag": "Karyera",
+      "icon": "target",
+      "cover": [
+        "#6EE7B7",
+        "#059669"
+      ],
+      "date": "28 sentyabr",
+      "read": 7,
+      "title": "30 yoshdan keyin yangi kasbga o'tish: qo'rqmaslik kerak",
+      "excerpt": "Kasbni o'zgartirish uchun hech qachon kech emas. Mavjud tajribangizni yangi sohada qanday qo'llash va o'tish davrini qanday rejalashtirish haqida.",
+      "body": [
+        {
+          "p": "Pedagog — o'quv kontent dizayneri, hamshira — tibbiy ma'lumotlar operatori, sotuvchi — CRM menejer. Ko'nikmalaringizning katta qismi yangi kasbda ham kerak bo'ladi."
+        },
+        {
+          "h": "O'tishni bosqichlarga bo'ling"
+        },
+        {
+          "list": [
+            "1-oy: qiziqqan sohadagi 10 ta vakansiyani o'qing va talablarni yozib boring",
+            "2–4-oy: kurs va amaliy loyihalar",
+            "5-oy: portfolio va yangilangan rezyume",
+            "6-oy: stajirovka yoki yarim stavkadan boshlash"
+          ]
+        },
+        {
+          "h": "QadamAI yordam beradi"
+        },
+        {
+          "p": "QadamAI'ga «Pedagogman, IT'ga o'tmoqchiman» deb yozing — u mavjud ko'nikmalaringizga eng yaqin yo'nalishlar va kurslarni tavsiya qiladi."
+        }
+      ]
+    },
+    {
+      "id": "a5",
+      "tag": "Huquq",
+      "icon": "building",
+      "cover": [
+        "#A5B4FC",
+        "#6366F1"
+      ],
+      "date": "20 sentyabr",
+      "read": 5,
+      "title": "Ishlaydigan ona huquqlari: bilishingiz kerak bo'lgan asosiy qoidalar",
+      "excerpt": "Homiladorlik, tug'ruq va bola parvarishi ta'tili, qisqartirilgan ish vaqti — mehnat qonunchiligi ishlaydigan ayollarga qanday kafolatlar beradi.",
+      "body": [
+        {
+          "p": "Mehnat kodeksi homilador ayollar va yosh bolali onalar uchun alohida kafolatlarni belgilaydi. Asosiylari bilan tanishib chiqing."
+        },
+        {
+          "list": [
+            "Homiladorlik va tug'ruq ta'tili",
+            "Bola parvarishi bo'yicha ta'til va bu davrda ish joyining saqlanishi",
+            "Homilador ayollar va yosh bolali onalarni ish beruvchi tashabbusi bilan ishdan bo'shatish cheklovlari",
+            "Tungi va qo'shimcha ishlarga jalb qilish bo'yicha cheklovlar"
+          ]
+        },
+        {
+          "h": "Muhim"
+        },
+        {
+          "p": "Muddatlar va to'lovlar miqdori o'zgarib turishi mumkin. Aniq ma'lumotni lex.uz saytidagi amaldagi Mehnat kodeksidan yoki kompaniyangiz kadrlar bo'limidan oling."
+        }
+      ]
+    }
+  ],
+  "companies": {
+    "NurTech": {
+      "about": "Mahalliy biznes uchun veb va mobil ilovalar yaratadigan IT kompaniya. Jamoaning yarmidan ko'pi — ayollar.",
+      "size": "50–100",
+      "since": 2016
+    },
+    "Raqamli Moliya": {
+      "about": "Kichik va o'rta biznesga buxgalteriya va moliyaviy autsorsing xizmatlari.",
+      "size": "20–50",
+      "since": 2012
+    },
+    "Zarafshon Med": {
+      "about": "Samarqanddagi ko'p tarmoqli xususiy klinika. Xodimlarga oilaviy tibbiy xizmat bepul.",
+      "size": "100–250",
+      "since": 2009
+    },
+    "Bilim Markazi": {
+      "about": "Bolalar va kattalar uchun til va fan kurslari. Darslar jadvalini o'qituvchilar o'zi tanlaydi.",
+      "size": "20–50",
+      "since": 2015
+    },
+    "Gulnor Textile": {
+      "about": "Farg'ona vodiysidagi tikuvchilik fabrikasi: bolalar va ayollar kiyimi eksporti.",
+      "size": "250+",
+      "since": 2005
+    },
+    "Orzu Beauty": {
+      "about": "Kosmetika do'konlari tarmog'i va go'zallik saloni. 3 shaharda filiallar.",
+      "size": "100–250",
+      "since": 2014
+    },
+    "Samo Design": {
+      "about": "Brending, UI/UX va reklama dizayni studiyasi. Masofaviy va gibrid ish formati.",
+      "size": "10–20",
+      "since": 2018
+    },
+    "Ipak Yo'li Savdo": {
+      "about": "Maishiy texnika va oziq-ovqat savdosi bilan shug'ullanuvchi distribyutor.",
+      "size": "100–250",
+      "since": 2010
+    },
+    "Bank Ishonch": {
+      "about": "Tijorat banki. Ayollar tadbirkorligini qo'llab-quvvatlash dasturlari mavjud.",
+      "size": "250+",
+      "since": 1994
+    },
+    "Makro": {
+      "about": "Supermarketlar tarmog'i. Smenali va yarim stavkali ish o'rinlari.",
+      "size": "250+",
+      "since": 2007
+    },
+    "Uzum Market": {
+      "about": "O'zbekistonning yirik onlayn savdo platformasi.",
+      "size": "250+",
+      "since": 2022
+    },
+    "Clean Pro": {
+      "about": "Ofis va xonadonlarni professional tozalash xizmati.",
+      "size": "20–50",
+      "since": 2017
+    },
+    "Mehr uyi": {
+      "about": "Keksalar va bemorlarga uyda parvarish ko'rsatuvchi xizmat.",
+      "size": "20–50",
+      "since": 2019
+    }
+  }
+}

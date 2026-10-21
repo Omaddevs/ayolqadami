@@ -8,15 +8,17 @@ import { JobCard, Sheet } from '../components/UI'
 import { useApp } from '../context/AppContext'
 import { CATEGORIES, JOB_TYPES } from '../data/mock'
 import { CITY_COORDS, placeJobs, rangeShort, salaryShort } from '../data/geo'
+import { tr, tx } from '../i18n'
+
 
 const MIN_SALARIES = [0, 3e6, 5e6, 8e6, 12e6]
 
-const ME_HTML = `<div class="jm-me">
-  <div class="jm-me-tag"><i><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2" fill="currentColor" stroke="none"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></i><b>Siz shu yerdasiz</b></div>
+const meHtml = () => `<div class="jm-me">
+  <div class="jm-me-tag"><i><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2" fill="currentColor" stroke="none"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></i><b>${tr('Siz shu yerdasiz')}</b></div>
   <s class="jm-me-stem"></s><span class="jm-me-dot"></span>
 </div>`
 const CITY_MODE_ZOOM = 10 // bundan kichik zoomda vakansiyalar shahar bo'yicha guruhlanadi
-const norm = (s) => s.toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
+const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 // nuqta chizilgan ko'pburchak ichidami (ray casting, [lat, lng])
 const inPoly = ([y, x], poly) => {
   let inside = false
@@ -56,7 +58,7 @@ export default function JobsMap() {
       (!type || j.type === type) &&
       (!minSalary || (j.salaryTo || j.salaryFrom || 0) >= minSalary) &&
       (!area || inPoly(j.pos, area)) &&
-      (!nq || norm(`${j.title} ${j.company} ${j.skills.join(' ')}`).includes(nq)))
+      (!nq || norm(`${j.title} ${j.company} ${(j.skills || []).join(' ')}`).includes(nq)))
   }, [allJobs, q, cat, type, minSalary, area])
 
   const activeFilters = (cat ? 1 : 0) + (type ? 1 : 0) + (minSalary ? 1 : 0)
@@ -96,7 +98,7 @@ export default function JobsMap() {
         if (!c) return
         const icon = L.divIcon({
           className: 'jm-wrap',
-          html: `<div class="jm-pin jm-city"><b>${esc(city)}</b><span>${rangeShort(list)}</span></div>`,
+          html: `<div class="jm-pin jm-city"><b>${esc(tx(city))}</b><span>${rangeShort(list)}</span></div>`,
           iconSize: null,
         })
         L.marker(c, { icon, keyboard: true, title: city })
@@ -120,7 +122,7 @@ export default function JobsMap() {
       const on = j.id === selected
       const icon = L.divIcon({
         className: 'jm-wrap',
-        html: `<div class="jm-pin ${on ? 'on' : ''}"><b>${salaryShort(j)}</b><span>${esc(j.title)}</span></div>`,
+        html: `<div class="jm-pin ${on ? 'on' : ''}"><b>${salaryShort(j)}</b><span>${esc(tx(j.title))}</span></div>`,
         iconSize: null,
       })
       L.marker(j.pos, { icon, keyboard: true, title: j.title, zIndexOffset: on ? 1000 : 0 })
@@ -143,17 +145,17 @@ export default function JobsMap() {
   useEffect(() => { if (selected && !selectedJob) setSelected(null) }, [selected, selectedJob])
 
   const locate = (silent = false) => {
-    if (!navigator.geolocation) return silent || notify("Qurilmangiz joylashuvni aniqlay olmaydi")
+    if (!navigator.geolocation) return silent || notify(tr("Qurilmangiz joylashuvni aniqlay olmaydi"))
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const map = mapRef.current
         if (!map) return
         const ll = [coords.latitude, coords.longitude]
         meRef.current?.remove()
-        meRef.current = L.marker(ll, { icon: L.divIcon({ className: 'jm-wrap', html: ME_HTML, iconSize: null }), interactive: false, zIndexOffset: 2000 }).addTo(map)
+        meRef.current = L.marker(ll, { icon: L.divIcon({ className: 'jm-wrap', html: meHtml(), iconSize: null }), interactive: false, zIndexOffset: 2000 }).addTo(map)
         map.flyTo(ll, 14, { duration: 0.9 })
       },
-      () => silent || notify("Joylashuvga ruxsat berilmadi"),
+      () => silent || notify(tr("Joylashuvga ruxsat berilmadi")),
       { enableHighAccuracy: true, timeout: 10000 },
     )
   }
@@ -201,34 +203,34 @@ export default function JobsMap() {
       <div ref={boxRef} className="jm-map" />
 
       <div className="jm-top">
-        <button type="button" className="jm-btn" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/'))} aria-label="Orqaga">
+        <button type="button" className="jm-btn" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/'))} aria-label={tr("Orqaga")}>
           <CaretLeft size={22} weight="bold" />
         </button>
         {searchOpen ? (
           <div className="jm-search">
             <MagnifyingGlass size={20} />
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Lavozim, kompaniya…" />
-            <button type="button" onClick={() => { setQ(''); setSearchOpen(false) }} aria-label="Yopish"><X size={18} weight="bold" /></button>
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Lavozim, kompaniya…")} />
+            <button type="button" onClick={() => { setQ(''); setSearchOpen(false) }} aria-label={tr("Yopish")}><X size={18} weight="bold" /></button>
           </div>
         ) : (
           <>
-            <div className="jm-title"><b>{area ? 'Chizilgan hudud' : 'Xarita'}</b><span>{jobs.length} ta vakansiya</span></div>
-            <button type="button" className="jm-btn" onClick={() => setSearchOpen(true)} aria-label="Qidirish">
+            <div className="jm-title"><b>{area ? tr('Chizilgan hudud') : tr('Xarita')}</b><span>{tr('{n} ta vakansiya', { n: jobs.length })}</span></div>
+            <button type="button" className="jm-btn" onClick={() => setSearchOpen(true)} aria-label={tr("Qidirish")}>
               <MagnifyingGlass size={22} weight="bold" />
             </button>
           </>
         )}
-        <button type="button" className={`jm-btn ${activeFilters ? 'on' : ''}`} onClick={() => setFilterOpen(true)} aria-label="Filtrlar">
+        <button type="button" className={`jm-btn ${activeFilters ? 'on' : ''}`} onClick={() => setFilterOpen(true)} aria-label={tr("Filtrlar")}>
           <SlidersHorizontal size={22} weight="bold" />
           {activeFilters > 0 && <em className="jm-badge">{activeFilters}</em>}
         </button>
       </div>
 
       <div className="jm-side">
-        <button type="button" className="jm-btn" onClick={() => locate()} aria-label="Mening joylashuvim"><NavigationArrow size={22} weight="bold" style={{ transform: 'scaleX(-1)' }} /></button>
+        <button type="button" className="jm-btn" onClick={() => locate()} aria-label={tr("Mening joylashuvim")}><NavigationArrow size={22} weight="bold" style={{ transform: 'scaleX(-1)' }} /></button>
         <div className="jm-zoom">
-          <button type="button" className="jm-btn" onClick={() => mapRef.current?.zoomIn()} aria-label="Yaqinlashtirish"><Plus size={22} weight="bold" /></button>
-          <button type="button" className="jm-btn" onClick={() => mapRef.current?.zoomOut()} aria-label="Uzoqlashtirish"><Minus size={22} weight="bold" /></button>
+          <button type="button" className="jm-btn" onClick={() => mapRef.current?.zoomIn()} aria-label={tr("Yaqinlashtirish")}><Plus size={22} weight="bold" /></button>
+          <button type="button" className="jm-btn" onClick={() => mapRef.current?.zoomOut()} aria-label={tr("Uzoqlashtirish")}><Minus size={22} weight="bold" /></button>
         </div>
       </div>
 
@@ -237,56 +239,57 @@ export default function JobsMap() {
           <svg><path ref={pathRef} /></svg>
         </div>
       )}
-      {drawing && <div className="jm-hint">Qidiriladigan hududni barmog'ingiz bilan chizing</div>}
+      {drawing && <div className="jm-hint">{tr("Qidiriladigan hududni barmog'ingiz bilan chizing")}</div>}
 
       {!selectedJob && (
         <button type="button" className={`jm-btn jm-draw-btn ${drawing || area ? 'on' : ''}`} onClick={toggleDraw}
-          aria-label={area ? 'Hududni tozalash' : drawing ? 'Chizishni bekor qilish' : 'Hududni chizib qidirish'}>
+          aria-label={area ? tr('Hududni tozalash') : drawing ? tr('Chizishni bekor qilish') : tr('Hududni chizib qidirish')}>
           {drawing || area ? <X size={22} weight="bold" /> : <ScribbleLoop size={24} weight="bold" />}
+          <span className="jm-draw-label">{area ? tr('Hududni tozalash') : drawing ? tr('Bekor qilish') : tr('Hududni chizish')}</span>
         </button>
       )}
 
       {selectedJob ? (
         <div className="jm-card" key={selectedJob.id}>
-          <button type="button" className="jm-card-x" onClick={() => setSelected(null)} aria-label="Yopish"><X size={16} weight="bold" /></button>
+          <button type="button" className="jm-card-x" onClick={() => setSelected(null)} aria-label={tr("Yopish")}><X size={16} weight="bold" /></button>
           <JobCard job={selectedJob} />
         </div>
       ) : (
         <button type="button" className="jm-list" onClick={() => nav('/jobs')}>
-          <ListBullets size={20} weight="bold" /> Ro'yxat ko'rinishida
+          <ListBullets size={20} weight="bold" /> {tr("Ro'yxat ko'rinishida")}
         </button>
       )}
 
-      {jobs.length === 0 && !drawing && <div className="jm-empty">{area ? "Bu hududda vakansiya topilmadi" : "Bu filtrlar bo'yicha vakansiya topilmadi"}</div>}
+      {jobs.length === 0 && !drawing && <div className="jm-empty">{area ? tr("Bu hududda vakansiya topilmadi") : tr("Bu filtrlar bo'yicha vakansiya topilmadi")}</div>}
 
-      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filtrlar">
+      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title={tr("Filtrlar")}>
         <div className="jm-filters">
-          <span className="search-panel-title">Soha</span>
+          <span className="search-panel-title">{tr("Soha")}</span>
           <div className="pill-row wrap">
-            <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}>Barchasi</button>
+            <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}>{tr("Barchasi")}</button>
             {CATEGORIES.map((c) => (
               <button key={c.id} className={`pill ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}>
-                <Icon3D name={c.icon} size={22} /> {c.short}
+                <Icon3D name={c.icon} size={22} /> {tr(c.short)}
               </button>
             ))}
           </div>
-          <span className="search-panel-title">Ish formati</span>
+          <span className="search-panel-title">{tr("Ish formati")}</span>
           <div className="pill-row wrap">
             {['', ...JOB_TYPES].map((t) => (
-              <button key={t || 'all'} className={`pill pill-sm ${type === t ? 'on' : ''}`} onClick={() => setType(t)}>{t || 'Har qanday'}</button>
+              <button key={t || 'all'} className={`pill pill-sm ${type === t ? 'on' : ''}`} onClick={() => setType(t)}>{tr(t || 'Har qanday')}</button>
             ))}
           </div>
-          <span className="search-panel-title">Oylik maosh</span>
+          <span className="search-panel-title">{tr("Oylik maosh")}</span>
           <div className="pill-row wrap">
             {MIN_SALARIES.map((s) => (
               <button key={s} className={`pill pill-sm ${minSalary === s ? 'on' : ''}`} onClick={() => setMinSalary(s)}>
-                {s ? `${s / 1e6} mln dan` : 'Har qanday'}
+                {s ? tr("{a} mln dan", { a: s / 1e6 }) : tr('Har qanday')}
               </button>
             ))}
           </div>
           <div className="jm-filter-actions">
-            <button className="btn btn-ghost" onClick={resetFilters} disabled={!activeFilters}>Tozalash</button>
-            <button className="btn btn-primary" onClick={() => setFilterOpen(false)}>{jobs.length} ta vakansiyani ko'rsatish</button>
+            <button className="btn btn-ghost" onClick={resetFilters} disabled={!activeFilters}>{tr("Tozalash")}</button>
+            <button className="btn btn-primary" onClick={() => setFilterOpen(false)}>{tr("{n} ta vakansiyani ko'rsatish", { n: jobs.length })}</button>
           </div>
         </div>
       </Sheet>

@@ -14,6 +14,8 @@ import {
 } from '../data/resume'
 import { PHONE_PREFIX, checkUzPhone, formatUzPhone } from '../lib/phone'
 import { readPhoto } from '../lib/photo'
+import { tr, tx } from '../i18n'
+
 
 const STEPS = ["Shaxsiy ma'lumotlar", 'Lavozim va mutaxassislik', 'Ish tajribasi', "Ta'lim", "Ko'nikmalar"]
 const EXP_ICONS = { none: Briefcase, lt1: CalendarBlank, '1-3': ChartBar, '3-5': TrendUp, '5+': Star }
@@ -156,11 +158,11 @@ function entryErrors(kind, x) {
 
 function MonthYear({ value, onChange, disabled }) {
   const [y = '', m = ''] = (value || '').split('-')
-  if (disabled) return <div className="rb-my"><div className="rb-my-off">Hozirgacha</div></div>
+  if (disabled) return <div className="rb-my"><div className="rb-my-off">{tr("Hozirgacha")}</div></div>
   return (
     <div className="rb-my">
-      <Select value={m} options={MONTH_OPTS} onChange={(v) => onChange(`${y}-${v}`)} placeholder="Oy" />
-      <Select value={y} options={YEARS} onChange={(v) => onChange(`${v}-${m}`)} placeholder="Yil" />
+      <Select value={m} options={MONTH_OPTS} onChange={(v) => onChange(`${y}-${v}`)} placeholder={tr("Oy")} />
+      <Select value={y} options={YEARS} onChange={(v) => onChange(`${v}-${m}`)} placeholder={tr("Yil")} />
     </div>
   )
 }
@@ -198,7 +200,7 @@ export default function ResumeBuilder() {
     if (Object.keys(errors).length) return failed()
     updateUser(toUser(d, user)) // har qadamda saqlanadi — yarim yo'lda chiqib ketsa ham ma'lumot yo'qolmaydi
     if (step === STEPS.length - 1) {
-      notify('Rezyume saqlandi')
+      notify(tr('Rezyume saqlandi'))
       nav('/profile')
       return
     }
@@ -216,8 +218,8 @@ export default function ResumeBuilder() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) return notify('Rasm 5 MB dan oshmasin')
-    try { set('photo', await readPhoto(file)) } catch { notify("Rasmni o'qib bo'lmadi") }
+    if (file.size > 5 * 1024 * 1024) return notify(tr('Rasm 5 MB dan oshmasin'))
+    try { set('photo', await readPhoto(file)) } catch { notify(tr("Rasmni o'qib bo'lmadi")) }
   }
 
   /* ro'yxat yozuvlari (tajriba, ta'lim, sertifikat) */
@@ -243,7 +245,7 @@ export default function ResumeBuilder() {
     const name = raw.trim().replace(/\s+/g, ' ')
     if (name.length < 2) return
     if (d.skills.some((s) => s.name.toLowerCase() === name.toLowerCase())) return setSkillText('')
-    if (d.skills.length >= MAX_SKILLS) return notify(`Ko'pi bilan ${MAX_SKILLS} ta ko'nikma`)
+    if (d.skills.length >= MAX_SKILLS) return notify(tr("Ko'pi bilan {a} ta ko'nikma", { a: MAX_SKILLS }))
     set('skills', [...d.skills, { name, level: SKILL_LEVELS[1] }])
     setSkillText('')
   }
@@ -261,13 +263,13 @@ export default function ResumeBuilder() {
 
   return (
     <div className="page rb">
-      <TopBar title={user.headline ? 'Rezyumeni tahrirlash' : 'Rezyume yaratish'} />
+      <TopBar title={user.headline ? tr('Rezyumeni tahrirlash') : tr('Rezyume yaratish')} />
       <div className="page-body rb-body">
-        <Stepper steps={STEPS} step={step} reached={reached} onGo={goStep} label="Rezyume qadamlari" />
+        <Stepper steps={STEPS} step={step} reached={reached} onGo={goStep} label={tr("Rezyume qadamlari")} />
 
         <section className="rb-card">
           <div className="rb-head">
-            <span>{step + 1}-qadam · {STEPS.length} tadan</span>
+            <span>{tr('{n}-qadam · {total} tadan', { n: step + 1, total: STEPS.length })}</span>
             <h2>{STEPS[step]}</h2>
           </div>
 
@@ -276,74 +278,74 @@ export default function ResumeBuilder() {
               <div className="rb-photo">
                 <label className="rb-photo-box">
                   <input type="file" accept="image/jpeg,image/png" onChange={pickPhoto} />
-                  {d.photo ? <img src={d.photo} alt="Rezyume rasmi" /> : <><Camera size={28} /><span>Rasm</span></>}
+                  {d.photo ? <img src={d.photo} alt={tr("Rezyume rasmi")} /> : <><Camera size={28} /><span>{tr("Rasm")}</span></>}
                 </label>
                 <div>
-                  <b>Fotosurat</b>
-                  <p>Rasmli rezyume ko'proq ko'riladi. Yuzingiz aniq ko'rinadigan, ish uslubidagi surat tanlang.</p>
+                  <b>{tr("Fotosurat")}</b>
+                  <p>{tr("Rasmli rezyume ko'proq ko'riladi. Yuzingiz aniq ko'rinadigan, ish uslubidagi surat tanlang.")}</p>
                   <div className="rb-photo-actions">
-                    <span className="rb-tag">JPG yoki PNG · 5 MB gacha</span>
-                    {d.photo && <button type="button" className="rb-link danger" onClick={() => set('photo', '')}>O'chirish</button>}
+                    <span className="rb-tag">{tr("JPG yoki PNG · 5 MB gacha")}</span>
+                    {d.photo && <button type="button" className="rb-link danger" onClick={() => set('photo', '')}>{tr("O'chirish")}</button>}
                   </div>
                 </div>
               </div>
 
               <div className="rb-grid">
-                <Field label="Familiya" req error={err('lastName')}><input {...bind('lastName')} autoComplete="family-name" placeholder="Rahimova" /></Field>
-                <Field label="Ism" req error={err('firstName')}><input {...bind('firstName')} autoComplete="given-name" placeholder="Malika" /></Field>
-                <Field label="Otasining ismi"><input {...bind('middleName')} placeholder="Akmal qizi" /></Field>
-                <Field label="Tug'ilgan sana" req error={err('birthDate')}>
+                <Field label={tr("Familiya")} req error={err('lastName')}><input {...bind('lastName')} autoComplete="family-name" placeholder={tr("Rahimova")} /></Field>
+                <Field label={tr("Ism")} req error={err('firstName')}><input {...bind('firstName')} autoComplete="given-name" placeholder={tr("Malika")} /></Field>
+                <Field label={tr("Otasining ismi")}><input {...bind('middleName')} placeholder={tr("Akmal qizi")} /></Field>
+                <Field label={tr("Tug'ilgan sana")} req error={err('birthDate')}>
                   <input type="date" {...bind('birthDate')} max={new Date().toISOString().slice(0, 10)} min="1940-01-01" />
                 </Field>
-                <Field label="Telefon raqami" req error={err('phone')}>
+                <Field label={tr("Telefon raqami")} req error={err('phone')}>
                   <input value={d.phone} inputMode="tel" autoComplete="tel" onChange={(ev) => set('phone', formatUzPhone(ev.target.value))} />
-                  {!err('phone') && registeredPhone && <small className="rb-ok"><CheckCircle size={16} weight="fill" /> Ro'yxatdan o'tgan raqam</small>}
+                  {!err('phone') && registeredPhone && <small className="rb-ok"><CheckCircle size={16} weight="fill" /> {tr("Ro'yxatdan o'tgan raqam")}</small>}
                 </Field>
-                <Field label="Email" error={err('email')}><input type="email" {...bind('email')} autoComplete="email" placeholder="ism@mail.uz" /></Field>
-                <Field as="div" label="Viloyat / shahar" req error={err('region')}>
-                  <Select value={d.region} options={REGION_OPTS} placeholder="Viloyatni tanlang"
+                <Field label={tr("Email")} error={err('email')}><input type="email" {...bind('email')} autoComplete="email" placeholder={tr("ism@mail.uz")} /></Field>
+                <Field as="div" label={tr("Viloyat / shahar")} req error={err('region')}>
+                  <Select value={d.region} options={REGION_OPTS} placeholder={tr("Viloyatni tanlang")}
                     onChange={(v) => setD((p) => ({ ...p, region: v, district: v === p.region ? p.district : '' }))} />
                 </Field>
-                <Field as="div" label="Tuman / shahar" req error={err('district')}>
+                <Field as="div" label={tr("Tuman / shahar")} req error={err('district')}>
                   {region
-                    ? <Select value={d.district} options={region.districts} placeholder="Tumanni tanlang" onChange={(v) => set('district', v)} />
-                    : <button type="button" className="sel-btn" disabled><span className="sel-val sel-ph">Avval viloyatni tanlang</span></button>}
+                    ? <Select value={d.district} options={region.districts} placeholder={tr("Tumanni tanlang")} onChange={(v) => set('district', v)} />
+                    : <button type="button" className="sel-btn" disabled><span className="sel-val sel-ph">{tr("Avval viloyatni tanlang")}</span></button>}
                 </Field>
-                <Field label="Mahalla (MFY)"><input {...bind('mahalla')} placeholder="Mahalla nomi" /></Field>
-                <Field label="Telegram"><input {...bind('telegram')} placeholder="@username" /></Field>
-                <Field label="O'zim haqimda" wide hint={`${d.about.length} / 1000 · 120 belgidan ko'p bo'lsa, rezyume raqobatda ajralib turadi`}>
+                <Field label={tr("Mahalla (MFY)")}><input {...bind('mahalla')} placeholder={tr("Mahalla nomi")} /></Field>
+                <Field label={tr("Telegram")}><input {...bind('telegram')} placeholder={tr("@username")} /></Field>
+                <Field label={tr("O'zim haqimda")} wide hint={`${d.about.length} / 1000 · 120 belgidan ko'p bo'lsa, rezyume raqobatda ajralib turadi`}>
                   <textarea rows={4} maxLength={1000} {...bind('about')}
-                    placeholder="Tajribangiz, kuchli tomonlaringiz va qanday ish izlayotganingizni qisqa yozing" />
+                    placeholder={tr("Tajribangiz, kuchli tomonlaringiz va qanday ish izlayotganingizni qisqa yozing")} />
                 </Field>
               </div>
-              <Check2 checked={d.relocate} onChange={(v) => set('relocate', v)}>Boshqa shaharga ko'chishga tayyorman</Check2>
+              <Check2 checked={d.relocate} onChange={(v) => set('relocate', v)}>{tr("Boshqa shaharga ko'chishga tayyorman")}</Check2>
             </>
           )}
 
           {step === 1 && (
             <div className="rb-stack">
               <div className="rb-grid two">
-                <Field as="div" label="Soha" req error={err('category')}>
-                  <Select value={d.category} options={CAT_OPTS} placeholder="Sohani tanlang" onChange={(v) => set('category', v)} />
+                <Field as="div" label={tr("Soha")} req error={err('category')}>
+                  <Select value={d.category} options={CAT_OPTS} placeholder={tr("Sohani tanlang")} onChange={(v) => set('category', v)} />
                 </Field>
-                <Field label="Kim bo'lib ishlamoqchisiz?" req error={err('headline')}>
-                  <input {...bind('headline')} placeholder="Masalan: Buxgalter, enaga, SMM menejer" maxLength={80} />
+                <Field label={tr("Kim bo'lib ishlamoqchisiz?")} req error={err('headline')}>
+                  <input {...bind('headline')} placeholder={tr("Masalan: Buxgalter, enaga, SMM menejer")} maxLength={80} />
                 </Field>
               </div>
-              <Field as="div" label="Tajribangiz qancha?">
+              <Field as="div" label={tr("Tajribangiz qancha?")}>
                 <Chips options={EXP_LEVELS} icons={EXP_ICONS} isOn={(id) => d.expLevel === id} onPick={(id) => set('expLevel', id)} />
               </Field>
-              <Field label="Kutilayotgan oylik maosh (so'm)" hint="Bo'sh qoldirsangiz — «Kelishiladi»">
-                <input className="rb-salary" value={d.salary} inputMode="numeric" placeholder="Masalan: 5 000 000"
+              <Field label={tr("Kutilayotgan oylik maosh (so'm)")} hint={tr("Bo'sh qoldirsangiz — «Kelishiladi»")}>
+                <input className="rb-salary" value={d.salary} inputMode="numeric" placeholder={tr("Masalan: 5 000 000")}
                   onChange={(ev) => set('salary', digits(ev.target.value) ? formatSum(Number(digits(ev.target.value).slice(0, 10))) : '')} />
               </Field>
-              <Field as="div" label="Bandlik turi" hint="Bir nechtasini tanlash mumkin">
+              <Field as="div" label={tr("Bandlik turi")} hint={tr("Bir nechtasini tanlash mumkin")}>
                 <Chips options={EMPLOYMENT} isOn={(id) => d.employment.includes(id)} onPick={(id) => toggleIn('employment', id)} />
               </Field>
-              <Field as="div" label="Ish usuli (rejimi)">
+              <Field as="div" label={tr("Ish usuli (rejimi)")}>
                 <Chips options={WORK_MODES} isOn={(id) => d.workMode.includes(id)} onPick={(id) => toggleIn('workMode', id)} />
               </Field>
-              <Field as="div" label="Qulay ish vaqti" hint="Farzandlaringiz bo'lsa, ish beruvchi grafikni oldindan biladi">
+              <Field as="div" label={tr("Qulay ish vaqti")} hint={tr("Farzandlaringiz bo'lsa, ish beruvchi grafikni oldindan biladi")}>
                 <Chips options={WORK_TIME} isOn={(id) => d.workTime.includes(id)} onPick={(id) => toggleIn('workTime', id)} />
               </Field>
             </div>
@@ -361,26 +363,26 @@ export default function ResumeBuilder() {
                       </span>
                       <b className="rb-tl-org">{it.company}</b>
                       <span className="rb-tl-role">{it.role}</span>
-                      {it.desc && <p>{it.desc}</p>}
+                      {it.desc && <p>{tr(it.desc)}</p>}
                       <div className="rb-item-actions">
-                        <button type="button" className="icon-btn sm" onClick={() => openEntry('exp', i)} aria-label="Tahrirlash"><PencilSimple size={17} /></button>
-                        <button type="button" className="icon-btn sm" onClick={() => removeEntry('exp', i)} aria-label="O'chirish"><Trash size={17} /></button>
+                        <button type="button" className="icon-btn sm" onClick={() => openEntry('exp', i)} aria-label={tr("Tahrirlash")}><PencilSimple size={17} /></button>
+                        <button type="button" className="icon-btn sm" onClick={() => removeEntry('exp', i)} aria-label={tr("O'chirish")}><Trash size={17} /></button>
                       </div>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className="rb-note"><Info size={20} />
-                  <span>Rasmiy ish joyi bo'lmasa ham — kasanachilik, oilaviy biznes, ko'ngillilik yoki amaliyotni qo'shishingiz mumkin. Tajriba yo'q bo'lsa, bu qadamni o'tkazib yuboring.</span>
+                  <span>{tr("Rasmiy ish joyi bo'lmasa ham — kasanachilik, oilaviy biznes, ko'ngillilik yoki amaliyotni qo'shishingiz mumkin. Tajriba yo'q bo'lsa, bu qadamni o'tkazib yuboring.")}</span>
                 </div>
               )}
-              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('exp')}><Plus size={18} weight="bold" /> Ish tajribasini qo'shish</button>
+              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('exp')}><Plus size={18} weight="bold" /> {tr("Ish tajribasini qo'shish")}</button>
 
               <div className="rb-sep" />
-              <Check2 checked={d.hasBreak} onChange={(v) => set('hasBreak', v)}>Ishda tanaffus bo'lgan (masalan, bola parvarishi ta'tili)</Check2>
+              <Check2 checked={d.hasBreak} onChange={(v) => set('hasBreak', v)}>{tr("Ishda tanaffus bo'lgan (masalan, bola parvarishi ta'tili)")}</Check2>
               {d.hasBreak && (
-                <Field label="Izoh" hint="Ish beruvchi tanaffus sababini tushunadi — bu sizning afzalligingiz">
-                  <input {...bind('careerBreak')} maxLength={150} placeholder="Masalan: 2021–2023 — bola parvarishi ta'tili" />
+                <Field label={tr("Izoh")} hint={tr("Ish beruvchi tanaffus sababini tushunadi — bu sizning afzalligingiz")}>
+                  <input {...bind('careerBreak')} maxLength={150} placeholder={tr("Masalan: 2021–2023 — bola parvarishi ta'tili")} />
                 </Field>
               )}
             </div>
@@ -392,20 +394,20 @@ export default function ResumeBuilder() {
                 <div key={i} className="rb-item">
                   <span className="rb-item-ico"><GraduationCap size={22} /></span>
                   <div className="rb-item-text">
-                    <span className="rb-tl-meta">{[it.from && `${it.from} – ${it.current ? 'h.v.' : it.to || ''}`, it.level].filter(Boolean).join(' · ')}</span>
+                    <span className="rb-tl-meta">{[it.from && `${it.from} – ${it.current ? tr('h.v.') : it.to || ''}`, it.level].filter(Boolean).join(' · ')}</span>
                     <b>{it.school}</b>
                     {it.faculty && <span>{it.faculty}</span>}
                   </div>
                   <div className="rb-item-actions">
-                    <button type="button" className="icon-btn sm" onClick={() => openEntry('edu', i)} aria-label="Tahrirlash"><PencilSimple size={17} /></button>
-                    <button type="button" className="icon-btn sm" onClick={() => removeEntry('edu', i)} aria-label="O'chirish"><Trash size={17} /></button>
+                    <button type="button" className="icon-btn sm" onClick={() => openEntry('edu', i)} aria-label={tr("Tahrirlash")}><PencilSimple size={17} /></button>
+                    <button type="button" className="icon-btn sm" onClick={() => removeEntry('edu', i)} aria-label={tr("O'chirish")}><Trash size={17} /></button>
                   </div>
                 </div>
               ))}
-              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('edu')}><Plus size={18} weight="bold" /> O'quv muassasasi qo'shish</button>
+              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('edu')}><Plus size={18} weight="bold" /> {tr("O'quv muassasasi qo'shish")}</button>
 
               <div className="rb-sep" />
-              <h3 className="rb-sub">Sertifikat va kurslar</h3>
+              <h3 className="rb-sub">{tr("Sertifikat va kurslar")}</h3>
               {d.certificates.map((it, i) => (
                 <div key={i} className="rb-item">
                   <span className="rb-item-ico"><Certificate size={22} /></span>
@@ -414,24 +416,24 @@ export default function ResumeBuilder() {
                     {(it.org || it.year) && <span>{[it.org, it.year].filter(Boolean).join(' · ')}</span>}
                   </div>
                   <div className="rb-item-actions">
-                    <button type="button" className="icon-btn sm" onClick={() => openEntry('cert', i)} aria-label="Tahrirlash"><PencilSimple size={17} /></button>
-                    <button type="button" className="icon-btn sm" onClick={() => removeEntry('cert', i)} aria-label="O'chirish"><Trash size={17} /></button>
+                    <button type="button" className="icon-btn sm" onClick={() => openEntry('cert', i)} aria-label={tr("Tahrirlash")}><PencilSimple size={17} /></button>
+                    <button type="button" className="icon-btn sm" onClick={() => removeEntry('cert', i)} aria-label={tr("O'chirish")}><Trash size={17} /></button>
                   </div>
                 </div>
               ))}
-              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('cert')}><Plus size={18} weight="bold" /> Sertifikat qo'shish</button>
+              <button type="button" className="btn btn-soft rb-add" onClick={() => openEntry('cert')}><Plus size={18} weight="bold" /> {tr("Sertifikat qo'shish")}</button>
             </div>
           )}
 
           {step === 4 && (
             <div className="rb-stack">
-              <Field as="div" label="Kasbiy bilim va ko'nikmalar" hint="Darajani o'zgartirish uchun ustiga bosing">
+              <Field as="div" label={tr("Kasbiy bilim va ko'nikmalar")} hint={tr("Darajani o'zgartirish uchun ustiga bosing")}>
                 <div className="rb-skill-input">
-                  <input value={skillText} maxLength={60} placeholder="Ko'nikma yozing va Enter bosing"
+                  <input value={skillText} maxLength={60} placeholder={tr("Ko'nikma yozing va Enter bosing")}
                     onChange={(ev) => setSkillText(ev.target.value)}
                     onKeyDown={(ev) => { if (ev.key === 'Enter') { ev.preventDefault(); addSkill(skillText) } }} />
                   <span className="rb-count">{d.skills.length} / {MAX_SKILLS}</span>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => addSkill(skillText)} disabled={skillText.trim().length < 2}>Qo'shish</button>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => addSkill(skillText)} disabled={skillText.trim().length < 2}>{tr("Qo'shish")}</button>
                 </div>
               </Field>
               {d.skills.length > 0 && (
@@ -439,15 +441,15 @@ export default function ResumeBuilder() {
                   {d.skills.map((s, i) => (
                     <span key={s.name} className="rb-skill">
                       {s.name}
-                      <button type="button" className="rb-skill-lvl" onClick={() => cycleSkill(i)} title="Darajani o'zgartirish">{s.level}</button>
-                      <button type="button" className="rb-skill-x" onClick={() => set('skills', d.skills.filter((_, j) => j !== i))} aria-label={`${s.name} — o'chirish`}><X size={14} weight="bold" /></button>
+                      <button type="button" className="rb-skill-lvl" onClick={() => cycleSkill(i)} title={tr("Darajani o'zgartirish")}>{tx(s.level)}</button>
+                      <button type="button" className="rb-skill-x" onClick={() => set('skills', d.skills.filter((_, j) => j !== i))} aria-label={tr("{a} — o'chirish", { a: s.name })}><X size={14} weight="bold" /></button>
                     </span>
                   ))}
                 </div>
               )}
               {suggestions.length > 0 && (
                 <div className="rb-suggest">
-                  <span>Tavsiya:</span>
+                  <span>{tr("Tavsiya:")}</span>
                   {suggestions.slice(0, 8).map((n) => (
                     <button key={n} type="button" onClick={() => addSkill(n)}><Plus size={13} weight="bold" /> {n}</button>
                   ))}
@@ -455,17 +457,17 @@ export default function ResumeBuilder() {
               )}
 
               <div className="rb-box">
-                <h3 className="rb-sub">Tillarni bilish</h3>
+                <h3 className="rb-sub">{tr("Tillarni bilish")}</h3>
                 {d.langs.map((l, i) => (
                   <div key={i} className="rb-lang">
-                    <Select value={l.lang} options={langOpts(i)} placeholder="Til" onChange={(v) => setLang(i, 'lang', v)} />
-                    <Select value={l.level} options={LANG_LEVELS} placeholder="Daraja" onChange={(v) => setLang(i, 'level', v)} />
-                    <button type="button" className="icon-btn sm" onClick={() => set('langs', d.langs.filter((_, j) => j !== i))} aria-label="Tilni o'chirish"><Trash size={17} /></button>
+                    <Select value={l.lang} options={langOpts(i)} placeholder={tr("Til")} onChange={(v) => setLang(i, 'lang', v)} />
+                    <Select value={l.level} options={LANG_LEVELS} placeholder={tr("Daraja")} onChange={(v) => setLang(i, 'level', v)} />
+                    <button type="button" className="icon-btn sm" onClick={() => set('langs', d.langs.filter((_, j) => j !== i))} aria-label={tr("Tilni o'chirish")}><Trash size={17} /></button>
                   </div>
                 ))}
                 {err('langs') && <small className="rb-err">{err('langs')}</small>}
                 {d.langs.length < LANGUAGES.length && (
-                  <button type="button" className="rb-link" onClick={() => set('langs', [...d.langs, { lang: '', level: '' }])}><Plus size={14} weight="bold" /> Til qo'shish</button>
+                  <button type="button" className="rb-link" onClick={() => set('langs', [...d.langs, { lang: '', level: '' }])}><Plus size={14} weight="bold" /> {tr("Til qo'shish")}</button>
                 )}
               </div>
 
@@ -473,28 +475,28 @@ export default function ResumeBuilder() {
                 {d.hasDriving ? (
                   <>
                     <div className="rb-box-head">
-                      <h3 className="rb-sub">Haydovchilik guvohnomasi</h3>
-                      <button type="button" className="rb-link danger" onClick={() => setD((p) => ({ ...p, hasDriving: false, driving: [] }))}>Olib tashlash</button>
+                      <h3 className="rb-sub">{tr("Haydovchilik guvohnomasi")}</h3>
+                      <button type="button" className="rb-link danger" onClick={() => setD((p) => ({ ...p, hasDriving: false, driving: [] }))}>{tr("Olib tashlash")}</button>
                     </div>
                     <Chips options={DRIVING.map((c) => ({ id: c, label: c }))} isOn={(c) => d.driving.includes(c)} onPick={(c) => toggleIn('driving', c)} />
                   </>
                 ) : (
-                  <button type="button" className="rb-box-add" onClick={() => set('hasDriving', true)}><Plus size={18} weight="bold" /> Haydovchilik guvohnomasi</button>
+                  <button type="button" className="rb-box-add" onClick={() => set('hasDriving', true)}><Plus size={18} weight="bold" /> {tr("Haydovchilik guvohnomasi")}</button>
                 )}
               </div>
 
               <div>
-                <h3 className="rb-sub">Ijtimoiy toifalar</h3>
-                <p className="rb-hint rb-sub-hint">Ixtiyoriy. Faqat imtiyozli ish o'rinlari va davlat dasturlariga mos vakansiyalarni topish uchun.</p>
+                <h3 className="rb-sub">{tr("Ijtimoiy toifalar")}</h3>
+                <p className="rb-hint rb-sub-hint">{tr("Ixtiyoriy. Faqat imtiyozli ish o'rinlari va davlat dasturlariga mos vakansiyalarni topish uchun.")}</p>
                 <div className="rb-checks">
-                  {SOCIAL.map((s) => <Check2 key={s.id} checked={d.social.includes(s.id)} onChange={() => toggleIn('social', s.id)}>{s.label}</Check2>)}
+                  {SOCIAL.map((s) => <Check2 key={s.id} checked={d.social.includes(s.id)} onChange={() => toggleIn('social', s.id)}>{tr(s.label)}</Check2>)}
                 </div>
               </div>
 
               <div className="rb-sep" />
               <div>
-                <h3 className="rb-sub"><i className="rb-req">*</i>Ish qidiruvchi holati</h3>
-                <p className="rb-hint rb-sub-hint">Hozirgi vaziyatingizga mosini tanlang</p>
+                <h3 className="rb-sub"><i className="rb-req">*</i>{tr("Ish qidiruvchi holati")}</h3>
+                <p className="rb-hint rb-sub-hint">{tr("Hozirgi vaziyatingizga mosini tanlang")}</p>
                 <div className="rb-status" role="radiogroup">
                   {SEARCH_OPTIONS.map((o) => {
                     const Ic = SEARCH_ICONS[o.id]
@@ -502,7 +504,7 @@ export default function ResumeBuilder() {
                     return (
                       <button key={o.id} type="button" role="radio" aria-checked={on} className={`rb-status-opt ${on ? 'on' : ''}`} onClick={() => set('searchStatus', o.id)}>
                         <span className="rb-status-ico"><Ic size={20} weight={on ? 'bold' : 'regular'} /></span>
-                        <span className="rb-status-text"><b>{o.label}</b><small>{o.hint}</small></span>
+                        <span className="rb-status-text"><b>{tr(o.label)}</b><small>{tr(o.hint)}</small></span>
                         <i className="rb-radio" />
                       </button>
                     )
@@ -513,52 +515,52 @@ export default function ResumeBuilder() {
           )}
 
           <div className="rb-foot">
-            {step > 0 ? <button type="button" className="btn btn-ghost" onClick={() => go(step - 1)}>Orqaga</button> : <span />}
+            {step > 0 ? <button type="button" className="btn btn-ghost" onClick={() => go(step - 1)}>{tr("Orqaga")}</button> : <span />}
             <button type="button" className="btn btn-primary rb-next" onClick={next}>
-              {step === STEPS.length - 1 ? 'Saqlash' : (step === 2 && !d.experience.length) || (step === 3 && !d.educations.length) ? "O'tkazib yuborish" : 'Davom etish'}
+              {step === STEPS.length - 1 ? tr('Saqlash') : (step === 2 && !d.experience.length) || (step === 3 && !d.educations.length) ? tr("O'tkazib yuborish") : tr('Davom etish')}
             </button>
           </div>
         </section>
       </div>
 
       <Sheet open={!!entry} onClose={() => setEntry(null)}
-        title={entry && `${entry.kind === 'exp' ? 'Ish tajribasi' : entry.kind === 'edu' ? "Ta'lim" : 'Sertifikat'}${entry.index >= 0 ? '' : ' qo\'shish'}`}>
+        title={entry && `${entry.kind === 'exp' ? tr('Ish tajribasi') : entry.kind === 'edu' ? tr("Ta'lim") : tr('Sertifikat')}${entry.index >= 0 ? '' : tr(' qo\'shish')}`}>
         {entry && (
           <div className="rb-sheet">
             {entry.kind === 'exp' && (
               <>
-                <Field label="Lavozim" req error={e.role}><input value={x.role} onChange={(ev) => setEntryField('role', ev.target.value)} placeholder="Masalan: Buxgalter" /></Field>
-                <Field label="Tashkilot" req error={e.company}><input value={x.company} onChange={(ev) => setEntryField('company', ev.target.value)} placeholder="Kompaniya yoki tashkilot nomi" /></Field>
-                <Field as="div" label="Boshlangan" req error={e.from}><MonthYear value={x.from} onChange={(v) => setEntryField('from', v)} /></Field>
-                <Field as="div" label="Tugagan" req={!x.current} error={e.to}><MonthYear value={x.to} disabled={x.current} onChange={(v) => setEntryField('to', v)} /></Field>
-                <Check2 checked={x.current} onChange={(v) => setEntryField('current', v)}>Hozir shu yerda ishlayman</Check2>
-                <Field label="Vazifalar va yutuqlar"><textarea rows={3} maxLength={600} value={x.desc} onChange={(ev) => setEntryField('desc', ev.target.value)}
-                  placeholder="Nimalar bilan shug'ullandingiz, qanday natijaga erishdingiz" /></Field>
+                <Field label={tr("Lavozim")} req error={e.role}><input value={x.role} onChange={(ev) => setEntryField('role', ev.target.value)} placeholder={tr("Masalan: Buxgalter")} /></Field>
+                <Field label={tr("Tashkilot")} req error={e.company}><input value={x.company} onChange={(ev) => setEntryField('company', ev.target.value)} placeholder={tr("Kompaniya yoki tashkilot nomi")} /></Field>
+                <Field as="div" label={tr("Boshlangan")} req error={e.from}><MonthYear value={x.from} onChange={(v) => setEntryField('from', v)} /></Field>
+                <Field as="div" label={tr("Tugagan")} req={!x.current} error={e.to}><MonthYear value={x.to} disabled={x.current} onChange={(v) => setEntryField('to', v)} /></Field>
+                <Check2 checked={x.current} onChange={(v) => setEntryField('current', v)}>{tr("Hozir shu yerda ishlayman")}</Check2>
+                <Field label={tr("Vazifalar va yutuqlar")}><textarea rows={3} maxLength={600} value={x.desc} onChange={(ev) => setEntryField('desc', ev.target.value)}
+                  placeholder={tr("Nimalar bilan shug'ullandingiz, qanday natijaga erishdingiz")} /></Field>
               </>
             )}
             {entry.kind === 'edu' && (
               <>
-                <Field as="div" label="Ta'lim darajasi" req error={e.level}><Select value={x.level} options={EDU_LEVELS} placeholder="Tanlang" onChange={(v) => setEntryField('level', v)} /></Field>
-                <Field label="O'quv muassasasi" req error={e.school}><input value={x.school} onChange={(ev) => setEntryField('school', ev.target.value)} placeholder="Universitet, kollej yoki o'quv markazi" /></Field>
-                <Field label="Fakultet / mutaxassislik"><input value={x.faculty} onChange={(ev) => setEntryField('faculty', ev.target.value)} placeholder="Masalan: Buxgalteriya hisobi" /></Field>
+                <Field as="div" label={tr("Ta'lim darajasi")} req error={e.level}><Select value={x.level} options={EDU_LEVELS} placeholder={tr("Tanlang")} onChange={(v) => setEntryField('level', v)} /></Field>
+                <Field label={tr("O'quv muassasasi")} req error={e.school}><input value={x.school} onChange={(ev) => setEntryField('school', ev.target.value)} placeholder={tr("Universitet, kollej yoki o'quv markazi")} /></Field>
+                <Field label={tr("Fakultet / mutaxassislik")}><input value={x.faculty} onChange={(ev) => setEntryField('faculty', ev.target.value)} placeholder={tr("Masalan: Buxgalteriya hisobi")} /></Field>
                 <div className="rb-grid two tight">
-                  <Field as="div" label="Boshlangan yil"><Select value={x.from} options={YEARS} placeholder="Yil" onChange={(v) => setEntryField('from', v)} /></Field>
-                  <Field as="div" label="Tamomlagan yil" error={e.to}>
-                    {x.current ? <div className="rb-my-off">Hozirgacha</div>
-                      : <Select value={x.to} options={YEARS} placeholder="Yil" onChange={(v) => setEntryField('to', v)} />}
+                  <Field as="div" label={tr("Boshlangan yil")}><Select value={x.from} options={YEARS} placeholder={tr("Yil")} onChange={(v) => setEntryField('from', v)} /></Field>
+                  <Field as="div" label={tr("Tamomlagan yil")} error={e.to}>
+                    {x.current ? <div className="rb-my-off">{tr("Hozirgacha")}</div>
+                      : <Select value={x.to} options={YEARS} placeholder={tr("Yil")} onChange={(v) => setEntryField('to', v)} />}
                   </Field>
                 </div>
-                <Check2 checked={x.current} onChange={(v) => setEntryField('current', v)}>Hozir o'qiyapman</Check2>
+                <Check2 checked={x.current} onChange={(v) => setEntryField('current', v)}>{tr("Hozir o'qiyapman")}</Check2>
               </>
             )}
             {entry.kind === 'cert' && (
               <>
-                <Field label="Sertifikat yoki kurs nomi" req error={e.name}><input value={x.name} onChange={(ev) => setEntryField('name', ev.target.value)} placeholder="Masalan: IELTS 6.5, 1C: Buxgalteriya" /></Field>
-                <Field label="Bergan tashkilot"><input value={x.org} onChange={(ev) => setEntryField('org', ev.target.value)} placeholder="O'quv markazi yoki tashkilot" /></Field>
-                <Field as="div" label="Olingan yil"><Select value={x.year} options={YEARS} placeholder="Yil" onChange={(v) => setEntryField('year', v)} /></Field>
+                <Field label={tr("Sertifikat yoki kurs nomi")} req error={e.name}><input value={x.name} onChange={(ev) => setEntryField('name', ev.target.value)} placeholder={tr("Masalan: IELTS 6.5, 1C: Buxgalteriya")} /></Field>
+                <Field label={tr("Bergan tashkilot")}><input value={x.org} onChange={(ev) => setEntryField('org', ev.target.value)} placeholder={tr("O'quv markazi yoki tashkilot")} /></Field>
+                <Field as="div" label={tr("Olingan yil")}><Select value={x.year} options={YEARS} placeholder={tr("Yil")} onChange={(v) => setEntryField('year', v)} /></Field>
               </>
             )}
-            <button type="button" className="btn btn-primary btn-block" onClick={saveEntry}>Saqlash</button>
+            <button type="button" className="btn btn-primary btn-block" onClick={saveEntry}>{tr("Saqlash")}</button>
           </div>
         )}
       </Sheet>

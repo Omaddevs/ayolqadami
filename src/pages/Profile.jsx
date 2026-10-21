@@ -11,6 +11,8 @@ import {
 } from '@phosphor-icons/react'
 import { profileCompletion, useApp } from '../context/AppContext'
 import { CATEGORIES, CITIES, catName, formatSum } from '../data/mock'
+import { tr, tx } from '../i18n'
+
 
 const CAT_OPTS = CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
 
@@ -40,7 +42,7 @@ function PfEmpty({ text, to = '/profile/edit', label = "Qo'shish" }) {
   )
 }
 
-const PfEdit = ({ to = '/profile/edit' }) => <Link to={to} className="btn pf-btn-gray btn-block">Tahrirlash</Link>
+const PfEdit = ({ to = '/profile/edit' }) => <Link to={to} className="btn pf-btn-gray btn-block">{tr("Tahrirlash")}</Link>
 
 const DESKTOP = '(min-width: 1024px)'
 function useDesktop() {
@@ -82,26 +84,26 @@ function ProfileMobile() {
   }, [])
 
   const contacts = [
-    { key: 'phone', icon: Phone, label: 'Telefon', value: user.phone, href: user.phone && `tel:${user.phone.replace(/\s/g, '')}` },
-    { key: 'email', icon: EnvelopeSimple, label: 'Email', value: user.email, href: user.email && `mailto:${user.email}` },
-    { key: 'tg', icon: TelegramLogo, label: 'Telegram', value: user.telegram, href: user.telegram && `https://t.me/${user.telegram.replace(/^@/, '')}` },
+    { key: 'phone', icon: Phone, label: tr('Telefon'), value: user.phone, href: user.phone && `tel:${user.phone.replace(/\s/g, '')}` },
+    { key: 'email', icon: EnvelopeSimple, label: tr('Email'), value: user.email, href: user.email && `mailto:${user.email}` },
+    { key: 'tg', icon: TelegramLogo, label: tr('Telegram'), value: user.telegram, href: user.telegram && `https://t.me/${user.telegram.replace(/^@/, '')}` },
   ]
 
   return (
     <div className="page pf">
       <header className={`pf-bar ${compact ? 'show' : ''}`}>
         <span />
-        <div className="pf-bar-title"><b>Profil</b><span>{title}</span></div>
+        <div className="pf-bar-title"><b>{tr("Profil")}</b><span>{title}</span></div>
         <span />
       </header>
-      <Link to="/more" className="pf-menu-btn" aria-label="Menyu">
+      <Link to="/more" className="pf-menu-btn" aria-label={tr("Menyu")}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
           <path d="M4 7h16" /><path className="mid" d="M10 12h10" /><path d="M4 17h16" />
         </svg>
       </Link>
 
       <div className="pf-hero">
-        <Link to="/profile/edit" className="pf-avatar" aria-label="Profilni tahrirlash">
+        <Link to="/profile/edit" className="pf-avatar" aria-label={tr("Profilni tahrirlash")}>
           <Avatar name={title} color={user.color} size={112} radius={34} photo={user.photo} silhouette={!isEmp} />
           <span className="pf-avatar-edit"><PencilSimple size={16} weight="fill" /></span>
         </Link>
@@ -110,7 +112,7 @@ function ProfileMobile() {
           <Link to="/profile/edit" className="pf-city">{`${user.name} · ${user.position || 'HR'}`} <CaretRight size={16} /></Link>
         ) : (
           <button type="button" className="pf-city" onClick={() => setLocOpen(true)}>
-            {[user.city, user.address].filter(Boolean).join(', ') || "Shahar ko'rsatilmagan"} <CaretRight size={16} />
+            {[user.city, user.address].filter(Boolean).join(', ') || tr("Shahar ko'rsatilmagan")} <CaretRight size={16} />
           </button>
         )}
       </div>
@@ -119,7 +121,7 @@ function ProfileMobile() {
         {!isEmp && (
           <button type="button" className={`pf-status tone-${status.tone}`} onClick={() => setStatusOpen(true)}>
             <span className="pf-status-ico"><MagnifyingGlass size={26} weight="bold" /></span>
-            <span className="pf-status-text"><b>{status.label}</b><small>{status.hint}</small></span>
+            <span className="pf-status-text"><b>{tr(status.label)}</b><small>{tr(status.hint)}</small></span>
             <span className="pf-status-caret"><CaretDown size={16} weight="bold" /></span>
           </button>
         )}
@@ -127,17 +129,17 @@ function ProfileMobile() {
         {isEmp ? (
           <>
             <div className="pf-stats">
-              <Link to="/applications"><b>{posted.length}</b><span>Vakansiyalar</span></Link>
-              <Link to="/candidates"><b>{invites.length}</b><span>Takliflar</span></Link>
+              <Link to="/applications"><b>{posted.length}</b><span>{tr("Vakansiyalar")}</span></Link>
+              <Link to="/candidates"><b>{invites.length}</b><span>{tr("Takliflar")}</span></Link>
             </div>
-            <PfSection title="Kompaniya haqida">
-              {user.about ? <><p className="pf-text">{user.about}</p><PfEdit /></>
-                : <PfEmpty text="Nomzodlar ishonchli ish beruvchilarni tanlaydi — kompaniyangizni tanishtiring" label="Yozish" />}
+            <PfSection title={tr("Kompaniya haqida")}>
+              {user.about ? <><p className="pf-text">{tx(user.about)}</p><PfEdit /></>
+                : <PfEmpty text={tr("Nomzodlar ishonchli ish beruvchilarni tanlaydi — kompaniyangizni tanishtiring")} label={tr("Yozish")} />}
             </PfSection>
-            <PfSection title="Ma'lumotlar">
+            <PfSection title={tr("Ma'lumotlar")}>
               <dl className="pf-kv">
-                <div><dt>Soha</dt><dd>{user.industry || user.category ? catName(user.industry || user.category) : "Ko'rsatilmagan"}</dd></div>
-                <div><dt>Shahar</dt><dd>{user.city || "Ko'rsatilmagan"}</dd></div>
+                <div><dt>{tr("Soha")}</dt><dd>{user.industry || user.category ? catName(user.industry || user.category) : tr("Ko'rsatilmagan")}</dd></div>
+                <div><dt>{tr("Shahar")}</dt><dd>{user.city || tr("Ko'rsatilmagan")}</dd></div>
               </dl>
               <PfEdit />
             </PfSection>
@@ -146,24 +148,24 @@ function ProfileMobile() {
           <>
             <section className="pf-sec">
               <div className="pf-sec-head">
-                <h2>Mening rezyumeyim</h2>
+                <h2>{tr("Mening rezyumeyim")}</h2>
                 <Link to="/profile/edit" className="pf-link">
-                  {user.headline ? <><PencilSimple size={16} weight="bold" /> Tahrirlash</> : <><Plus size={16} weight="bold" /> Rezyume yaratish</>}
+                  {user.headline ? <><PencilSimple size={16} weight="bold" /> {tr("Tahrirlash")}</> : <><Plus size={16} weight="bold" /> {tr("Rezyume yaratish")}</>}
                 </Link>
               </div>
               <div className="pf-card">
                 <div className="pf-resume-top">
                   <div>
-                    <b>{user.headline || "Kasb ko'rsatilmagan"}</b>
-                    <span>{user.salary ? `${formatSum(user.salary)} so'mdan` : 'Maosh kelishiladi'}</span>
+                    <b>{user.headline || tr("Kasb ko'rsatilmagan")}</b>
+                    <span>{user.salary ? tr("{a} so'mdan", { a: formatSum(user.salary) }) : tr('Maosh kelishiladi')}</span>
                   </div>
                   <Avatar name={title} color={user.color} size={56} radius={18} photo={user.photo} silhouette={!isEmp} />
                 </div>
                 {pct < 100 ? (
                   <div className="pf-alert amber">
                     <div>
-                      <b>Rezyume {pct}% to'ldirilgan</b>
-                      <span>To'liq rezyume 3 barobar ko'p taklif oladi</span>
+                      <b>{tr("Rezyume {n}% to'ldirilgan", { n: pct })}</b>
+                      <span>{tr("To'liq rezyume 3 barobar ko'p taklif oladi")}</span>
                       <div className="pf-progress" style={{ '--p': `${pct}%` }} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
                         <i />
                         <em>{pct}%</em>
@@ -173,24 +175,24 @@ function ProfileMobile() {
                   </div>
                 ) : (
                   <div className="pf-alert green">
-                    <div><b>Rezyume faol</b><span>Ish beruvchilar sizni QadamAI orqali topishadi</span></div>
+                    <div><b>{tr("Rezyume faol")}</b><span>{tr("Ish beruvchilar sizni QadamAI orqali topishadi")}</span></div>
                     <CheckCircle size={26} />
                   </div>
                 )}
                 <div className="pf-resume-stats">
-                  <Link to="/applications"><b>{applications.length}</b> ariza</Link>
-                  <Link to="/applications?tab=saved"><b>{saved.length}</b> saqlangan</Link>
+                  <Link to="/applications"><b>{applications.length}</b> {tr("ariza")}</Link>
+                  <Link to="/applications?tab=saved"><b>{saved.length}</b> {tr("saqlangan")}</Link>
                 </div>
-                <Link to="/profile/edit" className="btn btn-primary btn-block">{pct < 100 ? "Rezyumeni to'ldirish" : 'Rezyumeni tahrirlash'}</Link>
+                <Link to="/profile/edit" className="btn btn-primary btn-block">{pct < 100 ? tr("Rezyumeni to'ldirish") : tr('Rezyumeni tahrirlash')}</Link>
               </div>
             </section>
 
-            <PfSection title="Qidiruv sozlamalari">
+            <PfSection title={tr("Qidiruv sozlamalari")}>
               <dl className="pf-kv">
-                <div><dt>Sizni hozir nima qiziqtiryapti</dt><dd>{user.categories?.length ? user.categories.map((id) => (id === 'other' && user.otherCategory) || catName(id)).join(', ') : user.category ? catName(user.category) : "Ko'rsatilmagan"}</dd></div>
-                <div><dt>Qayerda yashaysiz</dt><dd>{user.city || "Ko'rsatilmagan"}</dd></div>
-                <div><dt>Kutilayotgan maosh</dt><dd>{user.salary ? `${formatSum(user.salary)} so'mdan` : "Ko'rsatilmagan"}</dd></div>
-                <div><dt>Ish formati</dt><dd>{user.format?.length ? user.format.join(', ') : "Ko'rsatilmagan"}</dd></div>
+                <div><dt>{tr("Sizni hozir nima qiziqtiryapti")}</dt><dd>{user.categories?.length ? user.categories.map((id) => (id === 'other' && user.otherCategory) || catName(id)).join(', ') : user.category ? catName(user.category) : tr("Ko'rsatilmagan")}</dd></div>
+                <div><dt>{tr("Qayerda yashaysiz")}</dt><dd>{user.city || tr("Ko'rsatilmagan")}</dd></div>
+                <div><dt>{tr("Kutilayotgan maosh")}</dt><dd>{user.salary ? tr("{a} so'mdan", { a: formatSum(user.salary) }) : tr("Ko'rsatilmagan")}</dd></div>
+                <div><dt>{tr("Ish formati")}</dt><dd>{user.format?.length ? user.format.join(', ') : tr("Ko'rsatilmagan")}</dd></div>
               </dl>
               <PfEdit />
             </PfSection>
@@ -198,14 +200,14 @@ function ProfileMobile() {
         )}
 
         <section className="pf-sec">
-          <div className="pf-sec-head"><h2>Kontaktlar</h2></div>
+          <div className="pf-sec-head"><h2>{tr("Kontaktlar")}</h2></div>
           <div className="pf-contacts">
             {contacts.map((c) => {
               const Ic = c.icon
               const body = (
                 <>
                   <span className={`pf-contact-ico ${c.key}`}><Ic size={26} weight="fill" /></span>
-                  <span className="pf-contact-text"><b>{c.label}</b><span>{c.value || "Qo'shish"}</span></span>
+                  <span className="pf-contact-text"><b>{tr(c.label)}</b><span>{c.value || tr("Qo'shish")}</span></span>
                 </>
               )
               return c.href
@@ -214,14 +216,14 @@ function ProfileMobile() {
             })}
           </div>
           <Link to="/profile/edit" className="pf-row">
-            <div><b>Boshqa aloqa usullari</b><span>Ijtimoiy tarmoqlar va blog</span></div>
+            <div><b>{tr("Boshqa aloqa usullari")}</b><span>{tr("Ijtimoiy tarmoqlar va blog")}</span></div>
             <CaretRight size={20} />
           </Link>
         </section>
 
         {!isEmp && (
           <>
-            <PfSection title="Ish tajribasi">
+            <PfSection title={tr("Ish tajribasi")}>
               {user.experience?.length ? (
                 <>
                   <div className="pf-list">
@@ -231,39 +233,39 @@ function ProfileMobile() {
                   </div>
                   <PfEdit />
                 </>
-              ) : <PfEmpty text="Tajriba va yutuqlaringizni qo'shing — ish beruvchilar nimalarni uddalashingizni ko'radi" />}
+              ) : <PfEmpty text={tr("Tajriba va yutuqlaringizni qo'shing — ish beruvchilar nimalarni uddalashingizni ko'radi")} />}
             </PfSection>
 
-            <PfSection title="Ta'lim">
+            <PfSection title={tr("Ta'lim")}>
               {user.educations?.length ? (
                 <>
                   <div className="pf-list">
                     {user.educations.map((e, i) => (
-                      <div key={i} className="pf-list-item"><b>{e.school}</b><span>{[e.faculty, e.level, e.to || (e.current && "o'qimoqda")].filter(Boolean).join(' · ')}</span></div>
+                      <div key={i} className="pf-list-item"><b>{e.school}</b><span>{[e.faculty, e.level, e.to || (e.current && tr("o'qimoqda"))].filter(Boolean).join(' · ')}</span></div>
                     ))}
                   </div>
                   <PfEdit />
                 </>
               ) : user.education ? <><div className="pf-list-item"><b>{user.education}</b></div><PfEdit /></>
-                : <PfEmpty text="Qayerda o'qiganingizni ko'rsating" />}
+                : <PfEmpty text={tr("Qayerda o'qiganingizni ko'rsating")} />}
             </PfSection>
 
-            <PfSection title="Ko'nikmalar">
+            <PfSection title={tr("Ko'nikmalar")}>
               {user.skills?.length ? (
                 <><div className="pf-chips">{user.skills.map((s) => <span key={s}>{s}</span>)}</div><PfEdit /></>
-              ) : <PfEmpty text="Ko'nikmalaringiz bo'yicha QadamAI sizga mos ishlarni topadi" />}
+              ) : <PfEmpty text={tr("Ko'nikmalaringiz bo'yicha QadamAI sizga mos ishlarni topadi")} />}
             </PfSection>
 
-            <PfSection title="O'zim haqimda">
-              {user.about ? <><p className="pf-text">{user.about}</p><PfEdit /></>
-                : <PfEmpty text="Bir-ikki jumlada o'zingizni tanishtiring" label="Yozish" />}
+            <PfSection title={tr("O'zim haqimda")}>
+              {user.about ? <><p className="pf-text">{tx(user.about)}</p><PfEdit /></>
+                : <PfEmpty text={tr("Bir-ikki jumlada o'zingizni tanishtiring")} label={tr("Yozish")} />}
             </PfSection>
 
-            <PfSection title="Tillar">
+            <PfSection title={tr("Tillar")}>
               <div className="pf-chips">
                 {user.languages?.length
                   ? user.languages.map((s) => <span key={s}>{s}</span>)
-                  : <span className="muted-chip">Tillar ko'rsatilmagan</span>}
+                  : <span className="muted-chip">{tr("Tillar ko'rsatilmagan")}</span>}
               </div>
               <PfEdit />
             </PfSection>
@@ -271,13 +273,13 @@ function ProfileMobile() {
         )}
       </div>
 
-      <Sheet open={statusOpen} onClose={() => setStatusOpen(false)} title="Qidiruv holati">
+      <Sheet open={statusOpen} onClose={() => setStatusOpen(false)} title={tr("Qidiruv holati")}>
         <div className="pf-options">
           {SEARCH_STATUS.map((s) => (
             <button key={s.id} type="button" className={`pf-option tone-${s.tone} ${s.id === status.id ? 'on' : ''}`}
               onClick={() => { updateUser({ searchStatus: s.id }); setStatusOpen(false) }}>
               <i />
-              <span className="pf-option-text"><b>{s.label}</b><span>{s.hint}</span></span>
+              <span className="pf-option-text"><b>{tr(s.label)}</b><span>{tr(s.hint)}</span></span>
               {s.id === status.id && <Check size={20} weight="bold" />}
             </button>
           ))}
@@ -307,7 +309,7 @@ function CompanyEdit() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    try { const photo = await readPhoto(file); setF((p) => ({ ...p, photo })) } catch { notify("Rasmni o'qib bo'lmadi") }
+    try { const photo = await readPhoto(file); setF((p) => ({ ...p, photo })) } catch { notify(tr("Rasmni o'qib bo'lmadi")) }
   }
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const pick = (k) => (v) => setF({ ...f, [k]: v })
@@ -315,49 +317,49 @@ function CompanyEdit() {
   const save = (e) => {
     e.preventDefault()
     updateUser({ ...f, industry: f.category })
-    notify("Ma'lumotlar saqlandi")
+    notify(tr("Ma'lumotlar saqlandi"))
     nav('/profile')
   }
 
   return (
     <div className="page">
-      <TopBar title="Kompaniya profili" />
+      <TopBar title={tr("Kompaniya profili")} />
       <form className="page-body form" onSubmit={save}>
         <div className="edit-banner">
           <Icon3D name="building" size={84} />
-          <div><b>Kompaniyangizni tanishtiring</b>
-            <span className="muted">Nomzodlar ishonchli ish beruvchilarni tanlaydi</span></div>
+          <div><b>{tr("Kompaniyangizni tanishtiring")}</b>
+            <span className="muted">{tr("Nomzodlar ishonchli ish beruvchilarni tanlaydi")}</span></div>
         </div>
 
         <fieldset className="card-set">
-          <legend>Asosiy</legend>
+          <legend>{tr("Asosiy")}</legend>
           <div className="avatar-picker">
             <Avatar name={f.company || 'A'} color={user.color} size={72} radius={24} photo={f.photo} />
             <div>
               <label className="btn btn-ghost btn-sm">
                 <input type="file" accept="image/*" onChange={pickPhoto} />
-                {f.photo ? "Rasmni o'zgartirish" : 'Rasm yuklash'}
+                {f.photo ? tr("Rasmni o'zgartirish") : tr('Rasm yuklash')}
               </label>
-              {f.photo && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setF({ ...f, photo: '' })}>O'chirish</button>}
+              {f.photo && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setF({ ...f, photo: '' })}>{tr("O'chirish")}</button>}
             </div>
           </div>
-          <label className="field"><span>Kompaniya nomi</span><input value={f.company} onChange={set('company')} /></label>
-          <label className="field"><span>Mas'ul shaxs</span><input value={f.name} onChange={set('name')} required /></label>
-          <label className="field"><span>Lavozim</span><input value={f.position} onChange={set('position')} placeholder="HR menejer" /></label>
+          <label className="field"><span>{tr("Kompaniya nomi")}</span><input value={f.company} onChange={set('company')} /></label>
+          <label className="field"><span>{tr("Mas'ul shaxs")}</span><input value={f.name} onChange={set('name')} required /></label>
+          <label className="field"><span>{tr("Lavozim")}</span><input value={f.position} onChange={set('position')} placeholder={tr("HR menejer")} /></label>
           <div className="field-row">
-            <label className="field"><span>Telefon</span><input value={f.phone} onChange={set('phone')} inputMode="tel" /></label>
-            <label className="field"><span>Shahar</span><Select value={f.city} options={CITIES} onChange={pick('city')} /></label>
+            <label className="field"><span>{tr("Telefon")}</span><input value={f.phone} onChange={set('phone')} inputMode="tel" /></label>
+            <label className="field"><span>{tr("Shahar")}</span><Select value={f.city} options={CITIES} onChange={pick('city')} /></label>
           </div>
           <div className="field-row">
-            <label className="field"><span>Email</span><input type="email" value={f.email} onChange={set('email')} placeholder="ism@mail.uz" /></label>
-            <label className="field"><span>Telegram</span><input value={f.telegram} onChange={set('telegram')} placeholder="@username" /></label>
+            <label className="field"><span>{tr("Email")}</span><input type="email" value={f.email} onChange={set('email')} placeholder={tr("ism@mail.uz")} /></label>
+            <label className="field"><span>{tr("Telegram")}</span><input value={f.telegram} onChange={set('telegram')} placeholder={tr("@username")} /></label>
           </div>
-          <label className="field"><span>Soha</span>
+          <label className="field"><span>{tr("Soha")}</span>
             <Select value={f.category} options={CAT_OPTS} onChange={pick('category')} /></label>
-          <label className="field"><span>Kompaniya haqida</span><textarea rows={4} value={f.about} onChange={set('about')} /></label>
+          <label className="field"><span>{tr("Kompaniya haqida")}</span><textarea rows={4} value={f.about} onChange={set('about')} /></label>
         </fieldset>
 
-        <button className="btn btn-primary btn-lg btn-block" type="submit">Saqlash</button>
+        <button className="btn btn-primary btn-lg btn-block" type="submit">{tr("Saqlash")}</button>
       </form>
     </div>
   )

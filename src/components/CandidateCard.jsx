@@ -6,6 +6,8 @@ import {
 import { Avatar, Sheet } from './UI'
 import { useApp } from '../context/AppContext'
 import { catShort, formatSum } from '../data/mock'
+import { tr, tx } from '../i18n'
+
 
 const MAX_TAGS = 2 // soha + 2 ko'nikma, qolgani "+N"
 
@@ -23,11 +25,11 @@ export default function CandidateCard({ c, list }) {
 
   const act = (fn) => () => { setMenu(false); fn() }
   const copyLink = () => {
-    navigator.clipboard?.writeText(`${location.origin}${to}`).then(() => notify('Havola nusxalandi'), () => notify("Nusxalab bo'lmadi"))
+    navigator.clipboard?.writeText(`${location.origin}${to}`).then(() => notify(tr('Havola nusxalandi')), () => notify(tr("Nusxalab bo'lmadi")))
   }
 
   const saveBtn = (
-    <button type="button" className={`cc-btn ${saved ? 'on' : ''}`} aria-pressed={saved} aria-label={saved ? 'Saqlanganlardan olib tashlash' : 'Saqlash'}
+    <button type="button" className={`cc-btn ${saved ? 'on' : ''}`} aria-pressed={saved} aria-label={saved ? tr('Saqlanganlardan olib tashlash') : tr('Saqlash')}
       onClick={() => { toggleSaveCand(c.id); notify(saved ? 'Saqlanganlardan olib tashlandi' : 'Nomzod saqlandi') }}>
       <Heart size={20} weight={saved ? 'fill' : 'regular'} />
     </button>
@@ -35,19 +37,19 @@ export default function CandidateCard({ c, list }) {
   const sheet = (
     <Sheet open={menu} onClose={() => setMenu(false)} title={c.name}>
       <div className="menu cc-menu">
-        <button type="button" className="menu-item" onClick={act(() => nav(to))}><UserCircle size={22} /> Profilni ko'rish</button>
+        <button type="button" className="menu-item" onClick={act(() => nav(to))}><UserCircle size={22} /> {tr("Profilni ko'rish")}</button>
         <button type="button" className="menu-item" disabled={invited}
           onClick={act(() => { invite(c.id); notify('Taklif yuborildi') })}>
-          <PaperPlaneTilt size={22} /> {invited ? 'Taklif yuborilgan' : 'Suhbatga taklif qilish'}
+          <PaperPlaneTilt size={22} /> {invited ? tr('Taklif yuborilgan') : tr('Suhbatga taklif qilish')}
         </button>
-        <button type="button" className="menu-item" onClick={act(copyLink)}><LinkSimple size={22} /> Havolani nusxalash</button>
+        <button type="button" className="menu-item" onClick={act(copyLink)}><LinkSimple size={22} /> {tr("Havolani nusxalash")}</button>
       </div>
     </Sheet>
   )
   const ava = (
     <Link to={to} className="cc-ava" aria-label={c.name}>
       <Avatar name={c.name} color={c.color} size={list ? 64 : 60} radius={list ? 18 : 20} />
-      {c.searchStatus === 'active' && <i className="cc-online" title="Faol ish qidiryapti" />}
+      {c.searchStatus === 'active' && <i className="cc-online" title={tr("Faol ish qidiryapti")} />}
     </Link>
   )
 
@@ -59,16 +61,16 @@ export default function CandidateCard({ c, list }) {
         {ava}
         <div className="cc-info">
           <Link to={to} className="cc-name">{c.name}</Link>
-          <span className="cc-role">{c.headline}</span>
+          <span className="cc-role">{tx(c.headline)}</span>
           <div className="cc-meta">
-            {c.city && <span><MapPin size={14} /> {c.city}</span>}
-            {c.years > 0 && <span><Briefcase size={14} /> {c.years} yil</span>}
-            {c.salary > 0 && <span><Wallet size={14} /> {formatSum(c.salary)} so'm</span>}
+            {c.city && <span><MapPin size={14} /> {tx(c.city)}</span>}
+            {c.years > 0 && <span><Briefcase size={14} /> {tr('{n} yil', { n: c.years })}</span>}
+            {c.salary > 0 && <span><Wallet size={14} /> {formatSum(c.salary)} {tr("so'm")}</span>}
           </div>
         </div>
         <div className="cc-acts">
           {saveBtn}
-          <button type="button" className="cc-btn" aria-label="Boshqa amallar" onClick={() => setMenu(true)}>
+          <button type="button" className="cc-btn" aria-label={tr("Boshqa amallar")} onClick={() => setMenu(true)}>
             <DotsThreeVertical size={22} weight="bold" />
           </button>
         </div>
@@ -77,7 +79,7 @@ export default function CandidateCard({ c, list }) {
             {tags.map((s) => <span key={s}>{s}</span>)}
             {skills.length > tags.length && <span className="t-more">+{skills.length - tags.length}</span>}
           </div>
-          <Link to={to} className="cc-view">Profilni ko'rish <ArrowRight size={14} weight="bold" /></Link>
+          <Link to={to} className="cc-view">{tr("Profilni ko'rish")} <ArrowRight size={14} weight="bold" /></Link>
         </div>
         {sheet}
       </article>
@@ -90,17 +92,17 @@ export default function CandidateCard({ c, list }) {
 
       <div className="cc-info">
         <Link to={to} className="cc-name">{c.name}</Link>
-        <span className="cc-role">{c.headline}</span>
+        <span className="cc-role">{tx(c.headline)}</span>
         <div className="cc-meta">
-          {c.years > 0 && <span><Briefcase size={15} /> {c.years} yil tajriba</span>}
-          {c.city && <span><MapPin size={15} /> {c.city}</span>}
+          {c.years > 0 && <span><Briefcase size={15} /> {tr('{n} yil tajriba', { n: c.years })}</span>}
+          {c.city && <span><MapPin size={15} /> {tx(c.city)}</span>}
         </div>
       </div>
 
       <div className="cc-acts">
-        <Link to={to} className="cc-view">Profilni ko'rish <CaretRight size={14} weight="bold" /></Link>
+        <Link to={to} className="cc-view">{tr("Profilni ko'rish")} <CaretRight size={14} weight="bold" /></Link>
         {saveBtn}
-        <button type="button" className="cc-btn" aria-label="Boshqa amallar" onClick={() => setMenu(true)}>
+        <button type="button" className="cc-btn" aria-label={tr("Boshqa amallar")} onClick={() => setMenu(true)}>
           <DotsThree size={22} weight="bold" />
         </button>
       </div>

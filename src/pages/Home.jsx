@@ -12,6 +12,7 @@ import { ArrowRight, Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGl
 import CandidateCard from '../components/CandidateCard'
 import { CANDIDATES, CATEGORIES, JOB_TYPES, NOTIFICATIONS, catShort } from '../data/mock'
 import { buildCompanies, companySlug } from '../data/companies'
+import { useT } from '../i18n'
 
 // Bosh sahifa bannerlari — yangi banner qo'shish uchun rasmni public/banners/ ga qo'yib, shu ro'yxatga yozing
 const BANNERS = [
@@ -20,6 +21,7 @@ const BANNERS = [
 ]
 
 function BannerCarousel() {
+  const t = useT()
   const trackRef = useRef(null)
   const [cur, setCur] = useState(0)
   const paused = useRef(false)
@@ -57,12 +59,12 @@ function BannerCarousel() {
         onPointerLeave={() => { paused.current = false }}>
         {BANNERS.map((b, i) => (
           <Link key={i} to={b.to} className={`hb-slide ${i === cur ? 'on' : ''}`}>
-            {b.img ? <img src={b.img} alt={b.alt} draggable="false" /> : (
+            {b.img ? <img src={b.img} alt={t(b.alt)} draggable="false" /> : (
               <div className="promo">
                 <div className="promo-text">
-                  <span className="chip chip-light">{b.promo.chip}</span>
-                  <b>{b.promo.title}</b>
-                  <span>{b.promo.sub}</span>
+                  <span className="chip chip-light">{t(b.promo.chip)}</span>
+                  <b>{t(b.promo.title)}</b>
+                  <span>{t(b.promo.sub)}</span>
                 </div>
                 <Icon3D name="laptop" size={110} className="promo-art" />
               </div>
@@ -73,7 +75,7 @@ function BannerCarousel() {
       {BANNERS.length > 1 && (
         <div className="hb-dots">
           {BANNERS.map((_, i) => (
-            <button key={i} type="button" className={i === cur ? 'on' : ''} onClick={() => goTo(i)} aria-label={`${i + 1}-banner`} />
+            <button key={i} type="button" className={i === cur ? 'on' : ''} onClick={() => goTo(i)} aria-label={t('{n}-banner', { n: i + 1 })} />
           ))}
         </div>
       )}
@@ -89,6 +91,7 @@ const DK_CATS = ['office', 'edu', 'med', 'sales', 'beauty', 'it', 'home', 'remot
 
 function DesktopIntro({ isEmp }) {
   const { allJobs, user } = useApp()
+  const t = useT()
   const [tab, setTab] = useState('cats')
   const listPath = isEmp ? '/candidates' : '/jobs'
   const companies = useMemo(() => buildCompanies(allJobs, user)
@@ -99,47 +102,49 @@ function DesktopIntro({ isEmp }) {
     <section className="dk-intro">
       <div className="dk-intro-head">
         <div>
-          <h1>{isEmp ? "Nomzodlar O'zbekistonda" : "Ish e'lonlari O'zbekistonda"}</h1>
-          <p>{isEmp ? 'Jamoangiz uchun eng yaxshi mutaxassislar' : 'Ayollar uchun eng yaxshi imkoniyatlar'}</p>
+          <h1>{isEmp ? t("Nomzodlar O'zbekistonda") : t("Ish e'lonlari O'zbekistonda")}</h1>
+          <p>{isEmp ? t('Jamoangiz uchun eng yaxshi mutaxassislar') : t('Ayollar uchun eng yaxshi imkoniyatlar')}</p>
         </div>
         <div className="dk-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === 'cats'} className={tab === 'cats' ? 'on' : ''} onClick={() => setTab('cats')}>Ish yo'nalishlari</button>
+          <button type="button" role="tab" aria-selected={tab === 'cats'} className={tab === 'cats' ? 'on' : ''} onClick={() => setTab('cats')}>{t("Ish yo'nalishlari")}</button>
           {/* vaqtincha yopiq — qaytarish uchun: <button ... onClick={() => setTab('companies')}>Kompaniyalar</button> */}
-          <span className="dk-tab-soon" aria-disabled="true">Kompaniyalar <em>Soon</em></span>
-          <span className="dk-tab-soon" aria-disabled="true">Kurslar <em>Soon</em></span>
+          <span className="dk-tab-soon" aria-disabled="true">{t('Kompaniyalar')} <em>{t('Soon')}</em></span>
+          <span className="dk-tab-soon" aria-disabled="true">{t('Kurslar')} <em>{t('Soon')}</em></span>
         </div>
       </div>
 
       {tab === 'cats' ? (
         // rasmdagidek: yuqori qatorda 6 ta, pastki qatorda 6 ta + "Barcha kategoriyalar"
-        [cats.slice(0, 6), cats.slice(6)].map((row, r) => (
+        <div className="dk-grid">
+        {[cats.slice(0, 6), cats.slice(6)].map((row, r) => (
           <div key={r} className="dk-row">
             {row.map((c) => (
               <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="dk-cat">
-                <b>{DK_NAMES[c.id] || c.name}</b>
+                <b>{t(DK_NAMES[c.id] || c.name)}</b>
                 <img src={`/categories/${c.id}.png`} alt="" className="dk-cat-img" loading="lazy" draggable="false" />
               </Link>
             ))}
             {r === 1 && (
               <Link to="/categories" className="dk-cat dk-cat-all">
                 <SquaresFour size={30} weight="fill" />
-                <b>Barcha kategoriyalar <ArrowRight size={16} weight="bold" /></b>
+                <b>{t('Barcha kategoriyalar')} <ArrowRight size={16} weight="bold" /></b>
               </Link>
             )}
           </div>
-        ))
+        ))}
+        </div>
       ) : (
         <div className="dk-cats dk-cos">
           {companies.map((c) => (
             <Link key={c.name} to={`/companies/${companySlug(c.name)}`} className="dk-co">
               <CompanyLogo name={c.name} color={c.color} size={52} />
               <b>{c.name}</b>
-              <span>{c.jobs.length} ta vakansiya · {catShort(c.categories[0])}</span>
+              <span>{t('{n} ta vakansiya', { n: c.jobs.length })} · {catShort(c.categories[0])}</span>
             </Link>
           ))}
           <Link to="/companies" className="dk-cat dk-cat-all">
             <SquaresFour size={30} weight="fill" />
-            <b>Barcha kompaniyalar <ArrowRight size={16} weight="bold" /></b>
+            <b>{t('Barcha kompaniyalar')} <ArrowRight size={16} weight="bold" /></b>
           </Link>
         </div>
       )}
@@ -149,6 +154,7 @@ function DesktopIntro({ isEmp }) {
 
 export default function Home() {
   const { user, allJobs, applications, posted, saved } = useApp()
+  const t = useT()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
   const isEmp = user?.role === 'employer'
@@ -175,16 +181,16 @@ export default function Home() {
 
   const tiles = isEmp
     ? [
-        { to: '/applications', label: "E'lonlarim", icon: 'folder', img: '/arizalar.png', badge: posted.length || null },
-        { to: '/candidates', label: 'Nomzod-\nlar', icon: 'users' },
-        { to: '/courses', label: "O'quv\nkurslar", icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
-        { to: '/events', label: 'Tadbirlar', icon: 'calendar', img: '/tadbirlar.png' },
+        { to: '/applications', label: t("E'lonlarim"), icon: 'folder', img: '/arizalar.png', badge: posted.length || null },
+        { to: '/candidates', label: t('Nomzod-\nlar'), icon: 'users' },
+        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
+        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.png' },
       ]
     : [
-        { to: '/applications', label: 'Ariza-\nlarim', icon: 'folder', img: '/arizalar.png', badge: applications.length || null },
-        { to: '/jobs', label: 'Yangi\nishlar', icon: 'briefcase', img: '/yangi-ishlar.png' },
-        { to: '/courses', label: "O'quv\nkurslar", icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
-        { to: '/events', label: 'Tadbirlar', icon: 'calendar', img: '/tadbirlar.png' },
+        { to: '/applications', label: t('Ariza-\nlarim'), icon: 'folder', img: '/arizalar.png', badge: applications.length || null },
+        { to: '/jobs', label: t('Yangi\nishlar'), icon: 'briefcase', img: '/yangi-ishlar.png' },
+        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
+        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.png' },
       ]
 
   const myCats = user?.categories?.length ? user.categories : user?.category ? [user.category] : []
@@ -204,7 +210,7 @@ export default function Home() {
             </Link>
             <div className="hero-actions">
               <ThemeToggle className="hero-btn" size={24} />
-              <Link to="/notifications" className="hero-btn" aria-label="Bildirishnomalar">
+              <Link to="/notifications" className="hero-btn" aria-label={t('Bildirishnomalar')}>
                 <Bell size={25} />
                 {NOTIFICATIONS.length > 0 && <em className="hero-badge">{NOTIFICATIONS.length}</em>}
               </Link>
@@ -213,20 +219,20 @@ export default function Home() {
           </div>
 
           <div className="tiles">
-            {tiles.map((t) => {
+            {tiles.map((tile) => {
               const inner = (
                 <>
-                  {t.img
-                    ? <img src={t.img} alt="" className={`tile-ico tile-img${t.wide ? ' wide' : ''}`} />
-                    : <GlassIcon name={t.icon} size={64} className="tile-ico" />}
-                  <span>{t.label}</span>
-                  {t.soon ? <em className="tile-soon">Soon</em> : t.badge && <em className="badge">{t.badge}</em>}
+                  {tile.img
+                    ? <img src={tile.img} alt="" className={`tile-ico tile-img${tile.wide ? ' wide' : ''}`} />
+                    : <GlassIcon name={tile.icon} size={64} className="tile-ico" />}
+                  <span>{tile.label}</span>
+                  {tile.soon ? <em className="tile-soon">{t('Soon')}</em> : tile.badge && <em className="badge">{tile.badge}</em>}
                 </>
               )
               // tez orada ochiladigan bo'limlar bosilmaydi
-              return t.soon
-                ? <div key={t.to + t.label} className="tile is-soon" aria-disabled="true">{inner}</div>
-                : <Link key={t.to + t.label} to={t.to} className="tile">{inner}</Link>
+              return tile.soon
+                ? <div key={tile.to} className="tile is-soon" aria-disabled="true">{inner}</div>
+                : <Link key={tile.to} to={tile.to} className="tile">{inner}</Link>
             })}
           </div>
         </div>
@@ -237,13 +243,13 @@ export default function Home() {
         <div className="search-bar">
           <button type="button" className="search search-trigger" onClick={openSearch}>
             <MagnifyingGlass size={22} />
-            <span>{isEmp ? "Kasb, ko'nikma, ism" : "Lavozim, kalit so'zlar"}</span>
+            <span>{isEmp ? t("Kasb, ko'nikma, ism") : t("Lavozim, kalit so'zlar")}</span>
           </button>
-          <button type="button" className="search-btn" aria-label="Filtrlar" onClick={() => setFilterOpen(true)}>
+          <button type="button" className="search-btn" aria-label={t('Filtrlar')} onClick={() => setFilterOpen(true)}>
             <SlidersHorizontal size={22} />
           </button>
           {!isEmp && (
-            <Link to="/applications?tab=saved" className="search-btn" aria-label="Saqlanganlar">
+            <Link to="/applications?tab=saved" className="search-btn" aria-label={t('Saqlanganlar')}>
               <Heart size={22} />
               {saved.length > 0 && <em className="search-badge">{saved.length}</em>}
             </Link>
@@ -254,31 +260,31 @@ export default function Home() {
         <div className="feature-grid">
           {isEmp ? (
             <Link to="/post-job" className="fcard fcard-big">
-              <b>Vakansiya joylash</b>
-              <span>E'lon bering, arizalar oling</span>
+              <b>{t('Vakansiya joylash')}</b>
+              <span>{t("E'lon bering, arizalar oling")}</span>
               <img src="/vacancy-plus.png" alt="" className="fcard-art plus-art" draggable="false" />
             </Link>
           ) : (
             <Link to="/profile/edit" className="fcard fcard-big">
-              <b>Rezyume yaratish</b>
-              <span>Profilingizni to'ldiring</span>
+              <b>{t('Rezyume yaratish')}</b>
+              <span>{t("Profilingizni to'ldiring")}</span>
               <img src="/rezyume.png" alt="" className="fcard-art resume-art" />
             </Link>
           )}
           <Link to="/qadam-ai" className="fcard fcard-ai">
             <b>QadamAI</b>
-            <span className="ai-sub">{isEmp ? 'Mos kadr' : 'Mos ish'}</span>
+            <span className="ai-sub">{isEmp ? t('Mos kadr') : t('Mos ish')}</span>
             <img src="/qadam-ai.png" alt="" className="fcard-art ai-art" />
           </Link>
           {isEmp ? (
             <Link to="/candidates" className="fcard">
-              <b>Nomzodlar</b>
+              <b>{t('Nomzodlar')}</b>
               <Icon3D name="users" size={80} className="fcard-art" />
             </Link>
           ) : (
             <div className="fcard is-soon" aria-disabled="true">
-              <em className="tile-soon">Soon</em>
-              <b>Kurslar</b>
+              <em className="tile-soon">{t('Soon')}</em>
+              <b>{t('Kurslar')}</b>
               <img src="/kurslar.png" alt="" className="fcard-art books-art" />
             </div>
           )}
@@ -293,24 +299,24 @@ export default function Home() {
               <div className="rec-head">
                 <span className="rec-ico"><Fire size={24} weight="fill" /></span>
                 <div className="grow">
-                  <h2>Tavsiya etilgan nomzodlar</h2>
-                  <span>Sizning talabingizga mos nomzodlar</span>
+                  <h2>{t('Tavsiya etilgan nomzodlar')}</h2>
+                  <span>{t('Sizning talabingizga mos nomzodlar')}</span>
                 </div>
-                <Link to="/candidates" className="rec-all">Barchasi <CaretRight size={14} weight="bold" /></Link>
+                <Link to="/candidates" className="rec-all">{t('Barchasi')} <CaretRight size={14} weight="bold" /></Link>
               </div>
               <div className="rec-list">
-                {CANDIDATES.filter((c) => !myCats.length || myCats.includes(c.category)).concat(CANDIDATES).slice(0, 4)
-                  .filter((c, i, a) => a.findIndex((x) => x.id === c.id) === i)
+                {CANDIDATES.filter((c) => !myCats.length || myCats.includes(c.category)).concat(CANDIDATES)
+                  .filter((c, i, a) => a.findIndex((x) => x.id === c.id) === i).slice(0, 4)
                   .map((c) => <CandidateCard key={c.id} c={c} />)}
               </div>
             </section>
           </>
         ) : (
           <>
-            <SectionHead title="Siz uchun vakansiyalar" to="/jobs" />
+            <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />
             <div className="list-grid">{uniqueRec.map((j) => <JobCard key={j.id} job={j} />)}</div>
             <Link to="/jobs" className="btn btn-soft btn-lg btn-block all-jobs-btn">
-              Barcha e'lonlar <span className="all-jobs-count">{allJobs.length}</span>
+              {t("Barcha e'lonlar")} <span className="all-jobs-count">{allJobs.length}</span>
               <Icon name="right" size={18} />
             </Link>
           </>
@@ -323,37 +329,37 @@ export default function Home() {
 
       <SearchSheet open={open} onClose={closeSearch} isEmp={isEmp} jobs={allJobs} inputRef={inputRef} />
 
-      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filtrlar">
-        <span className="search-panel-title">Soha</span>
+      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title={t('Filtrlar')}>
+        <span className="search-panel-title">{t('Soha')}</span>
         <div className="pill-row wrap">
-          <button type="button" className={`pill ${!fCat ? 'on' : ''}`} onClick={() => setFCat('')}>Barchasi</button>
+          <button type="button" className={`pill ${!fCat ? 'on' : ''}`} onClick={() => setFCat('')}>{t('Barchasi')}</button>
           {CATEGORIES.map((c) => (
             <button key={c.id} type="button" className={`pill ${fCat === c.id ? 'on' : ''}`} onClick={() => setFCat(c.id)}>
-              <Icon3D name={c.icon} size={22} /> {c.short}
+              <Icon3D name={c.icon} size={22} /> {t(c.short)}
             </button>
           ))}
         </div>
         {!isEmp && (
           <>
-            <span className="search-panel-title">Ish formati</span>
+            <span className="search-panel-title">{t('Ish formati')}</span>
             <div className="pill-row wrap">
-              {['', ...JOB_TYPES].map((t) => (
-                <button key={t || 'all'} type="button" className={`pill pill-sm ${fType === t ? 'on' : ''}`} onClick={() => setFType(t)}>
-                  {t || 'Har qanday format'}
+              {['', ...JOB_TYPES].map((jt) => (
+                <button key={jt || 'all'} type="button" className={`pill pill-sm ${fType === jt ? 'on' : ''}`} onClick={() => setFType(jt)}>
+                  {t(jt || 'Har qanday format')}
                 </button>
               ))}
             </div>
-            <span className="search-panel-title">Saralash</span>
+            <span className="search-panel-title">{t('Saralash')}</span>
             <div className="pill-row wrap">
               {[['new', 'Avval yangilari'], ['salary', "Maosh bo'yicha"], ['few', 'Kam arizali']].map(([v, l]) => (
-                <button key={v} type="button" className={`pill pill-sm ${fSort === v ? 'on' : ''}`} onClick={() => setFSort(v)}>{l}</button>
+                <button key={v} type="button" className={`pill pill-sm ${fSort === v ? 'on' : ''}`} onClick={() => setFSort(v)}>{t(l)}</button>
               ))}
             </div>
           </>
         )}
         <div className="filter-actions">
-          <button type="button" className="btn btn-soft btn-lg" onClick={() => { setFCat(''); setFType(''); setFSort('new') }}>Tozalash</button>
-          <button type="button" className="btn btn-primary btn-lg" onClick={applyFilters}>Natijalarni ko'rish</button>
+          <button type="button" className="btn btn-soft btn-lg" onClick={() => { setFCat(''); setFType(''); setFSort('new') }}>{t('Tozalash')}</button>
+          <button type="button" className="btn btn-primary btn-lg" onClick={applyFilters}>{t("Natijalarni ko'rish")}</button>
         </div>
       </Sheet>
     </div>

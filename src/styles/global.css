@@ -1016,7 +1016,7 @@ h1, h2, h3 { letter-spacing: -.01em; }
 
   .topbar { padding: 20px 32px 16px; }
   .topbar h1 { text-align: left; font-size: 24px; }
-  .topbar:has(.icon-btn[aria-label='Orqaga']) h1 { text-align: center; }
+  .topbar:has(.icon-back) h1 { text-align: center; }
   .page-body { padding: 8px 32px 32px; }
   .pill-row { margin: 0 0 12px; padding: 0; flex-wrap: wrap; }
   .detail .page-body { max-width: 860px; margin: 0 auto; padding-bottom: 120px; }
@@ -1067,15 +1067,21 @@ h1, h2, h3 { letter-spacing: -.01em; }
   font-style: normal; font-size: 11px; font-weight: 700; line-height: 19px; text-align: center; box-shadow: 0 0 0 2px var(--surface); }
 .jm-top { position: absolute; z-index: 500; top: calc(var(--safe-t) + 14px); left: 14px; right: 14px; display: flex; align-items: center; gap: 10px; }
 .jm-title { flex: 1; min-width: 0; height: 48px; padding: 0 16px; border-radius: 16px; display: flex; flex-direction: column; justify-content: center;
-  background: var(--glass); box-shadow: 0 8px 22px -8px rgba(30, 27, 90, .35); line-height: 1.2; }
-.jm-title b { font-size: 15px; }
+  background: var(--glass); backdrop-filter: blur(10px); box-shadow: 0 8px 22px -8px rgba(30, 27, 90, .35); line-height: 1.2; }
+.jm-title b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jm-title span { font-size: 12px; color: var(--muted); }
 .jm-search { flex: 1; min-width: 0; height: 48px; padding: 0 8px 0 14px; border-radius: 16px; display: flex; align-items: center; gap: 8px;
   background: var(--surface); color: var(--muted); box-shadow: 0 8px 22px -8px rgba(30, 27, 90, .35), 0 0 0 2px var(--primary-100); animation: fade .2s; }
 .jm-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 16px; color: var(--text); }
 .jm-search button { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--text-2); }
 .jm-side { position: absolute; z-index: 500; right: 14px; bottom: calc(160px + var(--safe-b)); display: flex; flex-direction: column; gap: 12px; }
-.jm-zoom { display: flex; flex-direction: column; gap: 8px; }
+/* zoom: bitta kartada ikki tugma */
+.jm-zoom { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: var(--glass); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px -8px rgba(30, 27, 90, .35), 0 1px 3px rgba(30, 27, 90, .08); }
+.jm-zoom .jm-btn { background: none; box-shadow: none; backdrop-filter: none; border-radius: 0; }
+.jm-zoom .jm-btn + .jm-btn { border-top: 1px solid var(--line); }
+.jm-zoom .jm-btn:active { transform: none; background: var(--primary-50); }
+.jm-draw-label { display: none; }
 .jm-list {
   position: absolute; z-index: 500; left: 50%; transform: translateX(-50%); bottom: calc(100px + var(--safe-b));
   display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 24px; border-radius: 26px; white-space: nowrap;
@@ -1134,12 +1140,28 @@ h1, h2, h3 { letter-spacing: -.01em; }
 @keyframes jmMeIn { from { opacity: 0; transform: translate(-50%, calc(-100% + 9px)) scale(.6); } }
 
 @media (min-width: 1024px) {
-  .jm { position: relative; top: auto; bottom: auto; left: auto; transform: none; width: auto; height: calc(100dvh - var(--hdr) - 48px); border-radius: 32px; }
-  .jm-map .leaflet-control-attribution { margin-bottom: 0; }
-  .jm-side { bottom: 110px; }
-  .jm-list { bottom: 28px; }
-  .jm-draw-btn { bottom: 30px; left: 24px; }
-  .jm-card { left: auto; right: 24px; bottom: 24px; width: 380px; }
+  /* xarita sahifasi: oq karta o'rniga xaritaning o'zi, sarlavha ostidagi joyga aniq sig'adi (scroll yo'q) */
+  .shell.is-map { padding-bottom: 0; }
+  .shell.is-map .main { max-width: 1448px; min-height: 0; margin: 20px auto; padding: 0 24px; background: none; box-shadow: none; border-radius: 0; overflow: visible; }
+  .jm { position: relative; top: auto; bottom: auto; left: auto; transform: none; width: auto; min-height: 480px;
+    height: calc(100dvh - 52px - var(--hdr) - 40px); border-radius: 28px;
+    box-shadow: 0 10px 40px rgba(30, 30, 80, .08), 0 0 0 1px var(--line); }
+  .jm-map .leaflet-control-attribution { margin-bottom: 0; border-radius: 8px 0 0 0; }
+
+  /* yuqori panel: ixcham guruh chap tomonda */
+  .jm-top { top: 20px; left: 20px; right: auto; max-width: calc(100% - 40px); }
+  .jm-title { flex: 0 1 auto; min-width: 200px; padding: 0 20px; }
+  .jm-search { flex: 0 1 auto; width: 380px; }
+  .jm-empty, .jm-hint { top: 84px; }
+
+  /* o'ng tomonda, vertikal markazda */
+  .jm-side { right: 20px; top: 50%; bottom: auto; transform: translateY(-50%); }
+
+  .jm-list { bottom: 24px; height: 50px; background: var(--text); color: var(--surface); }
+  .jm-list:hover { transform: translateX(-50%) translateY(-2px); }
+  .jm-draw-btn { bottom: 24px; left: 20px; width: auto; height: 50px; padding: 0 20px 0 16px; display: flex; gap: 10px; border-radius: 25px; font-weight: 600; font-size: 15px; }
+  .jm-draw-label { display: inline; }
+  .jm-card { left: 20px; right: auto; bottom: 20px; width: 400px; }
 }
 
 /* ============ Profil sahifasi ============ */
@@ -1358,6 +1380,6 @@ h1, h2, h3 { letter-spacing: -.01em; }
 :root[data-theme="dark"] ::selection { background: rgba(102, 99, 244, .45); color: #fff; }
 @media (min-width: 1024px) {
   :root[data-theme="dark"] .main { box-shadow: 0 0 0 1px var(--line); }
-  :root[data-theme="dark"] .shell.is-home .main { box-shadow: none; }
+  :root[data-theme="dark"] .shell.is-home .main, :root[data-theme="dark"] .shell.is-map .main { box-shadow: none; }
   :root[data-theme="dark"] .home .sheet-body { box-shadow: 0 0 0 1px var(--line); }
 }

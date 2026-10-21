@@ -1,3 +1,5 @@
+import { tr } from '../i18n'
+
 export const CATEGORIES = [
   { id: 'office', name: 'Ofis ishlari', short: 'Ofis', icon: 'folder' },
   { id: 'edu', name: "Ta'lim va pedagogika", short: "Ta'lim", icon: 'gradcap' },
@@ -30,15 +32,16 @@ export const JOB_TYPES = ["To'liq stavka", 'Yarim stavka', 'Masofaviy', 'Gibrid'
 // eski saqlangan ma'lumotlardagi soha id'lari yangi ro'yxatga moslanadi
 const LEGACY_CAT = { sew: 'production', design: 'it' }
 const findCat = (id) => CATEGORIES.find((c) => c.id === (LEGACY_CAT[id] || id))
-export const catName = (id) => findCat(id)?.name || id
-export const catShort = (id) => findCat(id)?.short || catName(id)
+export const catName = (id) => tr(findCat(id)?.name || id)
+export const catShort = (id) => (findCat(id) ? tr(findCat(id).short) : catName(id))
 export const catIcon = (id) => findCat(id)?.icon || 'briefcase'
 
-export const formatSum = (n) => n.toLocaleString('ru-RU').replace(/,/g, ' ')
+// botdan kelgan vakansiyalarda maosh satr bo'lishi mumkin — raqamga o'giramiz
+export const formatSum = (n) => (Number(n) || 0).toLocaleString('ru-RU').replace(/[,\u00A0\u202F]/g, ' ')
 export const salaryText = (j) =>
   j.salaryFrom && j.salaryTo
-    ? `${formatSum(j.salaryFrom)} – ${formatSum(j.salaryTo)} so'm`
-    : j.salaryFrom ? `${formatSum(j.salaryFrom)} so'mdan` : 'Kelishilgan holda'
+    ? `${formatSum(j.salaryFrom)} – ${formatSum(j.salaryTo)} ${tr("so'm")}`
+    : j.salaryFrom ? tr("{sum} so'mdan", { sum: formatSum(j.salaryFrom) }) : tr('Kelishilgan holda')
 
 const BASE_JOBS = [
   {

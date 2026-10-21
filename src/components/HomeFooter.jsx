@@ -5,6 +5,7 @@ import { FaTelegramPlane } from 'react-icons/fa'
 import { FaInstagram, FaRobot } from 'react-icons/fa6'
 import Icon3D from './Icon3D'
 import { useApp } from '../context/AppContext'
+import { useT } from '../i18n'
 import '../styles/home-footer.css'
 
 // Ko'p beriladigan savollar: ikki ustun, oxirgi katakda "Bog'lanish" tugmasi
@@ -31,26 +32,28 @@ const SOCIAL = [
 ]
 
 function FaqItem({ q, a, open, onToggle }) {
+  const t = useT()
   return (
     <div className={`hf-q ${open ? 'open' : ''}`}>
       <button type="button" className="hf-q-head" onClick={onToggle} aria-expanded={open}>
-        <span>{q}</span>
+        <span>{t(q)}</span>
         <Plus size={18} className="hf-q-plus" />
       </button>
-      <div className="hf-q-body"><p>{a}</p></div>
+      <div className="hf-q-body"><p>{t(a)}</p></div>
     </div>
   )
 }
 
 export default function HomeFooter() {
   const { user, notify } = useApp()
+  const t = useT()
   const [openQ, setOpenQ] = useState(-1)
   const [email, setEmail] = useState('')
   const subscribe = (e) => {
     e.preventDefault()
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return notify("Email manzilni to'g'ri kiriting")
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return notify(t("Email manzilni to'g'ri kiriting"))
     setEmail('')
-    notify("Obuna bo'ldingiz! Yangiliklarni emailingizga yuboramiz")
+    notify(t("Obuna bo'ldingiz! Yangiliklarni emailingizga yuboramiz"))
   }
   const isEmp = user?.role === 'employer'
 
@@ -58,16 +61,16 @@ export default function HomeFooter() {
     <footer className="hf">
       <section className="hf-faq">
         <div className="hf-faq-head">
-          <span className="hf-chip dark">Savol-javob</span>
-          <h2>Ko'p beriladigan savollar</h2>
+          <span className="hf-chip dark">{t('Savol-javob')}</span>
+          <h2>{t("Ko'p beriladigan savollar")}</h2>
         </div>
         <div className="hf-faq-grid">
           {FAQ.map(([q, a], i) => (
             <FaqItem key={q} q={q} a={a} open={openQ === i} onToggle={() => setOpenQ(openQ === i ? -1 : i)} />
           ))}
           <div className="hf-q hf-q-contact">
-            <span>Javob topa olmadingizmi?</span>
-            <Link to="/support" className="hf-contact-btn">Bog'lanish <i><ArrowRight size={12} weight="bold" /></i></Link>
+            <span>{t('Javob topa olmadingizmi?')}</span>
+            <Link to="/support" className="hf-contact-btn">{t("Bog'lanish")} <i><ArrowRight size={12} weight="bold" /></i></Link>
           </div>
         </div>
       </section>
@@ -88,12 +91,12 @@ export default function HomeFooter() {
         <span className="hf-float f4"><Icon3D name="sparkle" size={38} /></span>
 
         <div className="hf-cta-in">
-          <span className="hf-chip"><img src="/ayolqadami-mark.png" alt="" /> Ayollar uchun yaratilgan</span>
-          <h2>Karyerangizni yangi bosqichga <br />olib chiqing <span className="hf-logo-tile"><i /></span> AyolQadami bilan</h2>
-          <p>AyolQadami — ayollar uchun ish topish, rezyume yaratish va kasbiy o'sish platformasi: mos vakansiyalar, QadamAI tavsiyalari va ishonchli ish beruvchilar bir joyda.</p>
+          <span className="hf-chip"><img src="/ayolqadami-mark.png" alt="" /> {t('Ayollar uchun yaratilgan')}</span>
+          <h2>{t('Karyerangizni yangi bosqichga')} <br />{t('olib chiqing')} <span className="hf-logo-tile"><i /></span> {t('AyolQadami bilan')}</h2>
+          <p>{t("AyolQadami — ayollar uchun ish topish, rezyume yaratish va kasbiy o'sish platformasi: mos vakansiyalar, QadamAI tavsiyalari va ishonchli ish beruvchilar bir joyda.")}</p>
           <Link to={isEmp ? '/post-job' : '/profile/edit'} className="hf-cta-btn">
             <img src="/roles/seeker.png" alt="" />
-            {isEmp ? 'Vakansiya joylash' : 'Rezyume joylash'}
+            {isEmp ? t('Vakansiya joylash') : t('Rezyume joylash')}
           </Link>
         </div>
       </section>
@@ -102,12 +105,12 @@ export default function HomeFooter() {
       <div className="hf-foot">
         <div className="hf-bcard">
           <Link to="/" className="hf-brand"><img src="/ayolqadami-mark.png" alt="" /> AyolQadami</Link>
-          <p>Ayollar uchun ish va karyera, <span>QadamAI yordamida.</span></p>
+          <p>{t('Ayollar uchun ish va karyera,')} <span>{t('QadamAI yordamida.')}</span></p>
           <div className="hf-touch">
-            <b>Biz bilan bog'laning!</b>
+            <b>{t("Biz bilan bog'laning!")}</b>
             <div className="hf-social">
               {SOCIAL.map(({ label, icon: Ico, href }) => (
-                <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label}><Ico size={13} /></a>
+                <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={t(label)} title={t(label)}><Ico size={13} /></a>
               ))}
             </div>
           </div>
@@ -117,26 +120,26 @@ export default function HomeFooter() {
           <nav className="hf-links">
             {LINKS.map((c) => (
               <div key={c.title}>
-                <b>{c.title}</b>
-                {c.items.map(([t, to]) => <Link key={t} to={to}>{t}</Link>)}
+                <b>{t(c.title)}</b>
+                {c.items.map(([label, to]) => <Link key={label} to={to}>{t(label)}</Link>)}
               </div>
             ))}
           </nav>
 
           <form className="hf-news" onSubmit={subscribe} noValidate>
-            <small>Yangiliklardan birinchi bo'lib xabardor bo'ling.</small>
-            <b>AyolQadami bilan birga qoling.</b>
+            <small>{t("Yangiliklardan birinchi bo'lib xabardor bo'ling.")}</small>
+            <b>{t('AyolQadami bilan birga qoling.')}</b>
             <div className="hf-news-row">
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email manzilingiz" aria-label="Email manzil" />
-              <button type="submit">Obuna bo'lish</button>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('Email manzilingiz')} aria-label={t('Email manzil')} />
+              <button type="submit">{t("Obuna bo'lish")}</button>
             </div>
           </form>
 
           <div className="hf-copy">
-            <span>© {new Date().getFullYear()} AyolQadami. Barcha huquqlar himoyalangan.</span>
+            <span>© {new Date().getFullYear()} AyolQadami. {t('Barcha huquqlar himoyalangan.')}</span>
             <div>
-              <Link to="/more">Foydalanish shartlari</Link>
-              <Link to="/more">Maxfiylik siyosati</Link>
+              <Link to="/terms">{t('Foydalanish shartlari')}</Link>
+              <Link to="/privacy">{t('Maxfiylik siyosati')}</Link>
             </div>
           </div>
         </div>

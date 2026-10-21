@@ -1,0 +1,425 @@
+// AyolQadami — ma'lumotlar bazasi sxemasi (PostgreSQL)
+// O'zgartirgandan keyin: npm run db:migrate -- --name <nom>
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SEEKER
+  EMPLOYER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum JobStatus {
+  PENDING // moderatsiyani kutmoqda
+  ACTIVE
+  REJECTED
+  ARCHIVED
+}
+
+enum JobSource {
+  WEB
+  BOT
+  ADMIN
+  SEED
+}
+
+enum ApplicationStatus {
+  NEW
+  REVIEWING
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TicketStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+enum MessageFrom {
+  USER
+  ADMIN
+  BOT
+}
+
+model User {
+  id           String     @id @default(cuid())
+  role         Role       @default(SEEKER)
+  status       UserStatus @default(ACTIVE)
+  phone        String?    @unique // faqat raqamlar: 998901234567
+  email        String?    @unique
+  passwordHash String?
+  googleSub    String?    @unique
+  name         String
+  city         String?
+  region       String?
+  company      String?
+  categories   String[]
+  photo        String?
+  // Rezyume va profilning qolgan maydonlari (web ilova shakli o'zgarsa migratsiya talab qilmaydi)
+  profile      Json       @default("{}")
+  // Oshirilsa — foydalanuvchining barcha tokenlari bekor bo'ladi (bloklash, parolni almashtirish)
+  tokenVersion Int        @default(0)
+  lastLoginAt  DateTime?
+  phoneVerifiedAt DateTime? // raqam kirish boti orqali tasdiqlangan vaqt
+  termsAcceptedAt DateTime? // foydalanish shartlari va maxfiylik siyosatiga rozilik
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  jobs         Job[]           @relation("JobAuthor")
+  applications Application[]
+  enrollments  Enrollment[]
+  tickets      SupportTicket[]
+  invitesSent  Invite[]        @relation("InviteEmployer")
+  auditLogs    AuditLog[]
+  telegram     TelegramUser?
+
+  @@index([role, createdAt])
+  @@index([status])
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#6366F6")
+  about     String   @default("")
+  size      String?
+  since     Int?
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs Job[]
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  title        String
+  companyName  String
+  companyId    String?
+  color        String    @default("#6366F6")
+  category     String
+  city         String
+  region       String?
+  district     String?
+  salaryFrom   Int       @default(0)
+  salaryTo     Int       @default(0)
+  type         String
+  experience   Int       @default(0)
+  tags         String[]
+  skills       String[]
+  description  String    @default("")
+  requirements String[]
+  conditions   String[]
+  // Web shaklidagi qo'shimcha maydonlar: workMode, workTime, hours, langs, contact, duties ...
+  details      Json      @default("{}")
+  status       JobStatus @default(PENDING)
+  rejectReason String?
+  source       JobSource @default(WEB)
+  authorId     String?
+  views        Int       @default(0)
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  author       User?         @relation("JobAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  applications Application[]
+  telegramPosts TelegramPost[]
+
+  @@index([status, publishedAt])
+  @@index([category])
+  @@index([city])
+  @@index([authorId])
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  jobId     String
+  userId    String
+  letter    String            @default("")
+  status    ApplicationStatus @default(NEW)
+  note      String? // admin / ish beruvchi izohi
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model Course {
+  id          String        @id @default(cuid())
+  title       String
+  provider    String
+  category    String
+  icon        String        @default("cap")
+  price       Int           @default(0)
+  duration    String        @default("")
+  lessons     Int           @default(0)
+  level       String        @default("")
+  rating      Float         @default(0)
+  students    Int           @default(0)
+  certificate Boolean       @default(false)
+  format      String        @default("Onlayn")
+  description String        @default("")
+  modules     String[]
+  status      ContentStatus @default(PUBLISHED)
+  sort        Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  enrollments Enrollment[]
+
+  @@index([status, sort])
+}
+
+model Enrollment {
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([userId, courseId])
+  @@index([courseId])
+}
+
+model Article {
+  id          String        @id @default(cuid())
+  tag         String
+  icon        String        @default("resume")
+  cover       String[]
+  img         String?
+  title       String
+  excerpt     String        @default("")
+  body        Json          @default("[]") // [{h}|{p}|{list:[...]}]
+  readMinutes Int           @default(3)
+  dateLabel   String        @default("")
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+model Event {
+  id          String        @id @default(cuid())
+  title       String
+  dateLabel   String        @default("")
+  startsAt    DateTime?
+  place       String        @default("")
+  tag         String        @default("")
+  cover       String[]
+  img         String?
+  description String        @default("")
+  status      ContentStatus @default(PUBLISHED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, startsAt])
+}
+
+model SupportTicket {
+  id        String       @id @default(cuid())
+  userId    String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([status, updatedAt])
+  @@index([userId])
+}
+
+model SupportMessage {
+  id        String      @id @default(cuid())
+  ticketId  String
+  from      MessageFrom
+  authorId  String?
+  text      String
+  createdAt DateTime    @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model Invite {
+  id           String   @id @default(cuid())
+  employerId   String
+  candidateRef String // nomzod id (demo rezyume yoki foydalanuvchi id)
+  jobId        String?
+  createdAt    DateTime @default(now())
+
+  employer User @relation("InviteEmployer", fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, candidateRef])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String // masalan: job.approve, user.block
+  entity    String
+  entityId  String?
+  meta      Json     @default("{}")
+  ip        String?
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ================= Telegram =================
+
+enum TelegramPostStatus {
+  SENT
+  FAILED
+  DELETED
+}
+
+enum BroadcastStatus {
+  RUNNING
+  DONE
+  FAILED
+}
+
+// Botga /start bosgan foydalanuvchilar (xabar tarqatish auditoriyasi). id — Telegram user id
+model TelegramUser {
+  id           String   @id
+  userId       String?  @unique // bot orqali murojaat yozsa — platformadagi hisob bilan bog'lanadi
+  firstName    String
+  lastName     String?
+  username     String?
+  languageCode String?
+  blocked      Boolean  @default(false) // botni bloklagan — xabar yuborilmaydi
+  draft        Json?    // botda to'ldirilayotgan vakansiya e'loni (bosqich + javoblar)
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([blocked])
+}
+
+model TelegramChannel {
+  id          String   @id @default(cuid())
+  chatId      String   @unique // -100... yoki @username
+  title       String
+  username    String?
+  type        String   @default("channel")
+  memberCount Int?
+  active      Boolean  @default(true)
+  autoPost    Boolean  @default(true) // tasdiqlangan vakansiyalar avtomatik yuboriladi
+  categories  String[] // bo'sh — barcha sohalar
+  cities      String[] // bo'sh — barcha shaharlar
+  lastPostAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts TelegramPost[]
+}
+
+model TelegramPost {
+  id        String             @id @default(cuid())
+  channelId String
+  jobId     String?
+  text      String
+  photo     String?
+  messageId Int?
+  status    TelegramPostStatus
+  error     String?
+  authorId  String? // null — avtomatik
+  createdAt DateTime           @default(now())
+
+  channel TelegramChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  job     Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([channelId, createdAt])
+  @@index([jobId])
+}
+
+model TelegramBroadcast {
+  id         String          @id @default(cuid())
+  text       String
+  photo      String?
+  buttonText String? // eski tarqatmalar: bitta tugma
+  buttonUrl  String?
+  buttons    String? // "Matn | havola | rang" qatorlari (rangli, bir nechta tugma)
+  total      Int             @default(0)
+  sent       Int             @default(0)
+  failed     Int             @default(0)
+  status     BroadcastStatus @default(RUNNING)
+  authorId   String?
+  createdAt  DateTime        @default(now())
+  finishedAt DateTime?
+}
+
+// ================= Telefonni tasdiqlash (kirish boti) =================
+
+// Saytda boshlangan tasdiqlash: foydalanuvchi botga t.me/<bot>?start=v_<token> orqali o'tadi,
+// o'z kontaktini ulashadi (raqam mos kelsa) va 6 xonali kodni oladi
+model PhoneVerification {
+  id         String    @id @default(cuid())
+  phone      String // 998901234567
+  purpose    String // register | reset
+  token      String    @unique // deep link payload
+  telegramId String? // havolani birinchi ochgan Telegram hisobi — boshqasi ishlata olmaydi
+  codeHash   String?
+  attempts   Int       @default(0)
+  verifiedAt DateTime?
+  usedAt     DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+  @@index([telegramId, createdAt])
+}
+
+// Kirish botida kontakt orqali isbotlangan raqam (keyingi safar kontakt so'ralmaydi)
+model TelegramPhone {
+  telegramId String   @id
+  phone      String
+  firstName  String
+  username   String?
+  updatedAt  DateTime @updatedAt
+
+  @@index([phone])
+}

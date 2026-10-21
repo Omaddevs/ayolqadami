@@ -1,0 +1,36 @@
+# Lokal ishlab chiqish va oddiy VPS deploy uchun: PostgreSQL + Next.js server (API + admin panel)
+#   docker compose up -d db          # faqat baza (npm run dev bilan ishlash uchun)
+#   docker compose up -d --build     # hammasi (production rejimida)
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ayolqadami}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ayolqadami}
+      POSTGRES_DB: ${POSTGRES_DB:-ayolqadami}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5440}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ayolqadami}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ayolqadami}:${POSTGRES_PASSWORD:-ayolqadami}@db:5432/${POSTGRES_DB:-ayolqadami}?schema=public
+    ports:
+      # faqat lokal: tashqaridan to'g'ridan-to'g'ri kirib bo'lmasin (X-Forwarded-For soxtalashtirish, HTTPS'siz kirish)
+      - "127.0.0.1:${SERVER_PORT:-3100}:3000"
+
+volumes:
+  pgdata:

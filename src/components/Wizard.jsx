@@ -1,4 +1,6 @@
 import { Check } from '@phosphor-icons/react'
+import { tr } from '../i18n'
+
 
 // Ko'p qadamli formalar (rezyume, vakansiya) uchun umumiy bloklar. Uslublar: styles/resume.css (rb-*)
 
@@ -20,7 +22,7 @@ export function Chips({ options, isOn, onPick, icons }) {
         const on = isOn(o.id)
         return (
           <button key={o.id} type="button" className={`rb-chip ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => onPick(o.id)}>
-            {Ic && <Ic size={18} weight={on ? 'fill' : 'regular'} />}{o.label}
+            {Ic && <Ic size={18} weight={on ? 'fill' : 'regular'} />}{tr(o.label)}
           </button>
         )
       })}

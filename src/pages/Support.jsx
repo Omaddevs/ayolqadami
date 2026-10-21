@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Checks, DotsThree, Lifebuoy, PaperPlaneRight, Plus, Robot, Trash } from '@phosphor-icons/react'
 import { Sheet } from '../components/UI'
 import { useApp } from '../context/AppContext'
+import { api as server, apiEnabled } from '../lib/api'
+import { tr, tx } from '../i18n'
+
 
 const BOT = 'Yordamchi-bot Qadamjon'
 const GREETING = "Assalomu alaykum! Savollaringizga javob berishga tayyorman. Savolni bir-ikki qisqa jumlada yozing — shunda sizni tezroq tushunaman."
@@ -40,12 +43,12 @@ const FAQ = [
 
 const norm = (s) => s.toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 const answer = (q) => FAQ.find((f) => f.k.some((k) => norm(q).includes(k))) ||
-  { text: "Savolingizni to'liq tushunmadim. Iltimos, qisqaroq yozing yoki quyidagi mavzulardan birini tanlang. Operator kerak bo'lsa, «operator» deb yozing." }
+  { text: tr("Savolingizni to'liq tushunmadim. Iltimos, qisqaroq yozing yoki quyidagi mavzulardan birini tanlang. Operator kerak bo'lsa, «operator» deb yozing.") }
 
 const hhmm = (iso) => new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
 
 export default function Support() {
-  const { user, support, addSupport, clearSupport, requireAuth } = useApp()
+  const { user, support, addSupport, mergeSupport, clearSupport, requireAuth } = useApp()
   const nav = useNavigate()
   const [text, setText] = useState('')
   const [typing, setTyping] = useState(false)
@@ -57,6 +60,14 @@ export default function Support() {
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [support.length, typing])
   useEffect(() => () => clearTimeout(timer.current), [])
+  // Operator javoblari (admin panel → Murojaatlar) chatga qo'shiladi
+  useEffect(() => {
+    if (!apiEnabled || !user) return
+    const pull = () => server.support().then((d) => { if (Array.isArray(d?.messages)) mergeSupport?.(d.messages) }).catch(() => {})
+    pull()
+    const iv = setInterval(pull, 20000)
+    return () => clearInterval(iv)
+  }, [user, mergeSupport])
 
   const send = (q) => {
     q = q.trim()
@@ -79,23 +90,23 @@ export default function Support() {
   return (
     <div className="page sp">
       <header className="sp-top">
-        <button className="sp-back" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/more'))} aria-label="Orqaga">
+        <button className="sp-back" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/more'))} aria-label={tr("Orqaga")}>
           <ArrowLeft size={22} weight="bold" />
         </button>
         <span className="sp-ava"><Lifebuoy size={26} weight="duotone" /></span>
-        <div className="grow sp-title"><b>Texnik yordam</b><span>{typing ? 'yozmoqda…' : 'Doim yoningizda'}</span></div>
-        <button className="sp-back" onClick={() => setMenu(true)} aria-label="Menyu"><DotsThree size={26} weight="bold" /></button>
+        <div className="grow sp-title"><b>{tr("Texnik yordam")}</b><span>{typing ? tr('yozmoqda…') : tr('Doim yoningizda')}</span></div>
+        <button className="sp-back" onClick={() => setMenu(true)} aria-label={tr("Menyu")}><DotsThree size={26} weight="bold" /></button>
       </header>
 
       <div className="sp-feed" aria-live="polite">
-        <span className="sp-day">Bugun</span>
+        <span className="sp-day">{tr("Bugun")}</span>
         {msgs.map((m) => (
           <div key={m.id} className={`sp-row ${m.from}`}>
             {m.from === 'bot' && <span className="sp-bot-ava"><Robot size={24} weight="duotone" /></span>}
             <div className="sp-bubble">
-              {m.from === 'bot' && <b className="sp-name">{BOT}</b>}
-              <p>{m.text}</p>
-              {m.link && <Link to={m.link.to} className="sp-link">{m.link.label}</Link>}
+              {m.from === 'bot' && <b className="sp-name">{m.operator ? tr('Operator') : BOT}</b>}
+              <p>{tx(m.text)}</p>
+              {m.link && <Link to={m.link.to} className="sp-link">{tr(m.link.label)}</Link>}
               <span className="sp-time">{hhmm(m.time)}{m.from === 'me' && <Checks size={15} weight="bold" />}</span>
             </div>
           </div>
@@ -103,7 +114,7 @@ export default function Support() {
         {typing && (
           <div className="sp-row bot">
             <span className="sp-bot-ava"><Robot size={24} weight="duotone" /></span>
-            <div className="sp-bubble sp-typing" aria-label="Yozmoqda"><i /><i /><i /></div>
+            <div className="sp-bubble sp-typing" aria-label={tr("Yozmoqda")}><i /><i /><i /></div>
           </div>
         )}
         <div ref={endRef} />
@@ -116,20 +127,20 @@ export default function Support() {
           </div>
         )}
         <form className="sp-composer" onSubmit={(e) => { e.preventDefault(); send(text) }}>
-          <button type="button" className={`sp-plus ${topics ? 'on' : ''}`} onClick={() => setTopics((v) => !v)} aria-label="Mavzular" aria-expanded={topics}>
+          <button type="button" className={`sp-plus ${topics ? 'on' : ''}`} onClick={() => setTopics((v) => !v)} aria-label={tr("Mavzular")} aria-expanded={topics}>
             <Plus size={22} weight="bold" />
           </button>
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Xabar" aria-label="Xabar" />
-          {text.trim() && <button className="sp-send" aria-label="Yuborish"><PaperPlaneRight size={20} weight="fill" /></button>}
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={tr("Xabar")} aria-label={tr("Xabar")} />
+          {text.trim() && <button className="sp-send" aria-label={tr("Yuborish")}><PaperPlaneRight size={20} weight="fill" /></button>}
         </form>
       </div>
 
-      <Sheet open={menu} onClose={() => setMenu(false)} title="Yozishma">
+      <Sheet open={menu} onClose={() => setMenu(false)} title={tr("Yozishma")}>
         <div className="pf-options">
           <button type="button" className="pf-option" disabled={!support.length}
             onClick={() => { clearTimeout(timer.current); setTyping(false); clearSupport(); setTopics(true); setMenu(false) }}>
             <Trash size={22} />
-            <span className="pf-option-text"><b>Yozishmani tozalash</b><span>Barcha xabarlar o'chiriladi</span></span>
+            <span className="pf-option-text"><b>{tr("Yozishmani tozalash")}</b><span>{tr("Barcha xabarlar o'chiriladi")}</span></span>
           </button>
         </div>
       </Sheet>

@@ -157,6 +157,14 @@
 .ar-cover::before { width: 260px; height: 260px; left: -90px; bottom: -150px; }
 .ar-cover::after { width: 160px; height: 160px; right: -50px; top: -70px; }
 .ar-cover .icon3d { position: relative; z-index: 1; filter: drop-shadow(0 18px 22px rgba(20, 16, 80, .28)); }
+/* foto muqova: butun maydonni egallaydi, bezak doiralari yashiriladi, teg o'qilishi uchun tepadan yengil soya */
+.ar-cover .art-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ar-cover.has-img { background: var(--card); }
+.ar-cover.has-img::before { width: auto; height: auto; inset: 0; left: 0; bottom: 0; z-index: 1; border: 0; border-radius: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(10, 10, 25, .35), transparent 35%); }
+.ar-cover.has-img::after { display: none; }
+.ar-card:hover .ar-cover .art-photo { transform: scale(1.03); }
+.ar-cover .art-photo { transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
 .ar-tag { position: absolute; z-index: 1; left: 12px; top: 12px; padding: 6px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 600;
   color: #fff; background: rgba(255, 255, 255, .22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .ar-card-body { padding: 14px 8px 6px; }
@@ -796,6 +804,9 @@ button.pd-ico-btn { border: 0; cursor: pointer; }
   background: radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, .28), transparent 55%), linear-gradient(150deg, var(--c1), var(--c2)); color: #fff; }
 .ac-media { position: absolute; inset: 0; z-index: -1; }
 .ac-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.ac-card.has-img { background: #1C1A3A; }
+/* fotoda: tepada teg uchun yengil soya, pastda matn uchun neytral to'q gradient */
+.ac-card.has-img::after { background: linear-gradient(180deg, rgba(10, 10, 25, .38) 0%, transparent 28%, transparent 42%, rgba(12, 11, 30, .6) 66%, rgba(10, 9, 26, .92) 100%); }
 .ac-art { position: absolute; top: 12%; right: 6%; filter: drop-shadow(0 16px 22px rgba(20, 16, 70, .3)); transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
 /* matn o'qilishi uchun pastdan to'q brend gradienti */
 .ac-card::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
@@ -833,3 +844,30 @@ button.pd-ico-btn { border: 0; cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) { .ac-art, .ac-media img, .ac-notch i { transition: none; } }
 @media (max-width: 370px) { .ac-rail { margin: 0 -16px; padding-left: 16px; padding-right: 16px; scroll-padding: 0 16px; } }
+
+/* --- Kirish oynasi: Telegram orqali raqamni tasdiqlash, parolni tiklash, rozilik --- */
+.aw-verify { display: flex; flex-direction: column; }
+.aw-verify .aw-field { margin-top: 14px; text-align: left; }
+.aw-verify .aw-sub { text-align: center; }
+.aw-verify > .aw-btn { margin-top: 14px; }
+.aw-vphone { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 12px 14px; border-radius: 16px; background: var(--soft-bg); border: 1.5px solid var(--primary-100); }
+.aw-vphone small { color: var(--text-2); font-size: 13px; }
+.aw-vphone b { font-size: 15px; letter-spacing: .02em; }
+.aw-btn.aw-tg { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; background: #229ED9; box-shadow: 0 8px 20px rgba(34, 158, 217, .28); }
+.aw-btn.aw-tg:hover:not(:disabled) { background: #1c8cc2; }
+.aw-code { font-size: 22px !important; font-weight: 700; letter-spacing: .4em; text-align: center; font-variant-numeric: tabular-nums; }
+.aw-code::placeholder { font-size: 15px; font-weight: 500; letter-spacing: normal; }
+.aw-foot button:disabled { color: var(--text-2); font-weight: 600; cursor: default; }
+.aw-forgot { margin-top: 10px !important; }
+.aw-mt { margin-top: 18px; width: 100%; }
+.aw-terms { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 13.5px; line-height: 1.45; color: var(--text-2); cursor: pointer; text-align: left; }
+.aw-terms input { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--primary); }
+.aw-terms a { color: var(--primary-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+/* --- Huquqiy hujjatlar (maxfiylik siyosati, foydalanish shartlari) --- */
+.legal-doc { max-width: 820px; margin: 0 auto; font-size: 15px; }
+.legal-doc .legal-meta { margin-bottom: 18px; font-size: 13px; color: var(--text-2); }
+.legal-doc section + section { margin-top: 4px; }
+.legal-doc li { position: relative; padding-left: 18px; }
+.legal-doc li::before { content: ''; position: absolute; left: 4px; top: .65em; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.legal-doc a { color: var(--primary-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }

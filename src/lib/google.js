@@ -18,7 +18,8 @@ export function preloadGoogle() {
   return loading
 }
 
-// Google hisob tanlash oynasini ochadi va { email, name, photo } qaytaradi.
+// Google hisob tanlash oynasini ochadi va { email, name, photo, token } qaytaradi.
+// token — server Google hisobini o'zi tekshirishi uchun (VITE_API_URL rejimida).
 // Skript oldindan yuklangan bo'lsa (preloadGoogle), popup bosish ichida ochiladi va bloklanmaydi.
 export async function googleSignIn() {
   if (!CLIENT_ID) throw new Error('not-configured')
@@ -35,5 +36,5 @@ export async function googleSignIn() {
   const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` } })
   if (!res.ok) throw new Error('userinfo')
   const u = await res.json()
-  return { email: u.email, name: u.name || '', photo: u.picture || '' }
+  return { email: u.email, name: u.name || '', photo: u.picture || '', token }
 }

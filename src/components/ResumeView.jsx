@@ -5,6 +5,8 @@ import {
 import { formatSum } from '../data/mock'
 import { EMPLOYMENT, EXP_LEVELS, LANG_LEVELS, SEARCH_OPTIONS, WORK_MODES, WORK_TIME, duration, findRegion, monthText } from '../data/resume'
 import { useApp } from '../context/AppContext'
+import { tr, tx } from '../i18n'
+
 
 const labels = (list, ids) => list.filter((o) => ids?.includes(o.id)).map((o) => o.label).join(', ')
 
@@ -42,7 +44,7 @@ function Sec({ icon: Ic, title, children }) {
 export default function ResumeView({ p, contacts }) {
   const { notify } = useApp()
   const copy = (text, what) => {
-    navigator.clipboard?.writeText(text).then(() => notify(`${what} nusxalandi`), () => notify('Nusxalab bo\'lmadi'))
+    navigator.clipboard?.writeText(text).then(() => notify(`${what} nusxalandi`), () => notify(tr('Nusxalab bo\'lmadi')))
   }
 
   const facts = [
@@ -65,24 +67,24 @@ export default function ResumeView({ p, contacts }) {
   ].filter(Boolean)
 
   const contactRows = contacts ? [
-    p.phone && { icon: Phone, value: p.phone, label: 'Telefon raqami', href: `tel:${p.phone.replace(/\s/g, '')}`,
-      action: <a className="cv-act" href={`tel:${p.phone.replace(/\s/g, '')}`} aria-label="Qo'ng'iroq qilish"><PhoneCall size={18} /></a> },
-    p.email && { icon: EnvelopeSimple, value: p.email, label: 'Email manzil', href: `mailto:${p.email}`,
-      action: <button type="button" className="cv-act" onClick={() => copy(p.email, 'Email')} aria-label="Emailni nusxalash"><Copy size={18} /></button> },
-    p.telegram && { icon: TelegramLogo, value: p.telegram, label: 'Telegram', tg: true, href: `https://t.me/${p.telegram.replace(/^@/, '')}`,
-      action: <button type="button" className="cv-act" onClick={() => copy(p.telegram, 'Telegram')} aria-label="Telegramni nusxalash"><Copy size={18} /></button> },
+    p.phone && { icon: Phone, value: p.phone, label: tr('Telefon raqami'), href: `tel:${p.phone.replace(/\s/g, '')}`,
+      action: <a className="cv-act" href={`tel:${p.phone.replace(/\s/g, '')}`} aria-label={tr("Qo'ng'iroq qilish")}><PhoneCall size={18} /></a> },
+    p.email && { icon: EnvelopeSimple, value: p.email, label: tr('Email manzil'), href: `mailto:${p.email}`,
+      action: <button type="button" className="cv-act" onClick={() => copy(p.email, 'Email')} aria-label={tr("Emailni nusxalash")}><Copy size={18} /></button> },
+    p.telegram && { icon: TelegramLogo, value: p.telegram, label: tr('Telegram'), tg: true, href: `https://t.me/${p.telegram.replace(/^@/, '')}`,
+      action: <button type="button" className="cv-act" onClick={() => copy(p.telegram, 'Telegram')} aria-label={tr("Telegramni nusxalash")}><Copy size={18} /></button> },
   ].filter(Boolean) : []
 
   return (
     <div className="cv">
       {contactRows.length > 0 && (
-        <Sec icon={Phone} title="Aloqa">
+        <Sec icon={Phone} title={tr("Aloqa")}>
           <div className="cv-rows">
             {contactRows.map((c) => (
               <div key={c.label} className="cv-row">
                 <a className="cv-row-main" href={c.href} {...(c.tg ? { target: '_blank', rel: 'noreferrer' } : {})}>
                   <span className={`cv-row-ico ${c.tg ? 'tg' : ''}`}><c.icon size={20} weight="fill" /></span>
-                  <span className="cv-row-txt"><b>{c.value}</b><small>{c.label}</small></span>
+                  <span className="cv-row-txt"><b>{c.value}</b><small>{tr(c.label)}</small></span>
                 </a>
                 {c.action}
               </div>
@@ -92,7 +94,7 @@ export default function ResumeView({ p, contacts }) {
       )}
 
       {info.length > 0 && (
-        <Sec icon={FileText} title="Ma'lumotlar">
+        <Sec icon={FileText} title={tr("Ma'lumotlar")}>
           <div className="cv-tiles">
             {info.map(([Ic, k, v, sub]) => (
               <div key={k} className="cv-tile">
@@ -107,17 +109,17 @@ export default function ResumeView({ p, contacts }) {
       )}
 
       {facts.length > 0 && (
-        <Sec icon={Sliders} title="Istaklar">
+        <Sec icon={Sliders} title={tr("Istaklar")}>
           <dl className="cv-facts">
             {facts.map(([Ic, k, v]) => <div key={k}><span className="cv-fact-ico"><Ic size={18} /></span><span><dt>{k}</dt><dd>{v}</dd></span></div>)}
           </dl>
         </Sec>
       )}
 
-      {p.about && <Sec icon={UserCircle} title="O'zim haqimda"><p className="cv-text">{p.about}</p></Sec>}
+      {p.about && <Sec icon={UserCircle} title={tr("O'zim haqimda")}><p className="cv-text">{tx(p.about)}</p></Sec>}
 
       {p.experience?.length > 0 && (
-        <Sec icon={Briefcase} title="Tajriba">
+        <Sec icon={Briefcase} title={tr("Tajriba")}>
           <div className="cv-cards">
             {p.experience.map((e, i) => {
               const dur = e.from && duration(e.from, e.current ? '' : e.to)
@@ -133,9 +135,9 @@ export default function ResumeView({ p, contacts }) {
                         {e.from ? `${monthText(e.from)} – ${e.current ? 'hozirgacha' : monthText(e.to)}` : e.period}{dur && ` (${dur})`}
                       </small>
                     </div>
-                    {e.current && <span className="cv-badge">Hozir</span>}
+                    {e.current && <span className="cv-badge">{tr("Hozir")}</span>}
                   </div>
-                  {e.desc && <p>{e.desc}</p>}
+                  {e.desc && <p>{tr(e.desc)}</p>}
                 </article>
               )
             })}
@@ -145,7 +147,7 @@ export default function ResumeView({ p, contacts }) {
       )}
 
       {edus.length > 0 && (
-        <Sec icon={GraduationCap} title="Ta'lim">
+        <Sec icon={GraduationCap} title={tr("Ta'lim")}>
           <div className="cv-cards">
             {edus.map((e, i) => (
               <article key={i} className="cv-card">
@@ -165,7 +167,7 @@ export default function ResumeView({ p, contacts }) {
       )}
 
       {certs.length > 0 && (
-        <Sec icon={Certificate} title="Sertifikat va kurslar">
+        <Sec icon={Certificate} title={tr("Sertifikat va kurslar")}>
           <div className="cv-cards">
             {certs.map((c, i) => (
               <article key={i} className="cv-card">
@@ -181,15 +183,15 @@ export default function ResumeView({ p, contacts }) {
       )}
 
       {skills.length > 0 && (
-        <Sec icon={Star} title="Ko'nikmalar">
+        <Sec icon={Star} title={tr("Ko'nikmalar")}>
           <div className="cv-skills">
-            {skills.map((s) => <span key={s.name}>{s.name}{s.level && <em>{s.level}</em>}</span>)}
+            {skills.map((s) => <span key={s.name}>{s.name}{s.level && <em>{tx(s.level)}</em>}</span>)}
           </div>
         </Sec>
       )}
 
       {(langs.length > 0 || p.driving?.length > 0) && (
-        <Sec icon={Translate} title={`Tillar${p.driving?.length > 0 ? ' va guvohnoma' : ''}`}>
+        <Sec icon={Translate} title={p.driving?.length > 0 ? tr('Tillar va guvohnoma') : tr('Tillar')}>
           <div className="cv-rows">
             {langs.map((l) => (
               <div key={l.lang} className="cv-row static">
@@ -203,7 +205,7 @@ export default function ResumeView({ p, contacts }) {
               <div className="cv-row static">
                 <span className="cv-row-main">
                   <span className="cv-row-ico"><Car size={20} /></span>
-                  <span className="cv-row-txt"><b>Haydovchilik guvohnomasi</b><small>{p.driving.join(', ')} toifa</small></span>
+                  <span className="cv-row-txt"><b>{tr("Haydovchilik guvohnomasi")}</b><small>{tr('{list} toifa', { list: p.driving.join(', ') })}</small></span>
                 </span>
               </div>
             )}

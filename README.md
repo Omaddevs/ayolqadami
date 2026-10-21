@@ -34,8 +34,15 @@ src/
   styles/global.css       # dizayn tokenlari + responsive (mobil / planshet / desktop)
 ```
 
-## Keyingi qadamlar (backend)
+## Backend va admin panel
 
-- `AppContext` dagi funksiyalarni REST/Supabase API chaqiruvlariga almashtirish
+`server/` — Next.js + PostgreSQL: REST API (`/api/v1`) va admin panel (`/admin`). Batafsil: [server/README.md](server/README.md).
+Web ilovani ulash: `.env.local` faylida `VITE_API_URL=http://localhost:3100`. Bo'lmasa ilova oflayn demo rejimida ishlaydi.
+
+Launch tekshiruv ro'yxati va QA natijalari: [LAUNCH.md](LAUNCH.md).
+
+## Keyingi qadamlar
+
+- SMS orqali telefonni tasdiqlash (Eskiz.uz), Click/Payme to'lov integratsiyasi
 - `data/qadam.js` dagi `analyzeQuery`/`matchCandidates` ni server tomonda LLM (embedding + reranking) bilan almashtirish
-- SMS orqali tasdiqlash (telefon raqam), Click/Payme to'lov integratsiyasi
+- Nomzodlar bazasini ish izlovchilar rezyumesi asosida serverdan berish

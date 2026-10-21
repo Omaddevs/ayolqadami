@@ -3,6 +3,8 @@ import { CaretLeft, CaretRight, PencilSimple, X } from '@phosphor-icons/react'
 import { FaFacebookF, FaGlobe, FaInstagram, FaLinkedinIn, FaOdnoklassniki, FaViber, FaWhatsapp, FaYoutube } from 'react-icons/fa6'
 import { Sheet } from './UI'
 import { useApp } from '../context/AppContext'
+import { tr } from '../i18n'
+
 
 const digits = (v) => v.replace(/\D/g, '')
 const handle = (v) => v.trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?[^/]+\//i, '').replace(/\/+$/, '')
@@ -69,7 +71,7 @@ export function SocialSheet({ open, onClose, editId }) {
 
   const PickIco = pick?.icon
   return (
-    <Sheet open={open} onClose={onClose} title={pick ? pick.label : "Aloqa usulini qo'shish"}>
+    <Sheet open={open} onClose={onClose} title={pick ? pick.label : tr("Aloqa usulini qo'shish")}>
       {!pick ? (
         <div className="sc-grid">
           {SOCIALS.map((s) => {
@@ -78,7 +80,7 @@ export function SocialSheet({ open, onClose, editId }) {
             return (
               <button key={s.id} type="button" className="sc-pick" onClick={() => choose(s)}>
                 <span className="sc-ico" style={{ background: s.color }}><Ic size={18} /></span>
-                <span className="sc-pick-txt"><b>{s.label}</b><small>{has ? "Qo'shilgan" : s.kind === 'phone' ? 'Telefon raqam' : 'Havola'}</small></span>
+                <span className="sc-pick-txt"><b>{tr(s.label)}</b><small>{has ? tr("Qo'shilgan") : s.kind === 'phone' ? tr('Telefon raqam') : tr('Havola')}</small></span>
                 <CaretRight size={16} />
               </button>
             )
@@ -86,20 +88,20 @@ export function SocialSheet({ open, onClose, editId }) {
         </div>
       ) : (
         <form onSubmit={save} className="sc-form">
-          {!editId && <button type="button" className="loc-back" onClick={() => setPick(null)}><CaretLeft size={16} weight="bold" /> Orqaga</button>}
+          {!editId && <button type="button" className="loc-back" onClick={() => setPick(null)}><CaretLeft size={16} weight="bold" /> {tr("Orqaga")}</button>}
           <div className="sc-form-head">
             <span className="sc-ico lg" style={{ background: pick.color }}><PickIco size={22} /></span>
-            <p>{pick.kind === 'phone' ? `${pick.label} ulangan telefon raqamingizni kiriting` : `${pick.label} sahifangiz havolasi yoki foydalanuvchi nomini kiriting`}</p>
+            <p>{pick.kind === 'phone' ? tr("{a} ulangan telefon raqamingizni kiriting", { a: pick.label }) : tr("{a} sahifangiz havolasi yoki foydalanuvchi nomini kiriting", { a: pick.label })}</p>
           </div>
           <label className="field">
-            <span>{pick.kind === 'phone' ? 'Telefon raqam' : 'Havola'}</span>
+            <span>{pick.kind === 'phone' ? tr('Telefon raqam') : tr('Havola')}</span>
             <input autoFocus value={value} onChange={(e) => setValue(e.target.value)} onBlur={() => setTouched(true)}
               placeholder={pick.placeholder} inputMode={pick.kind === 'phone' ? 'tel' : 'url'} />
           </label>
           {touched && !valid(pick, value) && (
-            <p className="sc-err">{pick.kind === 'phone' ? "Raqamni to'liq kiriting" : "Havola yoki foydalanuvchi nomini to'g'ri kiriting"}</p>
+            <p className="sc-err">{pick.kind === 'phone' ? tr("Raqamni to'liq kiriting") : tr("Havola yoki foydalanuvchi nomini to'g'ri kiriting")}</p>
           )}
-          <button type="submit" className="btn btn-primary btn-block">Saqlash</button>
+          <button type="submit" className="btn btn-primary btn-block">{tr("Saqlash")}</button>
         </form>
       )}
     </Sheet>
@@ -121,11 +123,11 @@ export function SocialTiles({ onEdit }) {
           <div key={x.type} className="pd-contact sc-tile">
             <a href={s.href(x.value)} target="_blank" rel="noreferrer" className="sc-tile-main">
               <span className="pd-contact-ico" style={{ background: s.color }}><Ic size={16} /></span>
-              <span><b>{s.label}</b><small>{x.value}</small></span>
+              <span><b>{tr(s.label)}</b><small>{x.value}</small></span>
             </a>
             <span className="sc-tile-acts">
-              <button type="button" onClick={() => onEdit(s.id)} aria-label={`${s.label}ni tahrirlash`}><PencilSimple size={15} /></button>
-              <button type="button" onClick={() => remove(s)} aria-label={`${s.label}ni o'chirish`}><X size={15} /></button>
+              <button type="button" onClick={() => onEdit(s.id)} aria-label={tr("{a}ni tahrirlash", { a: s.label })}><PencilSimple size={15} /></button>
+              <button type="button" onClick={() => remove(s)} aria-label={tr("{a}ni o'chirish", { a: s.label })}><X size={15} /></button>
             </span>
           </div>
         )

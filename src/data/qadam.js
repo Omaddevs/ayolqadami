@@ -75,7 +75,7 @@ export function matchJobs(text, profile, jobs = JOBS) {
     let score = 30
     const reasons = []
     if (a.categories.includes(j.category)) { score += 26; reasons.push('Sohangizga mos') }
-    const hits = j.skills.filter((s) => a.skills.includes(s))
+    const hits = (j.skills || []).filter((s) => a.skills.includes(s))
     if (hits.length) { score += Math.min(hits.length * 9, 27); reasons.push(`Ko'nikmalar: ${hits.join(', ')}`) }
     if (a.city && j.city === a.city) { score += 8; reasons.push(j.city) }
     if (a.remote && (j.type === 'Masofaviy' || j.type === 'Gibrid')) { score += 8; reasons.push(j.type) }

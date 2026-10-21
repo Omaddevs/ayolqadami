@@ -1,4 +1,7 @@
 // Maqolalar: muqova — gradient + 3D ikonka (Icon3D nomi), matn — bloklar ro'yxati
+// Foto muqova: rasmni public/articles/ ga qo'ying va maqolaga img qo'shing, masalan img: '/articles/a1.jpg'
+// (tavsiya: 1200×900 yoki kattaroq, asosiy obyekt markazda — kartada 10:11, maqola sahifasida 16:9 qirqiladi).
+// img bo'lmasa yoki yuklanmasa, gradient + 3D ikonka ko'rsatiladi.
 export const ARTICLES = [
   {
     id: 'a1', tag: 'Rezyume', icon: 'resume', cover: ['#8286F6', '#4C42EA'], date: '18 oktyabr', read: 5,

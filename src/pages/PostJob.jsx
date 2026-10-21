@@ -11,13 +11,15 @@ import {
 import { CONTACT_WAYS, DURATIONS, EDU_REQ, PERKS } from '../data/vacancy'
 import { matchForVacancy } from '../data/qadam'
 import { PHONE_PREFIX, checkUzPhone, formatUzPhone } from '../lib/phone'
+import { tr, tx } from '../i18n'
+
 
 const STEPS = ['Lavozim va joylashuv', 'Ish sharoitlari', 'Nomzodga talablar', 'Tavsif va qulayliklar', "Aloqa va e'lon"]
 const EXP_ICONS = { none: Briefcase, lt1: CalendarBlank, '1-3': ChartBar, '3-5': TrendUp, '5+': Star }
 const EXP_REQ = [{ id: 'none', label: 'Tajriba shart emas' }, ...EXP_LEVELS.slice(1)]
 const CAT_OPTS = CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
 const REGION_OPTS = REGIONS.map((r) => ({ value: r.id, label: r.name }))
-const LEVEL_REQ = LANG_LEVELS.map((l) => (l.value === 'native' ? { ...l, label: 'Erkin (ona tili darajasida)' } : l))
+const LEVEL_REQ = LANG_LEVELS.map((l) => (l.value === 'native' ? { ...l, label: tr('Erkin (ona tili darajasida)') } : l))
 const MAX_SKILLS = 15
 
 const digits = (s) => String(s || '').replace(/\D/g, '')
@@ -120,6 +122,7 @@ export default function PostJob() {
   }, [jobsAll, d.category])
   const matches = useMemo(() => matchForVacancy(job), [job.category, job.city, job.type, job.experience, job.salaryTo, job.skills.join()]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [sending, setSending] = useState(false)
   const go = (i) => { setStep(i); setShowErr(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const failed = () => {
     setShowErr(true)
@@ -131,11 +134,17 @@ export default function PostJob() {
       setReached((r) => Math.max(r, step + 1))
       return go(step + 1)
     }
-    const posted = { ...job, id: 'p' + Date.now() }
-    postJob(posted)
-    notify("Vakansiya e'lon qilindi!")
-    setDone(posted)
-    window.scrollTo({ top: 0 })
+    if (sending) return
+    setSending(true)
+    const draft = { ...job, id: 'p' + Date.now() }
+    Promise.resolve(postJob(draft))
+      .then((saved) => {
+        notify(saved?.status === 'PENDING' ? tr("Vakansiya moderatsiyaga yuborildi. Tasdiqlangach saytda chiqadi") : tr("Vakansiya e'lon qilindi!"))
+        setDone(saved || draft)
+        window.scrollTo({ top: 0 })
+      })
+      .catch((e) => notify(e.message || tr("Vakansiyani yuborib bo'lmadi. Qayta urinib ko'ring")))
+      .finally(() => setSending(false))
   }
   const goStep = (i) => {
     if (i === step) return
@@ -147,7 +156,7 @@ export default function PostJob() {
     const name = raw.trim().replace(/\s+/g, ' ')
     if (name.length < 2) return
     if (d.skills.some((s) => s.toLowerCase() === name.toLowerCase())) return setSkillText('')
-    if (d.skills.length >= MAX_SKILLS) return notify(`Ko'pi bilan ${MAX_SKILLS} ta ko'nikma`)
+    if (d.skills.length >= MAX_SKILLS) return notify(tr("Ko'pi bilan {a} ta ko'nikma", { a: MAX_SKILLS }))
     set('skills', [...d.skills, name])
     setSkillText('')
   }
@@ -159,161 +168,161 @@ export default function PostJob() {
 
   return (
     <div className="page rb">
-      <TopBar title="Vakansiya joylash" />
+      <TopBar title={tr("Vakansiya joylash")} />
       <div className="page-body rb-body">
-        <Stepper steps={STEPS} step={step} reached={reached} onGo={goStep} label="Vakansiya qadamlari" />
+        <Stepper steps={STEPS} step={step} reached={reached} onGo={goStep} label={tr("Vakansiya qadamlari")} />
 
         <section className="rb-card">
           <div className="rb-head rb-head-row">
             <div>
-              <span>{step + 1}-qadam · {STEPS.length} tadan</span>
+              <span>{tr('{n}-qadam · {total} tadan', { n: step + 1, total: STEPS.length })}</span>
               <h2>{STEPS[step]}</h2>
             </div>
             {step > 0 && d.category && (
-              <span className={`rb-match ${matches.length ? '' : 'none'}`} title="Talablaringizga mos nomzodlar">
-                <UsersThree size={18} weight="fill" /> {matches.length ? `${matches.length} ta mos nomzod` : "Mos nomzod yo'q"}
+              <span className={`rb-match ${matches.length ? '' : 'none'}`} title={tr("Talablaringizga mos nomzodlar")}>
+                <UsersThree size={18} weight="fill" /> {matches.length ? tr("{a} ta mos nomzod", { a: matches.length }) : tr("Mos nomzod yo'q")}
               </span>
             )}
           </div>
 
           {step === 0 && (
             <div className="rb-grid">
-              <Field label="Lavozim nomi" req error={err('title')} hint="Aniq nom yozing: «Hamshira», «1C buxgalter», «Enaga (2 yoshli bola)»">
-                <Combo value={d.title} options={titleOpts} maxLength={80} placeholder="Kim kerak?"
+              <Field label={tr("Lavozim nomi")} req error={err('title')} hint={tr("Aniq nom yozing: «Hamshira», «1C buxgalter», «Enaga (2 yoshli bola)»")}>
+                <Combo value={d.title} options={titleOpts} maxLength={80} placeholder={tr("Kim kerak?")}
                   onChange={(v) => set('title', v)}
                   onPick={(o) => { if (!d.category && o.category) set('category', o.category) }} />
               </Field>
-              <Field as="div" label="Soha" req error={err('category')}>
-                <Select value={d.category} options={CAT_OPTS} placeholder="Sohani tanlang" onChange={(v) => set('category', v)} />
+              <Field as="div" label={tr("Soha")} req error={err('category')}>
+                <Select value={d.category} options={CAT_OPTS} placeholder={tr("Sohani tanlang")} onChange={(v) => set('category', v)} />
               </Field>
-              <Field label="Nechta xodim kerak?" req error={err('count')}>
+              <Field label={tr("Nechta xodim kerak?")} req error={err('count')}>
                 <input value={d.count} inputMode="numeric" maxLength={3} onChange={(e) => set('count', digits(e.target.value))} />
               </Field>
-              <Field as="div" label="Viloyat / shahar" req error={err('region')}>
-                <Select value={d.region} options={REGION_OPTS} placeholder="Viloyatni tanlang"
+              <Field as="div" label={tr("Viloyat / shahar")} req error={err('region')}>
+                <Select value={d.region} options={REGION_OPTS} placeholder={tr("Viloyatni tanlang")}
                   onChange={(v) => setD((p) => ({ ...p, region: v, district: v === p.region ? p.district : '' }))} />
               </Field>
-              <Field as="div" label="Tuman / shahar" req error={err('district')}>
+              <Field as="div" label={tr("Tuman / shahar")} req error={err('district')}>
                 {region
-                  ? <Select value={d.district} options={region.districts} placeholder="Tumanni tanlang" onChange={(v) => set('district', v)} />
-                  : <button type="button" className="sel-btn" disabled><span className="sel-val sel-ph">Avval viloyatni tanlang</span></button>}
+                  ? <Select value={d.district} options={region.districts} placeholder={tr("Tumanni tanlang")} onChange={(v) => set('district', v)} />
+                  : <button type="button" className="sel-btn" disabled><span className="sel-val sel-ph">{tr("Avval viloyatni tanlang")}</span></button>}
               </Field>
-              <Field label="Ish joyi manzili" hint="Ko'cha, uy yoki mo'ljal — nomzod yo'lni oldindan biladi">
-                <input {...bind('address')} maxLength={120} placeholder="Masalan: Amir Temur ko'chasi 15, «Next» yonida" />
+              <Field label={tr("Ish joyi manzili")} hint={tr("Ko'cha, uy yoki mo'ljal — nomzod yo'lni oldindan biladi")}>
+                <input {...bind('address')} maxLength={120} placeholder={tr("Masalan: Amir Temur ko'chasi 15, «Next» yonida")} />
               </Field>
             </div>
           )}
 
           {step === 1 && (
             <div className="rb-stack">
-              <Field as="div" label="Bandlik turi" req error={err('employment')}>
+              <Field as="div" label={tr("Bandlik turi")} req error={err('employment')}>
                 <Chips options={EMPLOYMENT} isOn={(id) => d.employment === id} onPick={(id) => set('employment', id)} />
               </Field>
-              <Field as="div" label="Ish usuli (rejimi)" hint="Bir nechtasini tanlash mumkin">
+              <Field as="div" label={tr("Ish usuli (rejimi)")} hint={tr("Bir nechtasini tanlash mumkin")}>
                 <Chips options={WORK_MODES} isOn={(id) => d.workMode.includes(id)} onPick={(id) => toggleIn('workMode', id)} />
               </Field>
-              <Field as="div" label="Ish vaqti" hint="Onalar uchun qulay grafik ko'proq ariza oladi">
+              <Field as="div" label={tr("Ish vaqti")} hint={tr("Onalar uchun qulay grafik ko'proq ariza oladi")}>
                 <Chips options={WORK_TIME} isOn={(id) => d.workTime.includes(id)} onPick={(id) => toggleIn('workTime', id)} />
               </Field>
-              <Field label="Ish soatlari"><input className="rb-salary" {...bind('hours')} maxLength={40} placeholder="09:00 – 18:00, dushanba – juma" /></Field>
+              <Field label={tr("Ish soatlari")}><input className="rb-salary" {...bind('hours')} maxLength={40} placeholder={tr("09:00 – 18:00, dushanba – juma")} /></Field>
               <div>
                 <div className="rb-grid two rb-salary-row">
-                  <Field label="Maosh, dan (so'm)" req={!d.negotiable} error={err('salaryFrom')}>
+                  <Field label={tr("Maosh, dan (so'm)")} req={!d.negotiable} error={err('salaryFrom')}>
                     <input value={d.negotiable ? '' : d.salaryFrom} disabled={d.negotiable} inputMode="numeric" placeholder="3 000 000"
                       onChange={(e) => set('salaryFrom', money(e.target.value))} />
                   </Field>
-                  <Field label="gacha (so'm)" error={err('salaryTo')}>
+                  <Field label={tr("gacha (so'm)")} error={err('salaryTo')}>
                     <input value={d.negotiable ? '' : d.salaryTo} disabled={d.negotiable} inputMode="numeric" placeholder="5 000 000"
                       onChange={(e) => set('salaryTo', money(e.target.value))} />
                   </Field>
                 </div>
-                <div className="rb-after"><Check2 checked={d.negotiable} onChange={(v) => set('negotiable', v)}>Maosh suhbatda kelishiladi</Check2></div>
-                <p className="rb-hint rb-sub-hint">Maosh ko'rsatilgan vakansiyalar o'rtacha 2 barobar ko'p ariza oladi.</p>
+                <div className="rb-after"><Check2 checked={d.negotiable} onChange={(v) => set('negotiable', v)}>{tr("Maosh suhbatda kelishiladi")}</Check2></div>
+                <p className="rb-hint rb-sub-hint">{tr("Maosh ko'rsatilgan vakansiyalar o'rtacha 2 barobar ko'p ariza oladi.")}</p>
               </div>
             </div>
           )}
 
           {step === 2 && (
             <div className="rb-stack">
-              <Field as="div" label="Ish tajribasi">
+              <Field as="div" label={tr("Ish tajribasi")}>
                 <Chips options={EXP_REQ} icons={EXP_ICONS} isOn={(id) => d.expLevel === id} onPick={(id) => set('expLevel', id)} />
               </Field>
-              <Field as="div" label="Ta'lim darajasi">
+              <Field as="div" label={tr("Ta'lim darajasi")}>
                 <div className="rb-salary"><Select value={d.education} options={EDU_REQ} onChange={(v) => set('education', v)} /></div>
               </Field>
 
-              <Field as="div" label="Kerakli ko'nikmalar" hint="QadamAI nomzodlarni aynan shu ko'nikmalar bo'yicha tanlaydi">
+              <Field as="div" label={tr("Kerakli ko'nikmalar")} hint={tr("QadamAI nomzodlarni aynan shu ko'nikmalar bo'yicha tanlaydi")}>
                 <div className="rb-skill-input">
-                  <input value={skillText} maxLength={60} placeholder="Ko'nikma yozing va Enter bosing"
+                  <input value={skillText} maxLength={60} placeholder={tr("Ko'nikma yozing va Enter bosing")}
                     onChange={(e) => setSkillText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(skillText) } }} />
                   <span className="rb-count">{d.skills.length} / {MAX_SKILLS}</span>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => addSkill(skillText)} disabled={skillText.trim().length < 2}>Qo'shish</button>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => addSkill(skillText)} disabled={skillText.trim().length < 2}>{tr("Qo'shish")}</button>
                 </div>
               </Field>
               {d.skills.length > 0 && (
                 <div className="rb-skills">
                   {d.skills.map((s) => (
                     <span key={s} className="rb-skill">{s}
-                      <button type="button" className="rb-skill-x" onClick={() => set('skills', d.skills.filter((x) => x !== s))} aria-label={`${s} — o'chirish`}><X size={14} weight="bold" /></button>
+                      <button type="button" className="rb-skill-x" onClick={() => set('skills', d.skills.filter((x) => x !== s))} aria-label={tr("{a} — o'chirish", { a: s })}><X size={14} weight="bold" /></button>
                     </span>
                   ))}
                 </div>
               )}
               {suggestions.length > 0 && (
                 <div className="rb-suggest">
-                  <span>Tavsiya:</span>
+                  <span>{tr("Tavsiya:")}</span>
                   {suggestions.slice(0, 8).map((n) => <button key={n} type="button" onClick={() => addSkill(n)}><Plus size={13} weight="bold" /> {n}</button>)}
                 </div>
               )}
 
               <div className="rb-box">
-                <h3 className="rb-sub">Tillarni bilishi</h3>
-                {!d.langs.length && <p className="rb-hint">Til talab qilinmasa, bo'sh qoldiring</p>}
+                <h3 className="rb-sub">{tr("Tillarni bilishi")}</h3>
+                {!d.langs.length && <p className="rb-hint">{tr("Til talab qilinmasa, bo'sh qoldiring")}</p>}
                 {d.langs.map((l, i) => (
                   <div key={i} className="rb-lang">
-                    <Select value={l.lang} options={langOpts(i)} placeholder="Til" onChange={(v) => setLang(i, 'lang', v)} />
-                    <Select value={l.level} options={LEVEL_REQ} placeholder="Kamida qaysi daraja" onChange={(v) => setLang(i, 'level', v)} />
-                    <button type="button" className="icon-btn sm" onClick={() => set('langs', d.langs.filter((_, j) => j !== i))} aria-label="Tilni o'chirish"><Trash size={17} /></button>
+                    <Select value={l.lang} options={langOpts(i)} placeholder={tr("Til")} onChange={(v) => setLang(i, 'lang', v)} />
+                    <Select value={l.level} options={LEVEL_REQ} placeholder={tr("Kamida qaysi daraja")} onChange={(v) => setLang(i, 'level', v)} />
+                    <button type="button" className="icon-btn sm" onClick={() => set('langs', d.langs.filter((_, j) => j !== i))} aria-label={tr("Tilni o'chirish")}><Trash size={17} /></button>
                   </div>
                 ))}
                 {err('langs') && <small className="rb-err">{err('langs')}</small>}
-                <button type="button" className="rb-link" onClick={() => set('langs', [...d.langs, { lang: '', level: '' }])}><Plus size={14} weight="bold" /> Til qo'shish</button>
+                <button type="button" className="rb-link" onClick={() => set('langs', [...d.langs, { lang: '', level: '' }])}><Plus size={14} weight="bold" /> {tr("Til qo'shish")}</button>
               </div>
 
               <div className={`rb-box ${d.hasDriving ? '' : 'collapsed'}`}>
                 {d.hasDriving ? (
                   <>
                     <div className="rb-box-head">
-                      <h3 className="rb-sub">Haydovchilik guvohnomasi</h3>
-                      <button type="button" className="rb-link danger" onClick={() => setD((p) => ({ ...p, hasDriving: false, driving: [] }))}>Olib tashlash</button>
+                      <h3 className="rb-sub">{tr("Haydovchilik guvohnomasi")}</h3>
+                      <button type="button" className="rb-link danger" onClick={() => setD((p) => ({ ...p, hasDriving: false, driving: [] }))}>{tr("Olib tashlash")}</button>
                     </div>
                     <Chips options={DRIVING.map((c) => ({ id: c, label: c }))} isOn={(c) => d.driving.includes(c)} onPick={(c) => toggleIn('driving', c)} />
                   </>
                 ) : (
-                  <button type="button" className="rb-box-add" onClick={() => set('hasDriving', true)}><Plus size={18} weight="bold" /> Haydovchilik guvohnomasi talab qilinadi</button>
+                  <button type="button" className="rb-box-add" onClick={() => set('hasDriving', true)}><Plus size={18} weight="bold" /> {tr("Haydovchilik guvohnomasi talab qilinadi")}</button>
                 )}
               </div>
 
-              <Field label="Qo'shimcha talablar" hint="Har birini yangi qatordan yozing">
-                <textarea rows={3} maxLength={800} {...bind('requirements')} placeholder={"Mas'uliyatli va xushmuomala\nTibbiy ko'rikdan o'tgan"} />
+              <Field label={tr("Qo'shimcha talablar")} hint={tr("Har birini yangi qatordan yozing")}>
+                <textarea rows={3} maxLength={800} {...bind('requirements')} placeholder={tr("Mas'uliyatli va xushmuomala\nTibbiy ko'rikdan o'tgan")} />
               </Field>
             </div>
           )}
 
           {step === 3 && (
             <div className="rb-stack">
-              <Field label="Vakansiya haqida" req error={err('description')} hint={`${d.description.trim().length} / 2000 · Kompaniya, jamoa va ish mohiyatini qisqa yozing`}>
+              <Field label={tr("Vakansiya haqida")} req error={err('description')} hint={`${d.description.trim().length} / 2000 · Kompaniya, jamoa va ish mohiyatini qisqa yozing`}>
                 <textarea rows={5} maxLength={2000} {...bind('description')}
-                  placeholder="Masalan: Xususiy klinikamizning terapiya bo'limiga mehribon va mas'uliyatli hamshira kerak. Tungi navbatchilik yo'q." />
+                  placeholder={tr("Masalan: Xususiy klinikamizning terapiya bo'limiga mehribon va mas'uliyatli hamshira kerak. Tungi navbatchilik yo'q.")} />
               </Field>
-              <Field label="Vazifalar" hint="Har birini yangi qatordan yozing">
-                <textarea rows={3} maxLength={800} {...bind('duties')} placeholder={"Bemorlarni qabul qilish\nTibbiy hujjatlarni yuritish"} />
+              <Field label={tr("Vazifalar")} hint={tr("Har birini yangi qatordan yozing")}>
+                <textarea rows={3} maxLength={800} {...bind('duties')} placeholder={tr("Bemorlarni qabul qilish\nTibbiy hujjatlarni yuritish")} />
               </Field>
-              <Field label="Sharoitlar" hint="Har birini yangi qatordan yozing">
-                <textarea rows={3} maxLength={800} {...bind('conditions')} placeholder={"Tushlik va transport kompensatsiyasi\nYillik bonus"} />
+              <Field label={tr("Sharoitlar")} hint={tr("Har birini yangi qatordan yozing")}>
+                <textarea rows={3} maxLength={800} {...bind('conditions')} placeholder={tr("Tushlik va transport kompensatsiyasi\nYillik bonus")} />
               </Field>
-              <Field as="div" label="Ayollar uchun qulayliklar" hint="Bu belgilar vakansiya kartasida ko'rinadi va QadamAI tavsiyalarida yuqoriga chiqaradi">
+              <Field as="div" label={tr("Ayollar uchun qulayliklar")} hint={tr("Bu belgilar vakansiya kartasida ko'rinadi va QadamAI tavsiyalarida yuqoriga chiqaradi")}>
                 <Chips options={PERKS.map((p) => ({ id: p, label: p }))} isOn={(p) => d.perks.includes(p)} onPick={(p) => toggleIn('perks', p)} />
               </Field>
             </div>
@@ -322,25 +331,25 @@ export default function PostJob() {
           {step === 4 && (
             <div className="rb-stack">
               <div className="rb-grid">
-                <Field label="Mas'ul shaxs" req error={err('contactName')}><input {...bind('contactName')} autoComplete="name" placeholder="Ism-familiya" /></Field>
-                <Field label="Telefon raqami" req error={err('contactPhone')}>
+                <Field label={tr("Mas'ul shaxs")} req error={err('contactName')}><input {...bind('contactName')} autoComplete="name" placeholder={tr("Ism-familiya")} /></Field>
+                <Field label={tr("Telefon raqami")} req error={err('contactPhone')}>
                   <input value={d.contactPhone} inputMode="tel" autoComplete="tel" onChange={(e) => set('contactPhone', formatUzPhone(e.target.value))} />
                 </Field>
-                <Field label="Telegram" error={err('telegram')}><input {...bind('telegram')} placeholder="@hr_kompaniya" /></Field>
+                <Field label={tr("Telegram")} error={err('telegram')}><input {...bind('telegram')} placeholder={tr("@hr_kompaniya")} /></Field>
               </div>
-              <Field as="div" label="Nomzodlar qanday bog'lansin?" req error={err('ways')}>
+              <Field as="div" label={tr("Nomzodlar qanday bog'lansin?")} req error={err('ways')}>
                 <Chips options={CONTACT_WAYS} isOn={(id) => d.ways.includes(id)} onPick={(id) => toggleIn('ways', id)} />
               </Field>
-              <Field as="div" label="E'lon muddati">
+              <Field as="div" label={tr("E'lon muddati")}>
                 <Chips options={DURATIONS} isOn={(id) => d.days === id} onPick={(id) => set('days', id)} />
               </Field>
 
               <div className="rb-sep" />
-              <h3 className="rb-sub">Ish izlovchilar shunday ko'radi</h3>
+              <h3 className="rb-sub">{tr("Ish izlovchilar shunday ko'radi")}</h3>
               <div className="vj-preview">
                 <div className="vj-preview-top">
                   <div>
-                    <b>{job.title || 'Lavozim nomi'}</b>
+                    <b>{job.title || tr('Lavozim nomi')}</b>
                     <span className="vj-salary">{salaryText(job)}</span>
                   </div>
                   <CompanyLogo name={job.company || 'K'} color={job.color} size={48} />
@@ -348,8 +357,8 @@ export default function PostJob() {
                 <span className="vj-meta">{job.company} · {[job.city, d.district].filter(Boolean).join(', ')}</span>
                 <div className="vj-chips">
                   <span>{job.type}</span>
-                  <span>{EXP_REQ.find((x) => x.id === d.expLevel)?.label}</span>
-                  {job.count > 1 && <span>{job.count} ta o'rin</span>}
+                  <span>{tr(EXP_REQ.find((x) => x.id === d.expLevel)?.label)}</span>
+                  {job.count > 1 && <span>{tr("{n} ta o'rin", { n: job.count })}</span>}
                   {shortOf(WORK_TIME, d.workTime).map((t) => <span key={t}>{t}</span>)}
                 </div>
                 {job.tags.length > 0 && <div className="vj-chips perks">{job.tags.map((t) => <span key={t}>{t}</span>)}</div>}
@@ -358,8 +367,8 @@ export default function PostJob() {
           )}
 
           <div className="rb-foot">
-            {step > 0 ? <button type="button" className="btn btn-ghost" onClick={() => go(step - 1)}>Orqaga</button> : <span />}
-            <button type="button" className="btn btn-primary rb-next" onClick={next}>{step === STEPS.length - 1 ? "E'lon qilish" : 'Davom etish'}</button>
+            {step > 0 ? <button type="button" className="btn btn-ghost" onClick={() => go(step - 1)}>{tr("Orqaga")}</button> : <span />}
+            <button type="button" className="btn btn-primary rb-next" onClick={next}>{step === STEPS.length - 1 ? tr("E'lon qilish") : tr('Davom etish')}</button>
           </div>
         </section>
       </div>
@@ -372,22 +381,22 @@ function Published({ job, matches }) {
   const { invites, invite, notify } = useApp()
   return (
     <div className="page rb">
-      <TopBar title="Vakansiya joylandi" />
+      <TopBar title={tr("Vakansiya joylandi")} />
       <div className="page-body rb-body">
         <section className="rb-card vj-done">
           <span className="vj-done-ico"><CheckCircle size={44} weight="fill" /></span>
-          <h2>«{job.title}» e'lon qilindi</h2>
-          <p>Vakansiya ish izlovchilar ro'yxatida va QadamAI tavsiyalarida ko'rinadi. Arizalar «Vakansiyalarim» bo'limiga tushadi.</p>
+          <h2>{tr("«{title}» e'lon qilindi", { title: tx(job.title) })}</h2>
+          <p>{tr("Vakansiya ish izlovchilar ro'yxatida va QadamAI tavsiyalarida ko'rinadi. Arizalar «Vakansiyalarim» bo'limiga tushadi.")}</p>
           <div className="vj-done-btns">
-            <Link to={`/jobs/${job.id}`} className="btn btn-ghost">Vakansiyani ko'rish</Link>
-            <Link to="/applications" className="btn btn-soft">Vakansiyalarim</Link>
+            <Link to={`/jobs/${job.id}`} className="btn btn-ghost">{tr("Vakansiyani ko'rish")}</Link>
+            <Link to="/applications" className="btn btn-soft">{tr("Vakansiyalarim")}</Link>
           </div>
         </section>
 
         <section className="rb-card">
           <div className="rb-head rb-head-row">
-            <div><span>QadamAI tanlovi</span><h2>Sizga mos nomzodlar</h2></div>
-            <Link to={`/candidates?cat=${job.category}`} className="rb-link">Barchasi</Link>
+            <div><span>{tr("QadamAI tanlovi")}</span><h2>{tr("Sizga mos nomzodlar")}</h2></div>
+            <Link to={`/candidates?cat=${job.category}`} className="rb-link">{tr("Barchasi")}</Link>
           </div>
           {matches.length ? (
             <div className="vj-cands">
@@ -397,18 +406,18 @@ function Published({ job, matches }) {
                   <div key={c.id} className="vj-cand">
                     <Link to={`/candidates/${c.id}`} className="vj-cand-main">
                       <Avatar name={c.name} color={c.color} size={48} />
-                      <div><b>{c.name}</b><span>{c.headline} · {c.city}</span><small>{reasons.slice(0, 2).join(' · ')}</small></div>
+                      <div><b>{c.name}</b><span>{tx(c.headline)} · {tx(c.city)}</span><small>{reasons.slice(0, 2).join(' · ')}</small></div>
                       <em>{score}%</em>
                     </Link>
                     <button type="button" className="btn btn-primary btn-sm" disabled={invited} onClick={() => { invite(c.id); notify('Taklif yuborildi') }}>
-                      {invited ? 'Taklif yuborilgan' : 'Suhbatga taklif'}
+                      {invited ? tr('Taklif yuborilgan') : tr('Suhbatga taklif')}
                     </button>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <p className="rb-hint">Hozircha mos nomzod topilmadi. Yangi rezyumelar paydo bo'lishi bilan QadamAI sizga xabar beradi.</p>
+            <p className="rb-hint">{tr("Hozircha mos nomzod topilmadi. Yangi rezyumelar paydo bo'lishi bilan QadamAI sizga xabar beradi.")}</p>
           )}
         </section>
       </div>

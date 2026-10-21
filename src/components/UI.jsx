@@ -7,7 +7,7 @@ import Icon3D from './Icon3D'
 import LocationSheet from './LocationSheet'
 import { useApp } from '../context/AppContext'
 import { CATEGORIES, NOTIFICATIONS, catName, salaryText, formatSum } from '../data/mock'
-import { AUTH_LANGS } from '../data/authText'
+import { LANGS, tr, tx, useT } from '../i18n'
 import { originOf } from '../lib/theme'
 
 export const THEME_OPTIONS = [
@@ -19,12 +19,13 @@ export const THEME_OPTIONS = [
 // Tezkor almashtirish tugmasi (yorug' ⇄ qorong'i). Ikonka joriy ko'rinishga qarab CSS orqali almashadi
 export function ThemeToggle({ className = '', size = 24 }) {
   const { setTheme } = useApp()
+  const t = useT()
   const toggle = (e) => {
     const dark = document.documentElement.dataset.theme === 'dark'
     setTheme(dark ? 'light' : 'dark', originOf(e))
   }
   return (
-    <button type="button" className={`theme-toggle ${className}`} onClick={toggle} aria-label="Mavzuni almashtirish" title="Mavzuni almashtirish">
+    <button type="button" className={`theme-toggle ${className}`} onClick={toggle} aria-label={t('Mavzuni almashtirish')} title={t('Mavzuni almashtirish')}>
       <Sun size={size} className="tt-sun" />
       <Moon size={size} className="tt-moon" />
     </button>
@@ -77,18 +78,18 @@ export function WomanFace({ size = 24, weight = 'regular', className, style }) {
 export function navItems(role) {
   return role === 'employer'
     ? [
-        { to: '/', icon: 'home', ph: House, label: 'Bosh sahifa', tab: 'Asosiy', end: true },
-        { to: '/candidates', icon: 'users', ph: UsersThree, label: 'Nomzodlar' },
-        { to: '/post-job', icon: 'plus', ph: Plus, label: 'Joylash', fab: true },
+        { to: '/', icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
+        { to: '/candidates', icon: 'users', ph: UsersThree, label: tr('Nomzodlar') },
+        { to: '/post-job', icon: 'plus', ph: Plus, label: tr('Joylash'), fab: true },
         { to: '/qadam-ai', icon: 'sparkle', ph: Sparkle, label: 'QadamAI' },
-        { to: '/profile', icon: 'user', ph: WomanFace, label: 'Profil' },
+        { to: '/profile', icon: 'user', ph: WomanFace, label: tr('Profil') },
       ]
     : [
-        { to: '/', icon: 'home', ph: House, label: 'Bosh sahifa', tab: 'Asosiy', end: true },
-        { to: '/jobs', icon: 'briefcase', ph: Briefcase, label: 'Vakansiyalar', tab: 'Ishlar' },
-        { to: '/companies', icon: 'building', ph: Buildings, label: 'Kompaniyalar', tab: 'Kompaniya' },
-        { to: '/map', icon: 'pin', ph: MapTrifold, label: 'Xarita' },
-        { to: '/profile', icon: 'user', ph: WomanFace, label: 'Profil', end: true },
+        { to: '/', icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
+        { to: '/jobs', icon: 'briefcase', ph: Briefcase, label: tr('Vakansiyalar'), tab: tr('Ishlar') },
+        { to: '/companies', icon: 'building', ph: Buildings, label: tr('Kompaniyalar'), tab: tr('Kompaniya') },
+        { to: '/map', icon: 'pin', ph: MapTrifold, label: tr('Xarita') },
+        { to: '/profile', icon: 'user', ph: WomanFace, label: tr('Profil'), end: true },
       ]
 }
 
@@ -181,7 +182,7 @@ export function TabBar({ items, pathname }) {
 
   const ActivePh = active >= 0 ? items[active].ph : null
   return (
-    <nav className="tabbar" ref={navRef} aria-label="Asosiy menyu">
+    <nav className="tabbar" ref={navRef} aria-label={tr('Asosiy menyu')}>
       <div className="tabbar-shadow" aria-hidden="true">
         <div className="tabbar-bg">
           <svg><path ref={pathRef} /></svg>
@@ -210,6 +211,7 @@ export function TabBar({ items, pathname }) {
 // Desktop sarlavhasi (≥1024px): mobil tab bar o'rniga sayt ko'rinishidagi yuqori menyu
 function SiteHeader() {
   const { user, saved, prefs, setPrefs, setTheme, requireAuth } = useApp()
+  const t = useT()
   const [locOpen, setLocOpen] = useState(false)
   const nav = useNavigate()
   const { pathname } = useLocation()
@@ -219,7 +221,7 @@ function SiteHeader() {
   const catsRef = useRef(null)
   const [langOpen, setLangOpen] = useState(false)
   const langRef = useRef(null)
-  const curLang = AUTH_LANGS.find((l) => l.id === prefs.lang) || AUTH_LANGS[0]
+  const curLang = LANGS.find((l) => l.id === prefs.lang) || LANGS[0]
 
   useEffect(() => { setCatsOpen(false); setLangOpen(false) }, [pathname])
   useEffect(() => {
@@ -242,8 +244,8 @@ function SiteHeader() {
   const listPath = isEmp ? '/candidates' : '/jobs'
   const submit = (e) => {
     e.preventDefault()
-    const t = q.trim()
-    nav(t ? `${listPath}?q=${encodeURIComponent(t)}` : listPath)
+    const s = q.trim()
+    nav(s ? `${listPath}?q=${encodeURIComponent(s)}` : listPath)
   }
 
   return (
@@ -256,24 +258,24 @@ function SiteHeader() {
           </Link>
           <div className="sh-tools">
             <button type="button" className="sh-region" onClick={() => requireAuth(() => setLocOpen(true))}>
-              <MapPin size={18} /> {user?.city || 'Barcha hududlar'} <CaretDown size={13} weight="bold" />
+              <MapPin size={18} /> {user?.city ? tx(user.city) : t('Barcha hududlar')} <CaretDown size={13} weight="bold" />
             </button>
-            <div className="sh-theme" role="group" aria-label="Mavzu">
+            <div className="sh-theme" role="group" aria-label={t('Mavzu')}>
               {THEME_OPTIONS.map(({ id, label, icon: Ic }) => {
                 const on = prefs.theme === id
                 return (
-                  <button key={id} type="button" className={on ? 'on' : ''} aria-pressed={on} aria-label={`Mavzu: ${label}`} title={label}
+                  <button key={id} type="button" className={on ? 'on' : ''} aria-pressed={on} aria-label={`${t('Mavzu')}: ${t(label)}`} title={t(label)}
                     onClick={(e) => setTheme(id, originOf(e))}><Ic size={16} weight={on ? 'bold' : 'regular'} /></button>
                 )
               })}
             </div>
             <div className="sh-lang" ref={langRef}>
-              <button type="button" className="sh-region" aria-expanded={langOpen} aria-label="Til" onClick={() => setLangOpen((o) => !o)}>
+              <button type="button" className="sh-region" aria-expanded={langOpen} aria-label={t('Til')} onClick={() => setLangOpen((o) => !o)}>
                 <Globe size={18} /> {curLang.short} <CaretDown size={13} weight="bold" />
               </button>
               {langOpen && (
                 <div className="sh-lang-menu">
-                  {AUTH_LANGS.map((l) => (
+                  {LANGS.map((l) => (
                     <button key={l.id} type="button" className={l.id === curLang.id ? 'on' : ''}
                       onClick={() => { setPrefs({ lang: l.id }); setLangOpen(false) }}>
                       <b>{l.short}</b> {l.label} {l.id === curLang.id && <Check size={15} weight="bold" />}
@@ -290,13 +292,13 @@ function SiteHeader() {
         <div className="sh-wrap">
           <div className="sh-cats" ref={catsRef}>
             <button type="button" className="sh-cats-btn" aria-expanded={catsOpen} onClick={() => setCatsOpen((o) => !o)}>
-              <SquaresFour size={20} /> Kategoriyalar
+              <SquaresFour size={20} /> <span className="sh-cats-label">{t('Kategoriyalar')}</span>
             </button>
             {catsOpen && (
               <div className="sh-cats-menu">
                 {CATEGORIES.map((c) => (
                   <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="sh-cat-item">
-                    <Icon3D name={c.icon} size={26} /> <span>{c.name}</span>
+                    <Icon3D name={c.icon} size={26} /> <span>{t(c.name)}</span>
                   </Link>
                 ))}
               </div>
@@ -306,37 +308,37 @@ function SiteHeader() {
           <form className="sh-search" onSubmit={submit} role="search">
             <MagnifyingGlass size={20} className="sh-search-ico" />
             <input value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder={isEmp ? "Kasb, ko'nikma yoki ism bo'yicha qidiring..." : 'Ish, kompaniya yoki lavozimni qidiring...'} />
-            <button type="submit" className="sh-search-btn" aria-label="Qidirish"><MagnifyingGlass size={18} weight="bold" /></button>
+              placeholder={isEmp ? t("Kasb, ko'nikma yoki ism bo'yicha qidiring...") : t('Ish, kompaniya yoki lavozimni qidiring...')} />
+            <button type="submit" className="sh-search-btn" aria-label={t('Qidirish')}><MagnifyingGlass size={18} weight="bold" /></button>
           </form>
 
           <div className="sh-icons">
             <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>
-            <Link to="/notifications" className="sh-ico" aria-label="Bildirishnomalar" title="Bildirishnomalar">
+            <Link to="/notifications" className="sh-ico" aria-label={t('Bildirishnomalar')} title={t('Bildirishnomalar')}>
               <Bell size={21} />
               {NOTIFICATIONS.length > 0 && <em className="sh-badge">{NOTIFICATIONS.length}</em>}
             </Link>
             {!isEmp && (
-              <Link to="/applications?tab=saved" className="sh-ico" aria-label="Saqlanganlar" title="Saqlanganlar">
+              <Link to="/applications?tab=saved" className="sh-ico" aria-label={t('Saqlanganlar')} title={t('Saqlanganlar')}>
                 <Heart size={21} />
                 {saved.length > 0 && <em className="sh-badge">{saved.length}</em>}
               </Link>
             )}
-            <Link to="/map" className="sh-ico" aria-label="Xarita" title="Xarita"><MapTrifold size={21} /></Link>
+            <Link to="/map" className="sh-ico sh-ico-map" aria-label={t('Xarita')} title={t('Xarita')}><MapTrifold size={21} /></Link>
           </div>
 
           <NavLink to={listPath} className="sh-link sh-link-outline">
-            {isEmp ? <UsersThree size={19} /> : <Briefcase size={19} />} {isEmp ? 'Nomzodlar' : "Ish e'lonlari"}
+            {isEmp ? <UsersThree size={19} /> : <Briefcase size={19} />} <span className="sh-link-label">{isEmp ? t('Nomzodlar') : t("Ish e'lonlari")}</span>
           </NavLink>
-          <NavLink to="/companies" className="sh-link">Kompaniyalar</NavLink>
+          <NavLink to="/companies" className="sh-link sh-link-co">{t('Kompaniyalar')}</NavLink>
 
-          <Link to={isEmp ? '/post-job' : '/profile/edit'} className="sh-cta">
-            {isEmp ? "E'lon joylashtirish" : 'Rezyume joylash'} <span className="sh-cta-plus"><Plus size={16} weight="bold" /></span>
+          <Link to={isEmp ? '/post-job' : '/profile/edit'} className="sh-cta" aria-label={isEmp ? t("E'lon joylashtirish") : t('Rezyume joylash')}>
+            <span className="sh-cta-label">{isEmp ? t("E'lon joylashtirish") : t('Rezyume joylash')}</span> <span className="sh-cta-plus"><Plus size={16} weight="bold" /></span>
           </Link>
-          <Link to="/profile" className="sh-avatar" aria-label="Profil">
+          <Link to="/profile" className="sh-avatar" aria-label={t('Profil')}>
             {user ? <Avatar name={user.name} photo={user.photo} silhouette size={44} radius={22} /> : <WomanFace size={22} />}
           </Link>
-          <Link to="/more" className="sh-more" aria-label="Boshqa bo'limlar"><DotsThree size={26} weight="bold" /></Link>
+          <Link to="/more" className="sh-more" aria-label={t("Boshqa bo'limlar")}><DotsThree size={26} weight="bold" /></Link>
         </div>
       </div>
     </header>
@@ -351,7 +353,7 @@ export function Layout() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
   return (
-    <div className={`shell ${chat ? 'no-tabs' : ''} ${pathname === '/' ? 'is-home' : ''}`}>
+    <div className={`shell ${chat ? 'no-tabs' : ''} ${pathname === '/' ? 'is-home' : ''} ${pathname === '/map' ? 'is-map' : ''}`}>
       <SiteHeader />
 
       <main className="main">
@@ -404,9 +406,9 @@ export function Dropdown({ value, options, onChange, label }) {
   return (
     <div className={`dd ${open ? 'open' : ''}`} ref={rootRef} onKeyDown={onKey}>
       <button type="button" className="dd-btn" onClick={toggle} aria-haspopup="listbox" aria-expanded={open}
-        aria-label={label ? `${label}: ${current.label}` : current.label}>
+        aria-label={label ? `${label}: ${tr(current.label)}` : tr(current.label)}>
         {CurIcon ? <CurIcon size={17} weight="bold" /> : <SortAscending size={17} weight="bold" />}
-        <span>{current.label}</span>
+        <span>{tr(current.label)}</span>
         <CaretDown size={14} weight="bold" className="dd-caret" />
       </button>
       <div className="dd-menu" role="listbox" ref={listRef} aria-label={label}>
@@ -417,7 +419,7 @@ export function Dropdown({ value, options, onChange, label }) {
             <button key={o.value} type="button" role="option" aria-selected={on} tabIndex={open ? 0 : -1}
               className={`dd-item ${on ? 'on' : ''}`} onClick={() => pick(o.value)}>
               {Ic && <span className="dd-ico"><Ic size={18} weight={on ? 'fill' : 'regular'} /></span>}
-              <span className="dd-label">{o.label}</span>
+              <span className="dd-label">{tr(o.label)}</span>
               {on && <Check size={16} weight="bold" className="dd-check" />}
             </button>
           )
@@ -429,7 +431,7 @@ export function Dropdown({ value, options, onChange, label }) {
 
 /* Forma uchun tanlov maydoni (native select o'rniga). options: ['Toshkent', ...] yoki [{ value, label }]
    Menyu portal orqali chiziladi — fieldset/sheet ichida kesilib qolmaydi, joy bo'lmasa tepaga ochiladi */
-export function Select({ value, options, onChange, placeholder = 'Tanlang' }) {
+export function Select({ value, options, onChange, placeholder }) {
   const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
   const [open, setOpen] = useState(false)
   const [focus, setFocus] = useState(-1)
@@ -495,7 +497,7 @@ export function Select({ value, options, onChange, placeholder = 'Tanlang' }) {
     <>
       <button type="button" ref={btnRef} className={`sel-btn ${open ? 'open' : ''}`} onClick={toggle} onKeyDown={onKey}
         aria-haspopup="listbox" aria-expanded={open}>
-        <span className={current ? 'sel-val' : 'sel-val sel-ph'}>{current ? current.label : placeholder}</span>
+        <span className={current ? 'sel-val' : 'sel-val sel-ph'}>{current ? tr(current.label) : placeholder ?? tr('Tanlang')}</span>
         <CaretDown size={16} weight="bold" className="sel-caret" />
       </button>
       {open && pos && createPortal(
@@ -506,7 +508,7 @@ export function Select({ value, options, onChange, placeholder = 'Tanlang' }) {
             return (
               <button key={o.value} type="button" role="option" aria-selected={on}
                 className={`sel-item ${on ? 'on' : ''}`} onClick={() => pick(o.value)}>
-                <span>{o.label}</span>
+                <span>{tr(o.label)}</span>
                 {on && <Check size={16} weight="bold" />}
               </button>
             )
@@ -592,8 +594,8 @@ export function Combo({ value, options, onChange, onPick, placeholder, maxLength
             <button key={o.value} type="button" role="option" tabIndex={-1} aria-selected={i === active}
               className={`sel-item ${i === active ? 'active' : ''} ${norm(o.value) === q ? 'on' : ''}`}
               onMouseDown={(e) => e.preventDefault()} onClick={() => pick(o)}>
-              <span>{o.value}</span>
-              {o.hint && <small className="sel-hint">{o.hint}</small>}
+              <span>{tx(o.value)}</span>
+              {o.hint && <small className="sel-hint">{tr(o.hint)}</small>}
             </button>
           ))}
         </div>,
@@ -608,7 +610,7 @@ export function TopBar({ title, right, back = true }) {
   return (
     <div className="topbar">
       {back ? (
-        <button className="icon-btn" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/'))} aria-label="Orqaga">
+        <button className="icon-btn icon-back" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/'))} aria-label={tr('Orqaga')}>
           <Icon name="left" />
         </button>
       ) : <span style={{ width: 42 }} />}
@@ -624,17 +626,18 @@ export function JobCard({ job, compact }) {
   const isSaved = saved.includes(job.id)
   const applied = applications.some((a) => a.jobId === job.id)
   const showActions = !compact && user?.role !== 'employer' && !job.own
+  const t = useT()
   const quickApply = () => requireAuth(() => {
     apply(job.id, '')
-    notify('Arizangiz yuborildi!')
+    notify(t('Arizangiz yuborildi!'))
   })
 
   return (
     <article className={`job-card ${compact ? 'compact' : ''}`}>
       <div className="job-title-row">
         {/* sarlavha havolasi butun kartani bosiladigan qiladi (::after orqali) */}
-        <h3><Link to={`/jobs/${job.id}`} className="job-link">{job.title}</Link></h3>
-        <button type="button" className={`save-btn ${isSaved ? 'on' : ''}`} aria-label="Saqlash" aria-pressed={isSaved}
+        <h3><Link to={`/jobs/${job.id}`} className="job-link">{tx(job.title)}</Link></h3>
+        <button type="button" className={`save-btn ${isSaved ? 'on' : ''}`} aria-label={t('Saqlash')} aria-pressed={isSaved}
           onClick={() => requireAuth(() => toggleSave(job.id))}>
           <Heart size={26} weight={isSaved ? 'fill' : 'regular'} />
         </button>
@@ -646,9 +649,9 @@ export function JobCard({ job, compact }) {
         <div className="job-company-text">
           <span className="job-company-name">
             {job.company}
-            {!job.own && <SealCheck size={18} weight="fill" className="verified" aria-label="Tasdiqlangan" />}
+            {!job.own && <SealCheck size={18} weight="fill" className="verified" aria-label={t('Tasdiqlangan')} />}
           </span>
-          <span className="job-place">{job.city} <i className="job-place-dot" /> {catName(job.category)}</span>
+          <span className="job-place">{tx(job.city)} <i className="job-place-dot" /> {catName(job.category)}</span>
         </div>
         <CompanyLogo name={job.company} color={job.color} size={compact ? 42 : 52} />
       </div>
@@ -656,20 +659,20 @@ export function JobCard({ job, compact }) {
       {!compact && (
         <>
           <div className="chips">
-            <span className="chip">{job.experience ? `Tajriba ${job.experience}+ yil` : 'Tajriba shart emas'}</span>
-            <span className="chip">Format: {job.type}</span>
+            <span className="chip">{job.experience ? t('Tajriba {n}+ yil', { n: job.experience }) : t('Tajriba shart emas')}</span>
+            <span className="chip">{t('Format')}: {t(job.type)}</span>
           </div>
-          {job.tags?.[0] && <span className="chip chip-green">{job.tags[0]}</span>}
-          <span className="job-posted">{job.posted} · {job.applicants} ariza</span>
+          {job.tags?.[0] && <span className="chip chip-green">{t(job.tags[0])}</span>}
+          <span className="job-posted">{t(job.posted)} · {t('{n} ariza', { n: job.applicants || 0 })}</span>
         </>
       )}
 
       {showActions && (
         <div className="job-actions">
           <button type="button" className="btn btn-primary" disabled={applied} onClick={quickApply}>
-            {applied ? 'Ariza yuborildi' : 'Ariza yuborish'}
+            {applied ? t('Ariza yuborildi') : t('Ariza yuborish')}
           </button>
-          <button type="button" className="btn btn-soft" onClick={() => nav(`/jobs/${job.id}`)}>Bog'lanish</button>
+          <button type="button" className="btn btn-soft" onClick={() => nav(`/jobs/${job.id}`)}>{t("Bog'lanish")}</button>
         </div>
       )}
     </article>
@@ -677,18 +680,19 @@ export function JobCard({ job, compact }) {
 }
 
 export function CourseCard({ c }) {
+  const t = useT()
   return (
     <Link to={`/courses/${c.id}`} className="course-card">
       <div className="course-art">
         <Icon3D name={c.icon} size={92} />
-        <span className={`price-tag ${c.price ? '' : 'free'}`}>{c.price ? `${formatSum(c.price)} so'm` : 'Bepul'}</span>
+        <span className={`price-tag ${c.price ? '' : 'free'}`}>{c.price ? `${formatSum(c.price)} ${t("so'm")}` : t('Bepul')}</span>
       </div>
       <div className="course-body">
-        <h3>{c.title}</h3>
-        <span className="muted">{c.provider}</span>
+        <h3>{tx(c.title)}</h3>
+        <span className="muted">{tx(c.provider)}</span>
         <div className="course-meta">
           <span><Icon name="star" size={14} fill="#FBBF24" style={{ color: '#FBBF24' }} /> {c.rating}</span>
-          <span><Icon name="clock" size={14} /> {c.duration}</span>
+          <span><Icon name="clock" size={14} /> {t(c.duration)}</span>
           <span><Icon name="users" size={14} /> {c.students}</span>
         </div>
       </div>
@@ -716,7 +720,7 @@ export function Sheet({ open, onClose, title, children }) {
         <div className="sheet-handle" />
         <div className="sheet-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Yopish"><Icon name="x" /></button>
+          <button className="icon-btn" onClick={onClose} aria-label={tr('Yopish')}><Icon name="x" /></button>
         </div>
         {children}
       </div>
@@ -725,11 +729,11 @@ export function Sheet({ open, onClose, title, children }) {
   )
 }
 
-export function SectionHead({ title, to, link = 'Barchasi' }) {
+export function SectionHead({ title, to, link }) {
   return (
     <div className="section-head">
       <h2>{title}</h2>
-      {to && <Link to={to}>{link} <Icon name="right" size={16} /></Link>}
+      {to && <Link to={to}>{link ?? tr('Barchasi')} <Icon name="right" size={16} /></Link>}
     </div>
   )
 }
@@ -745,8 +749,8 @@ function pageList(page, pages) {
 export function Pagination({ page, pages, onChange }) {
   if (pages <= 1) return null
   return (
-    <nav className="pager" aria-label="Sahifalar">
-      <button className="pager-btn pager-nav" disabled={page === 1} onClick={() => onChange(page - 1)} aria-label="Oldingi sahifa">
+    <nav className="pager" aria-label={tr('Sahifalar')}>
+      <button className="pager-btn pager-nav" disabled={page === 1} onClick={() => onChange(page - 1)} aria-label={tr('Oldingi sahifa')}>
         <CaretLeft size={18} weight="bold" />
       </button>
       {pageList(page, pages).map((n, i) =>
@@ -754,7 +758,7 @@ export function Pagination({ page, pages, onChange }) {
           <button key={n} className={`pager-btn ${n === page ? 'on' : ''}`} onClick={() => onChange(n)}
             aria-current={n === page ? 'page' : undefined}>{n}</button>
         ))}
-      <button className="pager-btn pager-nav" disabled={page === pages} onClick={() => onChange(page + 1)} aria-label="Keyingi sahifa">
+      <button className="pager-btn pager-nav" disabled={page === pages} onClick={() => onChange(page + 1)} aria-label={tr('Keyingi sahifa')}>
         <CaretRight size={18} weight="bold" />
       </button>
     </nav>

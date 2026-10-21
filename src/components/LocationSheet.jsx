@@ -6,6 +6,7 @@ import { Sheet } from './UI'
 import { useApp } from '../context/AppContext'
 import { CITIES } from '../data/mock'
 import { CITY_COORDS, UZ_CENTER } from '../data/geo'
+import { tx, useT } from '../i18n'
 
 // koordinataga eng yaqin shahar (MVP: reverse-geocoding o'rniga)
 const nearestCity = ([lat, lng]) => {
@@ -21,6 +22,7 @@ const nearestCity = ([lat, lng]) => {
 function MapPick({ start, onPick }) {
   const boxRef = useRef(null)
   const mapRef = useRef(null)
+  const t = useT()
   const [center, setCenter] = useState(start)
 
   useEffect(() => {
@@ -47,16 +49,17 @@ function MapPick({ start, onPick }) {
       <div className="loc-map">
         <div ref={boxRef} className="loc-map-box" />
         <MapPinLine className="loc-map-pin" size={40} weight="fill" />
-        <button type="button" className="loc-map-me" onClick={locate} aria-label="Joylashuvim"><NavigationArrow size={20} weight="fill" /></button>
+        <button type="button" className="loc-map-me" onClick={locate} aria-label={t('Joylashuvim')}><NavigationArrow size={20} weight="fill" /></button>
       </div>
-      <p className="loc-map-hint">Shahar: <b>{nearestCity(center)}</b></p>
-      <button type="button" className="btn btn-primary btn-block" onClick={() => onPick(center)}>Shu joyni tanlash</button>
+      <p className="loc-map-hint">{t('Shahar')}: <b>{tx(nearestCity(center))}</b></p>
+      <button type="button" className="btn btn-primary btn-block" onClick={() => onPick(center)}>{t('Shu joyni tanlash')}</button>
     </>
   )
 }
 
 export default function LocationSheet({ open, onClose }) {
   const { user, updateUser, notify } = useApp()
+  const t = useT()
   const [step, setStep] = useState('menu') // menu | city | map | address
   const [address, setAddress] = useState('')
   const [busy, setBusy] = useState(false)
@@ -64,30 +67,30 @@ export default function LocationSheet({ open, onClose }) {
   useEffect(() => { if (open) { setStep('menu'); setAddress(user.address || '') } }, [open])
 
   const close = () => onClose()
-  const save = (patch, msg) => { updateUser(patch); notify?.(msg || 'Manzil saqlandi'); close() }
+  const save = (patch, msg) => { updateUser(patch); notify?.(msg || t('Manzil saqlandi')); close() }
   const fromCoords = (ll) => save({ city: nearestCity(ll), lat: ll[0], lng: ll[1] })
 
   const detect = () => {
-    if (!navigator.geolocation) return notify?.("Qurilmangiz joylashuvni aniqlay olmaydi")
+    if (!navigator.geolocation) return notify?.(t('Qurilmangiz joylashuvni aniqlay olmaydi'))
     setBusy(true)
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => { setBusy(false); fromCoords([coords.latitude, coords.longitude]) },
-      () => { setBusy(false); notify?.('Joylashuvga ruxsat berilmadi') },
+      () => { setBusy(false); notify?.(t('Joylashuvga ruxsat berilmadi')) },
       { enableHighAccuracy: true, timeout: 10000 },
     )
   }
 
-  const titles = { menu: 'Manzil', city: 'Shaharni tanlang', map: 'Xaritadan tanlash', address: "Manzil qo'shish" }
+  const titles = { menu: t('Manzil'), city: t('Shaharni tanlang'), map: t('Xaritadan tanlash'), address: t("Manzil qo'shish") }
   const back = step !== 'menu' && (
-    <button type="button" className="loc-back" onClick={() => setStep('menu')}><CaretLeft size={16} weight="bold" /> Orqaga</button>
+    <button type="button" className="loc-back" onClick={() => setStep('menu')}><CaretLeft size={16} weight="bold" /> {t('Orqaga')}</button>
   )
   const mapStart = user.lat && user.lng ? [user.lat, user.lng] : CITY_COORDS[user.city] || UZ_CENTER
 
   const items = [
-    { id: 'detect', icon: Crosshair, label: busy ? 'Aniqlanmoqda…' : 'Joylashuvimni aniqlash', hint: 'GPS orqali avtomatik', onClick: detect },
-    { id: 'map', icon: MapTrifold, label: 'Xaritadan tanlash', hint: "Xaritada aniq joyni belgilang", onClick: () => setStep('map') },
-    { id: 'city', icon: Buildings, label: "Shaharni o'zgartirish", hint: user.city || "Ko'rsatilmagan", onClick: () => setStep('city') },
-    { id: 'address', icon: MapPinLine, label: user.address ? "Manzilni o'zgartirish" : "Manzil qo'shish", hint: user.address || "Ko'cha, uy, mo'ljal", onClick: () => setStep('address') },
+    { id: 'detect', icon: Crosshair, label: busy ? t('Aniqlanmoqda…') : t('Joylashuvimni aniqlash'), hint: t('GPS orqali avtomatik'), onClick: detect },
+    { id: 'map', icon: MapTrifold, label: t('Xaritadan tanlash'), hint: t('Xaritada aniq joyni belgilang'), onClick: () => setStep('map') },
+    { id: 'city', icon: Buildings, label: t("Shaharni o'zgartirish"), hint: tx(user.city) || t("Ko'rsatilmagan"), onClick: () => setStep('city') },
+    { id: 'address', icon: MapPinLine, label: user.address ? t("Manzilni o'zgartirish") : t("Manzil qo'shish"), hint: user.address || t("Ko'cha, uy, mo'ljal"), onClick: () => setStep('address') },
   ]
 
   return (
@@ -110,7 +113,7 @@ export default function LocationSheet({ open, onClose }) {
           {CITIES.map((c) => (
             <button key={c} type="button" className={`pf-option ${c === user.city ? 'on' : ''}`}
               onClick={() => save({ city: c, lat: null, lng: null })}>
-              <span className="pf-option-text"><b>{c}</b></span>
+              <span className="pf-option-text"><b>{tx(c)}</b></span>
               {c === user.city && <Check size={20} weight="bold" />}
             </button>
           ))}
@@ -121,10 +124,10 @@ export default function LocationSheet({ open, onClose }) {
 
       {step === 'address' && (
         <form onSubmit={(e) => { e.preventDefault(); save({ address: address.trim() }) }}>
-          <label className="field"><span>Manzil</span>
-            <input autoFocus value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Masalan: Navoiy ko'chasi 12-uy" />
+          <label className="field"><span>{t('Manzil')}</span>
+            <input autoFocus value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("Masalan: Navoiy ko'chasi 12-uy")} />
           </label>
-          <button type="submit" className="btn btn-primary btn-block">Saqlash</button>
+          <button type="submit" className="btn btn-primary btn-block">{t('Saqlash')}</button>
         </form>
       )}
     </Sheet>

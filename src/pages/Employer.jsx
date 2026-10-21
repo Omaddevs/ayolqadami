@@ -12,6 +12,8 @@ import {
 import ResumeView, { age, expText, fullName, placeText, statusOf } from '../components/ResumeView'
 import { useApp } from '../context/AppContext'
 import { CANDIDATES, CATEGORIES, catName } from '../data/mock'
+import { tr, tx } from '../i18n'
+
 
 // Kategoriya pill'lari uchun chiziqli ikonkalar (namunadagidek)
 const CAT_ICONS = {
@@ -46,52 +48,52 @@ export function Candidates() {
     <div className="page cands-page">
       <header className="cands-head">
         <div className="grow">
-          <h1>Nomzodlar</h1>
-          <span>Sizning jamoangiz uchun eng yaxshi nomzodlar</span>
+          <h1>{tr("Nomzodlar")}</h1>
+          <span>{tr("Sizning jamoangiz uchun eng yaxshi nomzodlar")}</span>
         </div>
-        <Link to="/qadam-ai" className="cands-ai-btn" aria-label="QadamAI"><Sparkle size={22} /></Link>
+        <Link to="/qadam-ai" className="cands-ai-btn" aria-label={tr("QadamAI")}><Sparkle size={22} /></Link>
       </header>
       <div className="page-body">
         <Link to="/qadam-ai" className="ai-cta cands-cta">
           <Icon3D name="sparkle" size={64} />
-          <div className="grow"><b>QadamAI bilan izlang</b><span>Talablarni yozing — mos nomzodlarni foiz bilan ko'rsatamiz</span></div>
+          <div className="grow"><b>{tr("QadamAI bilan izlang")}</b><span>{tr("Talablarni yozing — mos nomzodlarni foiz bilan ko'rsatamiz")}</span></div>
           <CaretRight size={20} weight="bold" />
         </Link>
         <div className="cands-search">
           <label className="search">
             <MagnifyingGlass size={20} />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ism, kasb yoki ko'nikma" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Ism, kasb yoki ko'nikma")} />
           </label>
-          <button type="button" className="cands-filter" aria-label="Filtr" onClick={() => { setDraft(f); setSheet(true) }}>
+          <button type="button" className="cands-filter" aria-label={tr("Filtr")} onClick={() => { setDraft(f); setSheet(true) }}>
             <SlidersHorizontal size={22} />
             {fCount > 0 && <i>{fCount}</i>}
           </button>
         </div>
         <div className="pill-row cands-pills">
-          <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}><SquaresFour size={18} /> Barchasi</button>
+          <button className={`pill ${!cat ? 'on' : ''}`} onClick={() => setCat('')}><SquaresFour size={18} /> {tr("Barchasi")}</button>
           {CATEGORIES.map((c) => {
             const Ic = CAT_ICONS[c.id] || Briefcase
-            return <button key={c.id} className={`pill ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}><Ic size={18} /> {c.short}</button>
+            return <button key={c.id} className={`pill ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}><Ic size={18} /> {tr(c.short)}</button>
           })}
         </div>
         {list.length ? (
           <div className="list-grid cands-list">{list.map((c) => <CandidateCard key={c.id} c={c} list />)}</div>
-        ) : <Empty icon="users" title="Nomzod topilmadi" />}
+        ) : <Empty icon="users" title={tr("Nomzod topilmadi")} />}
       </div>
 
-      <Sheet open={sheet} onClose={() => setSheet(false)} title="Filtr">
+      <Sheet open={sheet} onClose={() => setSheet(false)} title={tr("Filtr")}>
         <div className="cands-sheet">
-          <Field as="div" label="Shahar">
-            <Select value={draft.city} options={[{ value: '', label: 'Barcha shaharlar' }, ...CITY_OPTS]} placeholder="Barcha shaharlar"
+          <Field as="div" label={tr("Shahar")}>
+            <Select value={draft.city} options={[{ value: '', label: tr('Barcha shaharlar') }, ...CITY_OPTS]} placeholder={tr("Barcha shaharlar")}
               onChange={(v) => setDraft((d) => ({ ...d, city: v }))} />
           </Field>
-          <Field as="div" label="Tajriba">
+          <Field as="div" label={tr("Tajriba")}>
             <Chips options={EXP_MIN} isOn={(id) => draft.exp === id} onPick={(id) => setDraft((d) => ({ ...d, exp: id }))} />
           </Field>
-          <Check2 checked={draft.active} onChange={(v) => setDraft((d) => ({ ...d, active: v }))}>Faqat faol ish qidirayotganlar</Check2>
+          <Check2 checked={draft.active} onChange={(v) => setDraft((d) => ({ ...d, active: v }))}>{tr("Faqat faol ish qidirayotganlar")}</Check2>
           <div className="cands-sheet-btns">
-            <button type="button" className="btn btn-ghost" onClick={() => { setDraft(NO_FILTER); setF(NO_FILTER); setSheet(false) }}>Tozalash</button>
-            <button type="button" className="btn btn-primary grow" onClick={() => { setF(draft); setSheet(false) }}>Ko'rsatish</button>
+            <button type="button" className="btn btn-ghost" onClick={() => { setDraft(NO_FILTER); setF(NO_FILTER); setSheet(false) }}>{tr("Tozalash")}</button>
+            <button type="button" className="btn btn-primary grow" onClick={() => { setF(draft); setSheet(false) }}>{tr("Ko'rsatish")}</button>
           </div>
         </div>
       </Sheet>
@@ -103,7 +105,7 @@ export function CandidateDetail() {
   const { id } = useParams()
   const { user, invites, invite, notify, savedCands, toggleSaveCand } = useApp()
   const c = CANDIDATES.find((x) => x.id === id)
-  if (!c) return <div className="page"><TopBar title="Nomzod" /><Empty title="Topilmadi" /></div>
+  if (!c) return <div className="page"><TopBar title={tr("Nomzod")} /><Empty title={tr("Topilmadi")} /></div>
   const invited = invites.includes(c.id)
   const saved = savedCands.includes(c.id)
   const status = statusOf(c)
@@ -113,19 +115,19 @@ export function CandidateDetail() {
 
   return (
     <div className="page detail cv-page">
-      <TopBar title="Rezyume" />
+      <TopBar title={tr("Rezyume")} />
       <div className="page-body">
         <div className="cv-hero">
           <img className="cv-hero-art" src="/ayolqadami-mark.png" alt="" aria-hidden="true" />
           <span className="cv-ava">
             <Avatar name={c.name} color={c.color} size={88} radius={28} />
-            {status?.id === 'active' && <i className="cv-online" aria-label="Faol" />}
+            {status?.id === 'active' && <i className="cv-online" aria-label={tr("Faol")} />}
           </span>
           <h1>{fullName(c)}</h1>
-          <span className="cv-headline">{c.headline}</span>
+          <span className="cv-headline">{tx(c.headline)}</span>
           <span className="cv-pill"><Star size={14} weight="fill" /> {catName(c.category)}</span>
           <div className="cv-meta-row">
-            {years != null && <span><Cake size={16} /> {years} yosh</span>}
+            {years != null && <span><Cake size={16} /> {tr('{n} yosh', { n: years })}</span>}
             {placeText(c) && <span><MapPin size={16} /> {placeText(c)}</span>}
             {exp && <span><Suitcase size={16} /> {exp}</span>}
           </div>
@@ -133,20 +135,20 @@ export function CandidateDetail() {
             <div className="cv-hero-foot">
               {status && (
                 <div className={`cv-state s-${status.id}`}>
-                  <b><i />{status.id === 'active' ? 'Hozirda faol' : status.label}</b>
-                  <small>{status.id === 'active' ? 'Ish qidiryapti' : status.hint}</small>
+                  <b><i />{status.id === 'active' ? tr('Hozirda faol') : status.label}</b>
+                  <small>{status.id === 'active' ? tr('Ish qidiryapti') : status.hint}</small>
                 </div>
               )}
               {employer && (
                 <div className="cv-hero-acts">
                   <button type="button" className={`cv-like ${saved ? 'on' : ''}`} aria-pressed={saved}
-                    aria-label={saved ? 'Saqlanganlardan olib tashlash' : 'Saqlash'}
+                    aria-label={saved ? tr('Saqlanganlardan olib tashlash') : tr('Saqlash')}
                     onClick={() => { toggleSaveCand(c.id); notify(saved ? 'Saqlanganlardan olib tashlandi' : 'Nomzod saqlandi') }}>
                     <Heart size={20} weight={saved ? 'fill' : 'regular'} />
                   </button>
                   <button type="button" className="btn btn-primary cv-invite" disabled={invited}
                     onClick={() => { invite(c.id); notify('Taklif yuborildi') }}>
-                    {invited ? <><Check size={18} weight="bold" /> Yuborilgan</> : <><PaperPlaneTilt size={18} weight="fill" /> Taklif yuborish</>}
+                    {invited ? <><Check size={18} weight="bold" /> {tr("Yuborilgan")}</> : <><PaperPlaneTilt size={18} weight="fill" /> {tr("Taklif yuborish")}</>}
                   </button>
                 </div>
               )}

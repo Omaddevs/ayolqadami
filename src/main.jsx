@@ -8,6 +8,7 @@ import { initTelegram } from './lib/telegram'
 import './styles/global.css'
 import './styles/pages-extra.css'
 import './styles/resume.css'
+import './styles/fixes.css'
 
 initTelegram()
 
