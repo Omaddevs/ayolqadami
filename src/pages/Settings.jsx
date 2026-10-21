@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  ArrowsLeftRight, Bell, CalendarBlank, Check, EyeSlash, PencilSimple, SignOut, SquaresFour, Translate, Trash, UserCircle, WarningCircle,
+  ArrowsLeftRight, Bell, CalendarBlank, Check, CircleHalf, EyeSlash, Info, PencilSimple, SignOut, SquaresFour, Translate, Trash, UserCircle, WarningCircle,
 } from '@phosphor-icons/react'
-import { Avatar, CompanyLogo, Empty, Sheet, TopBar } from '../components/UI'
+import { Avatar, CompanyLogo, Empty, Sheet, THEME_OPTIONS, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
+import { inTelegram } from '../lib/telegram'
+import { originOf } from '../lib/theme'
 import { MoreList } from './Misc'
 
 const LANGS = [
@@ -15,12 +17,13 @@ const LANGS = [
 ]
 
 export function Settings() {
-  const { user, prefs, setPrefs, logout, notify, requireAuth } = useApp()
+  const { user, prefs, setPrefs, setTheme, logout, notify, requireAuth } = useApp()
   const nav = useNavigate()
   const isEmp = user?.role === 'employer'
-  const [sheet, setSheet] = useState(null) // 'lang' | 'delete' | 'logout'
+  const [sheet, setSheet] = useState(null) // 'lang' | 'theme' | 'delete' | 'logout'
   const close = () => setSheet(null)
   const lang = LANGS.find((l) => l.id === prefs.lang) || LANGS[0]
+  const theme = THEME_OPTIONS.find((t) => t.id === prefs.theme) || THEME_OPTIONS[2]
   const leave = (text) => { logout(); nav('/', { replace: true }); if (text) notify(text) }
 
   return (
@@ -39,6 +42,7 @@ export function Settings() {
           ...(isEmp ? [] : [[{ label: 'Yashirin vakansiyalar va kompaniyalar', icon: EyeSlash, to: '/settings/hidden' }]]),
           [
             { label: 'Til', icon: Translate, value: lang.label, onClick: () => setSheet('lang') },
+            { label: 'Mavzu', icon: CircleHalf, value: theme.label, onClick: () => setSheet('theme') },
             ...(user ? [{ label: 'Ilovadan chiqish', icon: SignOut, danger: true, onClick: () => setSheet('logout') }] : []),
           ],
         ]} />
@@ -54,6 +58,28 @@ export function Settings() {
             </button>
           ))}
         </div>
+      </Sheet>
+
+      <Sheet open={sheet === 'theme'} onClose={close} title="Mavzu">
+        <div className="th-opts" role="radiogroup" aria-label="Mavzu">
+          {THEME_OPTIONS.map(({ id, label, hint, icon: Ic }) => {
+            const on = id === theme.id
+            return (
+              <button key={id} type="button" role="radio" aria-checked={on} className={`th-opt ${on ? 'on' : ''}`}
+                onClick={(e) => setTheme(id, originOf(e))}>
+                <span className={`th-prev ${id}`} aria-hidden="true"><i /><i /><em /></span>
+                <b><Ic size={16} weight={on ? 'fill' : 'regular'} /> {label}</b>
+                <small>{hint}</small>
+              </button>
+            )
+          })}
+        </div>
+        <p className="th-hint">
+          <Info size={18} weight="fill" />
+          {inTelegram()
+            ? "«Tizim» tanlansa, ilova Telegram mavzusiga moslashadi."
+            : "«Tizim» tanlansa, ilova qurilmangizdagi yorug' yoki qorong'i rejimga avtomatik moslashadi."}
+        </p>
       </Sheet>
 
       <Sheet open={sheet === 'delete'} onClose={close} title="Akkauntni o'chirish">

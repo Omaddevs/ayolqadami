@@ -4,6 +4,7 @@ import Icon3D from '../components/Icon3D'
 import { Avatar, Sheet, TopBar, Select } from '../components/UI'
 import LocationSheet from '../components/LocationSheet'
 import ResumeBuilder from './ResumeBuilder'
+import ProfileDesktop from '../components/ProfileDesktop'
 import { readPhoto } from '../lib/photo'
 import {
   CaretDown, CaretRight, Check, CheckCircle, EnvelopeSimple, MagnifyingGlass, PencilSimple, Phone, Plus, TelegramLogo, WarningCircle,
@@ -41,7 +42,26 @@ function PfEmpty({ text, to = '/profile/edit', label = "Qo'shish" }) {
 
 const PfEdit = ({ to = '/profile/edit' }) => <Link to={to} className="btn pf-btn-gray btn-block">Tahrirlash</Link>
 
+const DESKTOP = '(min-width: 1024px)'
+function useDesktop() {
+  const [on, setOn] = useState(() => window.matchMedia(DESKTOP).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP)
+    const fn = () => setOn(mq.matches)
+    mq.addEventListener('change', fn)
+    return () => mq.removeEventListener('change', fn)
+  }, [])
+  return on
+}
+
+// desktopda ish izlovchi uchun alohida maket; mobil va ish beruvchi — avvalgidek
 export function Profile() {
+  const { user } = useApp()
+  const desktop = useDesktop()
+  return desktop && user.role !== 'employer' ? <ProfileDesktop /> : <ProfileMobile />
+}
+
+function ProfileMobile() {
   const { user, updateUser, applications, saved, posted, invites } = useApp()
   const isEmp = user.role === 'employer'
   const pct = profileCompletion(user)

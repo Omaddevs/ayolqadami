@@ -227,6 +227,13 @@ export default function Auth() {
     notify(t.hello)
   }
 
+  // chap paneldagi sarlavha: oxirgi so'z ostiga chizilgan chiziq
+  const sideWords = t.welcomeText[1].split(' ')
+  const sideLast = sideWords.pop()
+  const sideHead = sideWords.join(' ')
+  // desktopda forma tepasida turadigan brend (mobilda yashirin)
+  const dkBrand = <div className="aw-dk-brand" aria-hidden="true"><span><img src="/ayolqadami-mark.png" alt="" /></span> AyolQadami</div>
+
   const googleBtn = (
     <button type="button" className="aw-btn dark aw-google" onClick={google} disabled={busy}>
       <span className="aw-g"><GoogleLogo /></span> {t.google}
@@ -236,6 +243,21 @@ export default function Auth() {
   return (
     <div className="aw" role="dialog" aria-modal="true" aria-label={t.signIn} lang={lang === 'uz-cyrl' ? 'uz-Cyrl' : lang}>
       <div className={`aw-card ${mode === 'welcome' ? 'is-welcome' : ''}`}>
+        {/* Faqat desktopda ko'rinadigan brend paneli */}
+        <aside className="aw-side" aria-hidden="true">
+          <h2>{t.welcomeText[0]} {sideHead}{' '}
+            <em>{sideLast}
+              <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M3 10 C 50 3, 140 2, 197 8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" /></svg>
+            </em>
+          </h2>
+          <p>{t.sideFeats.join(' · ')}</p>
+          <div className="aw-side-people">
+            <picture>
+              <source srcSet="/auth/people.webp" type="image/webp" />
+              <img src="/auth/people.png" alt="" draggable="false" />
+            </picture>
+          </div>
+        </aside>
         {mode === 'welcome' && (
           <div className="aw-welcome fade-in">
             <div className="aw-top">
@@ -245,6 +267,7 @@ export default function Auth() {
             <div className="aw-deco" aria-hidden="true" />
             <div className="aw-hero">
               <img className="aw-logo" src="/logo.png" alt="" />
+              {dkBrand}
               <h1>{t.welcomeTitle[0]}<br />{t.welcomeTitle[1]}</h1>
               <p>{t.welcomeText[0]}<br />{t.welcomeText[1]}</p>
             </div>
@@ -261,6 +284,7 @@ export default function Auth() {
           <form className="aw-step fade-in" onSubmit={login} key="login" noValidate>
             <Head onBack={back} right={langPicker} backLabel={t.back} />
             <div className="aw-body">
+              {dkBrand}
               <h2>{t.loginTitle}</h2>
               <p className="aw-sub">{t.loginSub}</p>
               <div className="aw-fields">
@@ -280,6 +304,7 @@ export default function Auth() {
           <form className="aw-step" onSubmit={next} noValidate>
             <Head step={step} onBack={back} right={langPicker} backLabel={t.back} />
             <div className="aw-body fade-in" key={step}>
+              {dkBrand}
               {step === 1 && (
                 <>
                   <h2>{t.roleTitle}</h2>
@@ -350,7 +375,7 @@ export default function Auth() {
                       const idx = form.categories.indexOf(c.id)
                       const on = idx >= 0
                       return (
-                        <button key={c.id} type="button" className={`aw-chip ${on ? 'on' : ''} ${idx === 0 ? 'main' : ''}`} aria-pressed={on} onClick={() => toggleCat(c.id)}>
+                        <button key={c.id} type="button" className={`aw-chip ${on ? 'on' : ''} ${idx === 0 ? 'is-main' : ''}`} aria-pressed={on} onClick={() => toggleCat(c.id)}>
                           <Icon3D name={c.icon} size={22} /> {c.short}
                           {idx === 0 && <em className="aw-chip-main">{t.catMain}</em>}
                         </button>

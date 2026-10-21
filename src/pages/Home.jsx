@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
-import { JobCard, SectionHead, Sheet } from '../components/UI'
+import { CompanyLogo, JobCard, SectionHead, Sheet, ThemeToggle } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
+import HomeFooter from '../components/HomeFooter'
+import ArticlesRail from '../components/ArticlesRail'
 import { useApp } from '../context/AppContext'
-import { Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
+import { ArrowRight, Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGlass, SlidersHorizontal, SquaresFour } from '@phosphor-icons/react'
 import CandidateCard from '../components/CandidateCard'
-import { CANDIDATES, CATEGORIES, JOB_TYPES, NOTIFICATIONS } from '../data/mock'
+import { CANDIDATES, CATEGORIES, JOB_TYPES, NOTIFICATIONS, catShort } from '../data/mock'
+import { buildCompanies, companySlug } from '../data/companies'
 
 // Bosh sahifa bannerlari — yangi banner qo'shish uchun rasmni public/banners/ ga qo'yib, shu ro'yxatga yozing
 const BANNERS = [
@@ -78,6 +81,72 @@ function BannerCarousel() {
   )
 }
 
+// Desktop bosh sahifasi: sarlavha, bo'lim tanlovi va soha kartalari (mobil hero o'rniga)
+// rasmlar: public/categories/<id>.png (public/hero/hero-imageN.png dan kesib olingan)
+// kartaga sig'ishi uchun qisqa nomlar
+const DK_NAMES = { food: 'Restoran mehmonxona' }
+const DK_CATS = ['office', 'edu', 'med', 'sales', 'beauty', 'it', 'home', 'remote', 'production', 'food', 'marketing', 'other']
+
+function DesktopIntro({ isEmp }) {
+  const { allJobs, user } = useApp()
+  const [tab, setTab] = useState('cats')
+  const listPath = isEmp ? '/candidates' : '/jobs'
+  const companies = useMemo(() => buildCompanies(allJobs, user)
+    .sort((a, b) => b.jobs.length - a.jobs.length).slice(0, 12), [allJobs, user])
+  const cats = DK_CATS.map((id) => CATEGORIES.find((c) => c.id === id)).filter(Boolean)
+
+  return (
+    <section className="dk-intro">
+      <div className="dk-intro-head">
+        <div>
+          <h1>{isEmp ? "Nomzodlar O'zbekistonda" : "Ish e'lonlari O'zbekistonda"}</h1>
+          <p>{isEmp ? 'Jamoangiz uchun eng yaxshi mutaxassislar' : 'Ayollar uchun eng yaxshi imkoniyatlar'}</p>
+        </div>
+        <div className="dk-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === 'cats'} className={tab === 'cats' ? 'on' : ''} onClick={() => setTab('cats')}>Ish yo'nalishlari</button>
+          {/* vaqtincha yopiq — qaytarish uchun: <button ... onClick={() => setTab('companies')}>Kompaniyalar</button> */}
+          <span className="dk-tab-soon" aria-disabled="true">Kompaniyalar <em>Soon</em></span>
+          <span className="dk-tab-soon" aria-disabled="true">Kurslar <em>Soon</em></span>
+        </div>
+      </div>
+
+      {tab === 'cats' ? (
+        // rasmdagidek: yuqori qatorda 6 ta, pastki qatorda 6 ta + "Barcha kategoriyalar"
+        [cats.slice(0, 6), cats.slice(6)].map((row, r) => (
+          <div key={r} className="dk-row">
+            {row.map((c) => (
+              <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="dk-cat">
+                <b>{DK_NAMES[c.id] || c.name}</b>
+                <img src={`/categories/${c.id}.png`} alt="" className="dk-cat-img" loading="lazy" draggable="false" />
+              </Link>
+            ))}
+            {r === 1 && (
+              <Link to="/categories" className="dk-cat dk-cat-all">
+                <SquaresFour size={30} weight="fill" />
+                <b>Barcha kategoriyalar <ArrowRight size={16} weight="bold" /></b>
+              </Link>
+            )}
+          </div>
+        ))
+      ) : (
+        <div className="dk-cats dk-cos">
+          {companies.map((c) => (
+            <Link key={c.name} to={`/companies/${companySlug(c.name)}`} className="dk-co">
+              <CompanyLogo name={c.name} color={c.color} size={52} />
+              <b>{c.name}</b>
+              <span>{c.jobs.length} ta vakansiya · {catShort(c.categories[0])}</span>
+            </Link>
+          ))}
+          <Link to="/companies" className="dk-cat dk-cat-all">
+            <SquaresFour size={30} weight="fill" />
+            <b>Barcha kompaniyalar <ArrowRight size={16} weight="bold" /></b>
+          </Link>
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function Home() {
   const { user, allJobs, applications, posted, saved } = useApp()
   const [open, setOpen] = useState(false)
@@ -119,11 +188,13 @@ export default function Home() {
       ]
 
   const myCats = user?.categories?.length ? user.categories : user?.category ? [user.category] : []
-  const recommended = allJobs.filter((j) => !myCats.length || myCats.includes(j.category)).concat(allJobs).slice(0, 4)
-  const uniqueRec = [...new Map(recommended.map((j) => [j.id, j])).values()].slice(0, 4)
+  // avval foydalanuvchi sohasiga moslari, keyin qolganlari — takrorlarsiz 30 ta
+  const recommended = allJobs.filter((j) => !myCats.length || myCats.includes(j.category)).concat(allJobs)
+  const uniqueRec = [...new Map(recommended.map((j) => [j.id, j])).values()].slice(0, 30)
 
   return (
     <div className="home">
+      <DesktopIntro isEmp={isEmp} />
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-top">
@@ -132,6 +203,7 @@ export default function Home() {
               <span>AyolQadami</span>
             </Link>
             <div className="hero-actions">
+              <ThemeToggle className="hero-btn" size={24} />
               <Link to="/notifications" className="hero-btn" aria-label="Bildirishnomalar">
                 <Bell size={25} />
                 {NOTIFICATIONS.length > 0 && <em className="hero-badge">{NOTIFICATIONS.length}</em>}
@@ -243,7 +315,11 @@ export default function Home() {
             </Link>
           </>
         )}
+
+        <ArticlesRail />
       </section>
+
+      <HomeFooter />
 
       <SearchSheet open={open} onClose={closeSearch} isEmp={isEmp} jobs={allJobs} inputRef={inputRef} />
 

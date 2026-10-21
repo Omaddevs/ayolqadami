@@ -256,10 +256,12 @@ export const COURSES = [
   },
 ]
 
+// Tadbirlar — rasm qo'shish uchun faylni public/events/ ga qo'yib, img: '/events/fayl.jpg' deb yozing.
+// Rasm bo'lmasa, cover ranglaridagi gradient va 3D kalendar ko'rsatiladi.
 export const EVENTS = [
-  { id: 'e1', title: 'Ayollar karyera forumi 2026', date: '14 noyabr', place: 'Toshkent / Onlayn', desc: "50+ kompaniya, master-klasslar va jonli ish suhbatlari." },
-  { id: 'e2', title: 'Women in Tech meetup', date: '28 noyabr', place: 'IT Park, Toshkent', desc: "IT sohasidagi ayollar uchun tajriba almashish uchrashuvi." },
-  { id: 'e3', title: "Bo'sh ish o'rinlari yarmarkasi", date: '5 dekabr', place: 'Samarqand', desc: "Viloyat korxonalari bilan to'g'ridan-to'g'ri uchrashuv." },
+  { id: 'e1', title: 'Ayollar karyera forumi 2026', date: '14 noyabr', place: 'Toshkent / Onlayn', tag: 'Forum', cover: ['#6E6AF6', '#4338CA'], img: '', desc: "50+ kompaniya, master-klasslar va jonli ish suhbatlari." },
+  { id: 'e2', title: 'Women in Tech meetup', date: '28 noyabr', place: 'IT Park, Toshkent', tag: 'Meetup', cover: ['#38BDF8', '#4F46E5'], img: '', desc: "IT sohasidagi ayollar uchun tajriba almashish uchrashuvi." },
+  { id: 'e3', title: "Bo'sh ish o'rinlari yarmarkasi", date: '5 dekabr', place: 'Samarqand', tag: 'Yarmarka', cover: ['#F472B6', '#7C3AED'], img: '', desc: "Viloyat korxonalari bilan to'g'ridan-to'g'ri uchrashuv." },
 ]
 
 export const NOTIFICATIONS = [

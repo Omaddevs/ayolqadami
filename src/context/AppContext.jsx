@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { JOBS } from '../data/mock'
 import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
+import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 
 const KEY = 'ayolkaryera_v1'
 // Backend yo'q: yaratilgan hisoblar telefon raqami bo'yicha brauzerda saqlanadi, "Kirish" shu yerdan tiklaydi
@@ -36,7 +38,7 @@ const initial = {
   hiddenJobs: [], // yashirilgan vakansiya id'lari
   hiddenCompanies: [], // yashirilgan kompaniya nomlari
   support: [], // texnik yordam chati: { id, from: 'me' | 'bot', text, time }
-  prefs: { lang: 'uz', notif: { jobs: true, ai: true, apps: true, courses: true, events: false, email: false } },
+  prefs: { lang: 'uz', theme: 'system', notif: { jobs: true, ai: true, apps: true, courses: true, events: false, email: false } },
 }
 
 function load() {
@@ -47,6 +49,7 @@ function load() {
     // eski versiyalardan qolgan buzuq qiymatlarni tiklaymiz
     for (const k of ['saved', 'applications', 'courses', 'posted', 'ads', 'invites', 'savedCands', 'hiddenJobs', 'hiddenCompanies', 'support']) if (!Array.isArray(s[k])) s[k] = []
     s.prefs = { ...initial.prefs, ...s.prefs, notif: { ...initial.prefs.notif, ...s.prefs?.notif } }
+    s.prefs.theme = normalizeMode(s.prefs.theme)
     if (s.user && (typeof s.user !== 'object' || !s.user.role)) s.user = null
     return s
   } catch {
@@ -63,6 +66,7 @@ export function AppProvider({ children }) {
   const pending = useRef(null)
   const userRef = useRef(state.user)
   userRef.current = state.user
+  useThemeEffect(state.prefs.theme)
 
   useEffect(() => {
     try {
@@ -80,7 +84,8 @@ export function AppProvider({ children }) {
     const set = (fn) => setState((s) => ({ ...s, ...fn(s) }))
     return {
       register: (user) => set(() => ({ user: { skills: [], experience: [], languages: ["O'zbek"], ...user } })),
-      logout: () => setState(initial),
+      // til va mavzu — qurilma sozlamasi, hisobdan chiqilganda saqlanib qoladi
+      logout: () => setState((s) => ({ ...initial, prefs: s.prefs })),
       updateUser: (patch) => set((s) => ({ user: { ...s.user, ...patch } })),
       switchRole: () => set((s) => ({ user: { ...s.user, role: s.user.role === 'seeker' ? 'employer' : 'seeker' } })),
       toggleSave: (id) => set((s) => ({ saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] })),
@@ -108,6 +113,11 @@ export function AppProvider({ children }) {
       toggleSaveCand: (id) => set((s) => ({ savedCands: s.savedCands.includes(id) ? s.savedCands.filter((x) => x !== id) : [...s.savedCands, id] })),
     }
   }, [])
+
+  // Mavzuni almashtirish. origin — bosilgan tugma markazi: yangi mavzu shu nuqtadan yoyiladi
+  const setTheme = useCallback((mode, origin) => {
+    switchTheme(() => flushSync(() => api.setPrefs({ theme: normalizeMode(mode) })), origin)
+  }, [api])
 
   const requireAuth = useCallback((fn) => {
     if (userRef.current) { fn?.(); return true }
@@ -159,7 +169,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, jobsAll, allJobs, notify, toast, authOpen, requireAuth, closeAuth, signUp, signIn, signInGoogle }
+  const value = { ...state, ...api, setTheme, jobsAll, allJobs, notify, toast, authOpen, requireAuth, closeAuth, signUp, signIn, signInGoogle }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

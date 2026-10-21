@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import { Layout } from './components/UI'
 import { useTelegramBackButton } from './lib/telegram'
 import Auth from './pages/Auth'
-import Splash from './pages/Splash'
-import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
 import { Jobs, JobDetail } from './pages/Jobs'
 import { Courses, CourseDetail } from './pages/Courses'
@@ -19,13 +17,8 @@ import { AccountSettings, HiddenItems, NotificationSettings, Settings } from './
 import { ArticleDetail, Articles } from './pages/Articles'
 import Support from './pages/Support'
 import { Companies, CompanyDetail } from './pages/Companies'
-
-// Kirish ekranlari (Splash + 3 slayd) faqat birinchi ochilishda ko'rsatiladi. localStorage'da saqlanadi:
-// sessionStorage Telegram mini app har ochilganda tozalanib, ekranlar qayta-qayta chiqardi.
-const OB_KEY = 'aq_onboarded_v2'
-const seenIntro = () => {
-  try { return localStorage.getItem(OB_KEY) === '1' || sessionStorage.getItem(OB_KEY) === '1' } catch { return false }
-}
+import Categories from './pages/Categories'
+import NotFound, { Unauthorized } from './pages/NotFound'
 
 // Shaxsiy sahifalar: mehmon asosiy sahifaga qaytariladi va ro'yxatdan o'tish oynasi ochiladi,
 // muvaffaqiyatli o'tgach so'ralgan sahifaga o'tkaziladi
@@ -42,14 +35,6 @@ function Gate({ children, role }) {
 export default function App() {
   const { user, authOpen } = useApp()
   useTelegramBackButton()
-  const [intro, setIntro] = useState(() => (user || seenIntro() ? 'done' : 'splash'))
-  const finishIntro = () => {
-    try { localStorage.setItem(OB_KEY, '1') } catch { /* private mode */ }
-    setIntro('done')
-  }
-
-  if (intro === 'splash') return <div className="ob-wrap"><Splash onStart={() => setIntro('onboarding')} /></div>
-  if (intro === 'onboarding') return <div className="ob-wrap"><Onboarding onDone={finishIntro} /></div>
 
   return (
     <>
@@ -75,6 +60,7 @@ export default function App() {
           <Route path="articles" element={<Articles />} />
           <Route path="articles/:id" element={<ArticleDetail />} />
           <Route path="support" element={<Support />} />
+          <Route path="categories" element={<Categories />} />
           <Route path="companies" element={<Companies />} />
           <Route path="companies/:name" element={<CompanyDetail />} />
           {/* E'lonlar bo'limi olib tashlandi: ish izlovchi rezyume joylaydi, eski havolalar kompaniyalarga yo'naltiriladi */}
@@ -83,7 +69,8 @@ export default function App() {
           <Route path="candidates/:id" element={<CandidateDetail />} />
           <Route path="post-job" element={<Gate role="employer"><PostJob /></Gate>} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="401" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {authOpen && !user && <Auth />}
     </>

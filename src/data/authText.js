@@ -9,6 +9,7 @@ export const AUTH_LANGS = [
 const uz = {
   close: 'Yopish', back: 'Orqaga', lang: 'Til',
   welcomeTitle: ['Xush kelibsiz', "AyolQadami'ga"], welcomeText: ['Har bir kichik qadamni', 'katta karyeraga aylantiring.'],
+  sideFeats: ['Minglab vakansiyalar bir joyda', 'QadamAI bilan rezyume va maslahat', 'Bepul kurslar va sertifikatlar'],
   signIn: 'Kirish', google: 'Google bilan davom etish', noAccount: "Hisobingiz yo'qmi?", signUp: "Ro'yxatdan o'tish",
   haveAccount: 'Hisobingiz bormi?', guest: 'Mehmon sifatida davom etish', or: 'yoki',
   loginTitle: 'Hisobingizga kiring', loginSub: "Telefon raqamingiz va parolingizni kiriting",
@@ -39,6 +40,7 @@ const uz = {
 const cyrl = {
   close: 'Ёпиш', back: 'Орқага', lang: 'Тил',
   welcomeTitle: ['Хуш келибсиз', 'AyolQadami’га'], welcomeText: ['Ҳар бир кичик қадамни', 'катта карьерага айлантиринг.'],
+  sideFeats: ['Минглаб вакансиялар бир жойда', 'QadamAI билан резюме ва маслаҳат', 'Бепул курслар ва сертификатлар'],
   signIn: 'Кириш', google: 'Google билан давом этиш', noAccount: 'Ҳисобингиз йўқми?', signUp: 'Рўйхатдан ўтиш',
   haveAccount: 'Ҳисобингиз борми?', guest: 'Меҳмон сифатида давом этиш', or: 'ёки',
   loginTitle: 'Ҳисобингизга киринг', loginSub: 'Телефон рақамингиз ва паролингизни киритинг',
@@ -69,6 +71,7 @@ const cyrl = {
 const ru = {
   close: 'Закрыть', back: 'Назад', lang: 'Язык',
   welcomeTitle: ['Добро пожаловать', 'в AyolQadami'], welcomeText: ['Превращайте каждый маленький шаг', 'в большую карьеру.'],
+  sideFeats: ['Тысячи вакансий в одном месте', 'Резюме и советы с QadamAI', 'Бесплатные курсы и сертификаты'],
   signIn: 'Войти', google: 'Продолжить с Google', noAccount: 'Нет аккаунта?', signUp: 'Регистрация',
   haveAccount: 'Уже есть аккаунт?', guest: 'Продолжить как гость', or: 'или',
   loginTitle: 'Вход в аккаунт', loginSub: 'Введите номер телефона и пароль',
@@ -99,6 +102,7 @@ const ru = {
 const en = {
   close: 'Close', back: 'Back', lang: 'Language',
   welcomeTitle: ['Welcome', 'to AyolQadami'], welcomeText: ['Turn every small step', 'into a big career.'],
+  sideFeats: ['Thousands of jobs in one place', 'Resume help and advice from QadamAI', 'Free courses and certificates'],
   signIn: 'Sign in', google: 'Continue with Google', noAccount: "Don't have an account?", signUp: 'Sign up',
   haveAccount: 'Already have an account?', guest: 'Continue as a guest', or: 'or',
   loginTitle: 'Sign in to your account', loginSub: 'Enter your phone number and password',

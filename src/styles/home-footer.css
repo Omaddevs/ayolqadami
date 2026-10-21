@@ -1,0 +1,120 @@
+/* ============ Bosh sahifa oxiri: FAQ + CTA banner + footer ============ */
+.hf { position: relative; margin-top: 24px; background: var(--surface); padding: 12px 0 calc(var(--safe-b) + 96px); }
+.hf-faq { position: relative; margin: 0 12px; padding: 40px 16px 170px; background: var(--bg-alt); border-radius: 24px; }
+.hf-faq-head { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 22px; text-align: center; }
+.hf-faq-head h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.hf-faq-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 900px; margin: 0 auto; align-items: start; }
+.hf-q { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 2px rgba(20, 20, 60, .04); }
+.hf-q-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 52px; padding: 14px 18px;
+  text-align: left; font-size: 14px; font-weight: 500; color: var(--text); }
+.hf-q-plus { flex-shrink: 0; transition: transform .25s, color .2s; }
+.hf-q.open .hf-q-plus { transform: rotate(45deg); color: var(--primary); }
+.hf-q-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+.hf-q-body p { overflow: hidden; padding: 0 18px; font-size: 13.5px; line-height: 1.55; color: var(--text-2); transition: padding .3s; }
+.hf-q.open .hf-q-body { grid-template-rows: 1fr; }
+.hf-q.open .hf-q-body p { padding-bottom: 16px; }
+.hf-q-contact { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 7px 8px 7px 18px; font-size: 14px; font-weight: 500; }
+.hf-contact-btn { display: inline-flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px 0 14px; border-radius: 10px; flex-shrink: 0;
+  background: var(--surface); font-size: 13.5px; font-weight: 600; box-shadow: 0 2px 8px rgba(20, 20, 60, .1), 0 0 0 1px var(--line); transition: box-shadow .2s; }
+.hf-contact-btn i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--surface); }
+.hf-contact-btn:hover { box-shadow: 0 6px 16px rgba(91, 87, 240, .22), 0 0 0 1px var(--primary-100); }
+
+.hf-chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px 0 8px; border-radius: 15px; font-size: 12.5px; font-weight: 500;
+  color: #fff; background: rgba(255, 255, 255, .18); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45); backdrop-filter: blur(6px); }
+.hf-chip img { width: 18px; height: 18px; object-fit: contain; }
+.hf-chip.dark { padding: 0 12px; color: var(--primary-ink); background: var(--primary-50); box-shadow: none; }
+
+.hf-cta { position: relative; z-index: 1; overflow: hidden; margin: -140px 12px 0; padding: 80px 20px; border-radius: 28px; color: #fff; text-align: center;
+  background: linear-gradient(180deg, #8B87FF 0%, #6C69F2 48%, #4C42EA 100%); box-shadow: 0 30px 60px -24px rgba(76, 66, 234, .55); }
+.hf-cta-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hf-cta-in { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; max-width: 640px; margin: 0 auto; }
+.hf-cta h2 { margin-top: 18px; font-size: clamp(26px, 4.4vw, 50px); font-weight: 700; line-height: 1.12; letter-spacing: -.03em; }
+.hf-logo-tile { display: inline-grid; place-items: center; width: 1.05em; height: 1.05em; margin: 0 .08em; vertical-align: -.16em; border-radius: .26em;
+  background: linear-gradient(160deg, #fff, #E2E1FF); box-shadow: 0 8px 20px rgba(30, 20, 120, .35), inset 0 -2px 0 rgba(91, 87, 240, .15); }
+/* logo fayli oq — mask orqali loyiha rangiga bo'yaladi */
+.hf-logo-tile i { width: 66%; height: 66%; background: linear-gradient(160deg, #6E6BF4, #4F46E5);
+  -webkit-mask: url('/ayolqadami-mark.png') center / contain no-repeat; mask: url('/ayolqadami-mark.png') center / contain no-repeat; }
+.hf-cta p { margin-top: 16px; max-width: 520px; font-size: 14px; line-height: 1.5; opacity: .9; }
+.hf-cta-btn { display: inline-flex; align-items: center; gap: 12px; margin-top: 26px; height: 54px; padding: 0 22px 0 6px; border-radius: 16px;
+  background: linear-gradient(180deg, #2B2B38, #121218); color: #fff; font-size: 18px; font-weight: 500; letter-spacing: -.01em;
+  box-shadow: 0 14px 28px rgba(10, 8, 40, .45), inset 0 1px 0 rgba(255, 255, 255, .18), 0 0 0 2px rgba(255, 255, 255, .12); transition: transform .2s; }
+.hf-cta-btn:hover { transform: translateY(-2px); }
+.hf-cta-btn img { width: 42px; height: 42px; border-radius: 11px; object-fit: cover; background: #fff; }
+.hf-float { position: absolute; z-index: 1; width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; background: #fff;
+  box-shadow: 0 16px 30px -10px rgba(30, 20, 120, .45); animation: hfFloat 6s ease-in-out infinite; }
+.hf-float .icon3d { width: 28px; height: 28px; }
+.hf-float.f1 { --r: -10deg; left: 8%; top: 5%; }
+.hf-float.f2 { --r: 12deg; right: 8%; top: 5%; animation-delay: -1.5s; }
+.hf-float.f3 { --r: 8deg; left: 8%; bottom: 4%; animation-delay: -3s; }
+.hf-float.f4 { --r: -12deg; right: 8%; bottom: 4%; animation-delay: -4.5s; }
+@keyframes hfFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--r)); }
+  50% { transform: translateY(-10px) rotate(calc(var(--r) + 3deg)); }
+}
+
+/* Ikki panelli footer: chapda binafsha brend kartasi, o'ngda kulrang ma'lumot kartasi */
+.hf-foot { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 40px 12px 0; }
+.hf-bcard { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 18px; padding: 28px 24px 24px; border-radius: 24px; color: #fff;
+  background: radial-gradient(90% 70% at 100% 0%, #8B87FF 0%, transparent 60%), linear-gradient(160deg, #5B57F0 0%, #3E36C9 100%); }
+.hf-bcard::after { content: ''; position: absolute; right: -70px; bottom: -70px; width: 200px; height: 200px; border-radius: 50%; border: 36px solid rgba(255, 255, 255, .07); pointer-events: none; }
+.hf-brand { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.hf-brand img { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(20, 10, 80, .3)); }
+.hf-bcard p { max-width: 260px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.02em; }
+.hf-bcard p span { opacity: .7; font-weight: 500; }
+.hf-touch { position: relative; z-index: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: auto; }
+.hf-touch b { font-size: 15px; font-weight: 600; font-style: italic; }
+.hf-social { display: flex; gap: 6px; }
+.hf-social a { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .95); color: #3E36C9; transition: transform .2s, background .2s; }
+.hf-social a:hover { transform: translateY(-2px); background: #fff; }
+
+.hf-icard { display: grid; grid-template-columns: 1fr; gap: 28px; padding: 28px 24px 20px; border-radius: 24px; background: var(--bg-alt); border: 1px solid var(--line); }
+.hf-links { display: flex; flex-wrap: wrap; gap: 24px 48px; }
+.hf-links b { display: block; margin-bottom: 12px; font-size: 12.5px; font-weight: 500; font-style: italic; color: var(--muted); }
+.hf-links a { display: block; margin-bottom: 9px; font-size: 13.5px; color: var(--text); transition: color .2s; }
+.hf-links a:hover { color: var(--primary); }
+.hf-news { display: flex; flex-direction: column; gap: 2px; }
+.hf-news small { font-size: 12px; color: var(--muted); }
+.hf-news b { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.hf-news-row { display: flex; gap: 8px; margin-top: 12px; }
+.hf-news input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s; }
+.hf-news input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91, 87, 240, .14); }
+.hf-news button { flex-shrink: 0; height: 42px; padding: 0 18px; border-radius: 10px; background: #15151C; color: #fff; font-size: 13.5px; font-weight: 600; transition: background .2s; }
+.hf-news button:hover { background: var(--primary); }
+.hf-copy { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.hf-copy div { display: flex; gap: 16px; }
+.hf-copy a:hover { color: var(--primary); }
+:root[data-theme="dark"] .hf-news button { background: var(--primary); }
+
+@media (min-width: 768px) {
+  .hf-foot { grid-template-columns: minmax(260px, 30%) 1fr; }
+  .hf-icard { grid-template-columns: 1fr minmax(280px, 340px); align-items: end; column-gap: 32px; padding: 32px 32px 20px; }
+  .hf-links { align-self: start; }
+  .hf-copy { grid-column: 1 / -1; }
+}
+
+@media (min-width: 768px) {
+  .hf-faq-grid { grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+  .hf-cta { margin: -150px auto 0; max-width: 880px; padding: 72px 48px 64px; }
+  .hf-cta h2 br { display: inline; }
+  .hf-float { width: 72px; height: 72px; border-radius: 22px; }
+  .hf-float .icon3d { width: 38px; height: 38px; }
+  .hf-float.f1 { left: 11%; top: 15%; }
+  .hf-float.f2 { right: 11%; top: 14%; }
+  .hf-float.f3 { left: 7%; bottom: 20%; top: auto; }
+  .hf-float.f4 { right: 9%; bottom: 23%; top: auto; }
+}
+@media (max-width: 767px) { .hf-cta h2 br { display: none; } }
+@media (min-width: 1024px) {
+  /* oq karta ichida kulrang panel: har tomondan bir xil 16px chekinish, radiuslar konsentrik (32 − 16 = 16) */
+  .hf { margin: 28px auto 0; max-width: 1400px; border-radius: 32px; padding: 16px 16px 28px; overflow: clip; box-shadow: 0 10px 40px rgba(30, 30, 80, .05); }
+  .hf-faq { margin: 0; padding: 56px 32px 200px; border-radius: 16px; border: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--card-subtle) 0%, var(--bg-alt) 100%); }
+  .hf-faq-grid { max-width: 1120px; }
+  .hf-cta { margin-top: -160px; max-width: 1000px; }
+  .hf-foot { margin: 48px 0 0; }
+  .hf { padding-bottom: 16px; }
+  .hf-bcard { padding: 32px 30px 28px; }
+  .hf-bcard, .hf-icard { border-radius: 16px; }
+}
+:root[data-theme="dark"] .hf { box-shadow: 0 0 0 1px var(--line); }
+@media (prefers-reduced-motion: reduce) { .hf-float { animation: none; transform: rotate(var(--r)); } }

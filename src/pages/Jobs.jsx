@@ -1,13 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import {
-  ArrowLeft, Briefcase, Buildings, EyeSlash, CheckCircle, Phone, TelegramLogo, Clock, CurrencyCircleDollar, Export, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, SealCheck, Sparkle, UsersThree,
+  ArrowLeft, Buildings, CaretRight, ChatCircleText, CheckCircle, Clock, CurrencyCircleDollar, DotsThree, Export, EyeSlash, Flag, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, Phone, SealCheck, Sparkle, TelegramLogo, UsersThree,
 } from '@phosphor-icons/react'
 import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Sheet, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES, JOB_TYPES, catIcon, catName, salaryText } from '../data/mock'
+import { CATEGORIES, JOB_TYPES, catName, salaryText } from '../data/mock'
+import { placeJobs } from '../data/geo'
 import { WORK_MODES, WORK_TIME } from '../data/resume'
 
 const PER_PAGE = 20
@@ -42,6 +45,9 @@ export function Jobs() {
   const cat = params.get('cat') || ''
   const [type, setType] = useState(params.get('type') || '')
   const [sort, setSort] = useState(params.get('sort') || 'new')
+  // sarlavhadagi qidiruvdan kelgan so'rov (sahifa ochiq turganda ham) maydonga tushadi
+  const urlQ = params.get('q')
+  useEffect(() => { if (urlQ !== null) setQ(urlQ) }, [urlQ])
 
   const setCat = (id) => {
     const p = new URLSearchParams(params)
@@ -125,18 +131,54 @@ export function Jobs() {
   )
 }
 
+const QUESTIONS = ['Ish joyi qayerda joylashgan?', 'Qanday ish jadvali?', 'Vakansiya hali ochiqmi?', 'Ish haqi qancha?', "Siz bilan qanday bog'lanish mumkin?"]
+const REPORTS = ["Firibgarlik yoki to'lov talab qilinmoqda", "Noto'g'ri yoki eskirgan ma'lumot", 'Kamsituvchi talablar', 'Boshqa sabab']
+
+// Ish joyi xaritasi (kichik, faqat ko'rish uchun)
+function JobMiniMap({ pos }) {
+  const boxRef = useRef(null)
+  useEffect(() => {
+    const map = L.map(boxRef.current, { center: pos, zoom: 14, scrollWheelZoom: false })
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+    }).addTo(map)
+    L.marker(pos, { icon: L.divIcon({ className: 'jd-map-wrap', html: '<span class="jd-map-pin"></span>', iconSize: null }), interactive: false }).addTo(map)
+    return () => map.remove()
+  }, [pos[0], pos[1]]) // eslint-disable-line react-hooks/exhaustive-deps
+  return <div ref={boxRef} className="jd-map" />
+}
+
 export function JobDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { jobsAll, user, saved, toggleSave, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
+  const { jobsAll, allJobs, user, saved, toggleSave, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
   const job = jobsAll.find((j) => j.id === id)
   const [open, setOpen] = useState(false)
   const [letter, setLetter] = useState('')
+  const [ask, setAsk] = useState(null) // savol matni (null — oyna yopiq)
+  const [report, setReport] = useState(null) // shikoyat sababi (null — oyna yopiq)
+  const [menu, setMenu] = useState(false)
+  const [showContacts, setShowContacts] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!menu) return
+    const close = (e) => { if (!menuRef.current?.contains(e.target)) setMenu(false) }
+    const esc = (e) => { if (e.key === 'Escape') setMenu(false) }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', esc) }
+  }, [menu])
+
+  const pos = useMemo(() => placeJobs(jobsAll).find((j) => j.id === id)?.pos, [jobsAll, id])
+  const similar = useMemo(() => (job ? allJobs.filter((j) => j.id !== job.id && j.category === job.category) : []), [allJobs, job])
 
   if (!job) return <div className="page"><TopBar title="Vakansiya" /><Empty title="Vakansiya topilmadi" /></div>
 
   const applied = applications.some((a) => a.jobId === job.id)
   const isSaved = saved.includes(job.id)
+  const seeker = user?.role !== 'employer'
   const send = () => {
     apply(job.id, letter)
     setOpen(false)
@@ -144,6 +186,7 @@ export function JobDetail() {
   }
 
   const share = async () => {
+    setMenu(false)
     const url = window.location.href
     try {
       if (navigator.share) await navigator.share({ title: job.title, text: `${job.title} — ${job.company}`, url })
@@ -151,9 +194,28 @@ export function JobDetail() {
     } catch { /* foydalanuvchi bekor qildi */ }
   }
   const back = () => (window.history.length > 1 ? nav(-1) : nav('/jobs'))
-  const facts = jobFacts(job)
   const contactPhone = job.contact?.ways?.includes('phone') && job.contact.phone
   const contactTg = job.contact?.ways?.includes('telegram') && job.contact.telegram
+  const hasContacts = !!(contactPhone || contactTg)
+  const companyJobs = allJobs.filter((j) => j.company === job.company).length
+
+  const facts = [
+    ['Ish tajribasi', job.experience ? `${job.experience}+ yil` : 'Talab qilinmaydi'],
+    ['Ish formati', job.type],
+    ['Soha', catName(job.category)],
+    ...jobFacts(job),
+  ]
+  const applyBtn = (cls = '') => (
+    <button type="button" className={`btn ${applied ? 'btn-done' : 'btn-primary'} ${cls}`} disabled={applied} onClick={() => requireAuth(() => setOpen(true))}>
+      {applied ? <><CheckCircle size={19} weight="fill" /> Ariza yuborilgan</> : 'Ariza topshirish'}
+    </button>
+  )
+  // kontakt bo'lsa — kontaktlar bo'limiga o'tamiz, bo'lmasa savol yozish oynasini ochamiz
+  const contact = () => {
+    if (!hasContacts) return requireAuth(() => setAsk(''))
+    setShowContacts(true)
+    document.getElementById('jd-contacts')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   return (
     <div className="page jd">
@@ -168,106 +230,161 @@ export function JobDetail() {
         </div>
       </header>
 
-      <div className="jd-body">
-        <section className="jd-card jd-head">
-          <CompanyLogo name={job.company} color={job.color} size={58} />
-          <h2>{job.title}</h2>
-          <span className="jd-sub">
-            <Link to={`/companies/${encodeURIComponent(job.company)}`} className="jd-company-link">{job.company}</Link>
-            {!job.own && <SealCheck size={16} weight="fill" className="verified" aria-label="Tasdiqlangan" />}
-            <i>•</i>{job.type}
-          </span>
-          <div className="jd-salary">{salaryText(job)}<small>/ oyiga</small></div>
-          <hr />
-          <div className="jd-meta">
-            <span><Clock size={17} /> {job.posted}</span>
-            <b />
-            <span><UsersThree size={17} /> {job.applicants} ariza</span>
-          </div>
-          <div className="jd-meta-chips">
-            <span><MapPin size={15} weight="fill" /> {job.city}</span>
-            <span><Briefcase size={15} weight="fill" /> {job.experience ? `${job.experience}+ yil tajriba` : 'Tajriba shart emas'}</span>
-            <span><Icon3D name={catIcon(job.category)} size={16} /> {catName(job.category)}</span>
-          </div>
-        </section>
-
-        {job.tags?.length > 0 && (
-          <section className="jd-card jd-perks">
-            <span className="jd-perk-ico"><HeartStraight size={20} weight="fill" /></span>
-            <div>
-              <b>Ayollar uchun qulayliklar</b>
-              <div className="jd-perk-tags">{job.tags.map((t) => <span key={t}>{t}</span>)}</div>
-            </div>
-          </section>
-        )}
-
-        {facts.length > 0 && (
-          <section className="jd-card">
-            <h3>Ish sharoiti</h3>
-            <dl className="jd-facts">{facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-          </section>
-        )}
-
-        {job.skills?.length > 0 && (
-          <section className="jd-card">
-            <h3>Ko'nikmalar</h3>
-            <div className="jd-skills">{job.skills.map((s) => <span key={s}>{s}</span>)}</div>
-          </section>
-        )}
-
-        <section className="jd-card jd-text">
-          <h3>Vakansiya haqida</h3>
-          <p>{job.description}</p>
-          {job.duties?.length > 0 && (
-            <>
-              <h4>Vazifalar</h4>
-              <ul>{job.duties.map((r) => <li key={r}>{r}</li>)}</ul>
-            </>
-          )}
-          {job.requirements?.length > 0 && (
-            <>
-              <h4>Talablar</h4>
-              <ul>{job.requirements.map((r) => <li key={r}>{r}</li>)}</ul>
-            </>
-          )}
-          {job.conditions?.length > 0 && (
-            <>
-              <h4>Sharoitlar</h4>
-              <ul>{job.conditions.map((r) => <li key={r}>{r}</li>)}</ul>
-            </>
-          )}
-        </section>
-
-        {user?.role !== 'employer' && (contactPhone || contactTg) && (
-          <section className="jd-card">
-            <h3>Bog'lanish</h3>
-            {job.contact.name && <p className="jd-contact-name">{job.contact.name}</p>}
-            <div className="jd-contact">
-              {contactPhone && <a className="btn btn-soft" href={`tel:${contactPhone.replace(/\s/g, '')}`}><Phone size={18} weight="fill" /> {contactPhone}</a>}
-              {contactTg && <a className="btn btn-soft" href={`https://t.me/${contactTg.replace(/^@/, '')}`} target="_blank" rel="noreferrer"><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
-            </div>
-          </section>
-        )}
-
-        {user?.role !== 'employer' && !job.own && (
-          <section className="jd-card jd-hide">
-            <p>Bu vakansiya sizga mos emasmi? Uni ro'yxatlardan yashiring — Sozlamalar orqali qaytarish mumkin.</p>
-            <div className="jd-hide-btns">
-              <button type="button" disabled={hiddenJobs.includes(job.id)}
-                onClick={() => { hideJob(job.id); notify('Vakansiya yashirildi'); back() }}>
-                <EyeSlash size={18} weight="bold" /> {hiddenJobs.includes(job.id) ? 'Yashirilgan' : 'Vakansiyani yashirish'}
+      <div className="jd-body jd-layout">
+        <div className="jd-main">
+          {/* Asosiy karta: nom, maosh, shartlar va amallar */}
+          <section className="jd-card jd-hero">
+            <h2>{job.title}</h2>
+            <div className="jd-hero-salary">{salaryText(job)} <small>oyiga, soliqdan oldin</small></div>
+            <dl className="jd-rows">
+              {facts.map(([k, v]) => <div key={k}><dt>{k}:</dt><dd>{v}</dd></div>)}
+            </dl>
+            <p className="jd-live">
+              <UsersThree size={16} /> {job.applicants ? `${job.applicants} kishi ariza topshirgan` : "Birinchilardan bo'lib ariza topshiring"}
+            </p>
+            <div className="jd-actions">
+              {seeker && applyBtn('jd-apply-inline')}
+              {seeker && <button type="button" className="btn btn-soft" onClick={contact}><ChatCircleText size={19} weight="bold" /> Bog'lanish</button>}
+              <button type="button" className={`jd-sq ${isSaved ? 'saved' : ''}`} onClick={() => requireAuth(() => toggleSave(job.id))} aria-label="Saqlash" aria-pressed={isSaved}>
+                <Heart size={20} weight={isSaved ? 'fill' : 'bold'} />
               </button>
-              <button type="button" disabled={hiddenCompanies.includes(job.company)}
-                onClick={() => { hideCompany(job.company); notify(`«${job.company}» vakansiyalari yashirildi`); back() }}>
-                <Buildings size={18} weight="bold" /> {hiddenCompanies.includes(job.company) ? 'Kompaniya yashirilgan' : 'Kompaniyani yashirish'}
-              </button>
+              <div className="jd-more" ref={menuRef}>
+                <button type="button" className="jd-sq" onClick={() => setMenu((m) => !m)} aria-label="Boshqa amallar" aria-haspopup="menu" aria-expanded={menu}>
+                  <DotsThree size={22} weight="bold" />
+                </button>
+                {menu && (
+                  <div className="jd-menu" role="menu">
+                    <button type="button" role="menuitem" onClick={share}><Export size={18} /> Ulashish</button>
+                    {seeker && !job.own && (
+                      <>
+                        <button type="button" role="menuitem" disabled={hiddenJobs.includes(job.id)}
+                          onClick={() => { hideJob(job.id); notify('Vakansiya yashirildi'); back() }}>
+                          <EyeSlash size={18} /> {hiddenJobs.includes(job.id) ? 'Yashirilgan' : 'Vakansiyani yashirish'}
+                        </button>
+                        <button type="button" role="menuitem" disabled={hiddenCompanies.includes(job.company)}
+                          onClick={() => { hideCompany(job.company); notify(`«${job.company}» vakansiyalari yashirildi`); back() }}>
+                          <Buildings size={18} /> {hiddenCompanies.includes(job.company) ? 'Kompaniya yashirilgan' : 'Kompaniyani yashirish'}
+                        </button>
+                        <button type="button" role="menuitem" className="danger" onClick={() => { setMenu(false); setReport('') }}><Flag size={18} /> Shikoyat qilish</button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
-        )}
+
+          {job.tags?.length > 0 && (
+            <section className="jd-card jd-perks">
+              <span className="jd-perk-ico"><HeartStraight size={20} weight="fill" /></span>
+              <div>
+                <b>Ayollar uchun qulayliklar</b>
+                <div className="jd-perk-tags">{job.tags.map((t) => <span key={t}>{t}</span>)}</div>
+              </div>
+            </section>
+          )}
+
+          <section className="jd-card jd-text">
+            <h3>Vakansiya haqida</h3>
+            <p>{job.description}</p>
+            {job.duties?.length > 0 && <><h4>Vazifalar</h4><ul>{job.duties.map((r) => <li key={r}>{r}</li>)}</ul></>}
+            {job.requirements?.length > 0 && <><h4>Talablar</h4><ul>{job.requirements.map((r) => <li key={r}>{r}</li>)}</ul></>}
+            {job.conditions?.length > 0 && <><h4>Sharoitlar</h4><ul>{job.conditions.map((r) => <li key={r}>{r}</li>)}</ul></>}
+            {job.skills?.length > 0 && (
+              <>
+                <h4>Asosiy ko'nikmalar</h4>
+                <div className="jd-skills">{job.skills.map((s) => <span key={s}>{s}</span>)}</div>
+              </>
+            )}
+          </section>
+
+          {seeker && hasContacts && (
+            <section className="jd-card" id="jd-contacts">
+              <h3>Kontaktlar</h3>
+              {job.contact.name && <p className="jd-contact-name">{job.contact.name}</p>}
+              {showContacts ? (
+                <div className="jd-contact fade-in">
+                  {contactPhone && <a className="btn btn-soft" href={`tel:${contactPhone.replace(/\s/g, '')}`}><Phone size={18} weight="fill" /> {contactPhone}</a>}
+                  {contactTg && <a className="btn btn-soft" href={`https://t.me/${contactTg.replace(/^@/, '')}`} target="_blank" rel="noreferrer"><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
+                </div>
+              ) : (
+                <button type="button" className="btn btn-soft" onClick={() => requireAuth(() => setShowContacts(true))}><Phone size={18} weight="fill" /> Kontaktlarni ko'rsatish</button>
+              )}
+            </section>
+          )}
+
+          {seeker && !job.own && (
+            <section className="jd-card">
+              <h3>Ish beruvchiga savol bering</h3>
+              <p className="jd-note">Savolingiz shu vakansiya bo'yicha murojaat sifatida yuboriladi</p>
+              <div className="jd-questions">
+                {QUESTIONS.map((q) => <button key={q} type="button" onClick={() => requireAuth(() => setAsk(q))}>{q}</button>)}
+                <button type="button" className="alt" onClick={() => requireAuth(() => setAsk(''))}>Boshqa savol</button>
+              </div>
+            </section>
+          )}
+
+          {pos && (
+            <section className="jd-card">
+              <h3>Qayerda ishlash kerak</h3>
+              <p className="jd-address"><MapPin size={17} weight="fill" /> {[job.city, job.district, job.address].filter(Boolean).join(', ')}</p>
+              <JobMiniMap pos={pos} />
+              <Link to="/map" className="jd-link">Katta xaritada ko'rish <CaretRight size={14} weight="bold" /></Link>
+            </section>
+          )}
+
+          <p className="jd-posted">Vakansiya {job.posted} e'lon qilingan · {job.city}</p>
+
+          {seeker && (
+            <div className="jd-foot">
+              {applyBtn()}
+              {!job.own && <button type="button" className="btn jd-report" onClick={() => setReport('')}><Flag size={18} /> Vakansiyadan shikoyat qilish</button>}
+            </div>
+          )}
+        </div>
+
+        {/* O'ng ustun: kompaniya, QadamAI, o'xshash vakansiyalar */}
+        <aside className="jd-aside">
+          <Link to={`/companies/${encodeURIComponent(job.company)}`} className="jd-card jd-company">
+            <CompanyLogo name={job.company} color={job.color} size={52} />
+            <div className="jd-company-info">
+              <b>{job.company} {!job.own && <SealCheck size={16} weight="fill" className="verified" aria-label="Tasdiqlangan" />}</b>
+              <span>{companyJobs} ta faol vakansiya</span>
+            </div>
+            <CaretRight size={18} weight="bold" className="jd-company-go" />
+          </Link>
+
+          {seeker && (
+            <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-promo">
+              <div>
+                <b>Bu ish sizga qanchalik mos?</b>
+                <span>QadamAI rezyumengizni vakansiya bilan solishtiradi</span>
+                <em>Tekshirish <Sparkle size={14} weight="fill" /></em>
+              </div>
+              <img src="/qadam-ai.png" alt="" draggable="false" />
+            </Link>
+          )}
+
+          {similar.length > 0 && (
+            <section className="jd-similar">
+              <h3>Sizga mos boshqa vakansiyalar</h3>
+              {similar.slice(0, 3).map((j) => (
+                <Link key={j.id} to={`/jobs/${j.id}`} className="jd-card jd-sim">
+                  <b>{j.title}</b>
+                  <span className="jd-sim-pay">{salaryText(j)}</span>
+                  <span className="jd-sim-co"><CompanyLogo name={j.company} color={j.color} size={26} /> {j.company} · {j.city}</span>
+                </Link>
+              ))}
+              {similar.length > 3 && (
+                <Link to={`/jobs?cat=${job.category}`} className="jd-link">Yana {similar.length - 3} ta o'xshash vakansiya <CaretRight size={14} weight="bold" /></Link>
+              )}
+            </section>
+          )}
+        </aside>
       </div>
 
-      {user?.role !== 'employer' && (
-        <div className="jd-cta">
+      {seeker && (
+        <div className="jd-cta jd-cta-mobile">
           <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-cta-ai" aria-label="QadamAI moslik">
             <Sparkle size={22} weight="fill" />
           </Link>
@@ -294,6 +411,29 @@ export function JobDetail() {
             placeholder="Nima uchun aynan siz bu lavozimga mossiz?" /></label>
         <p className="muted small">Arizaga profilingizdagi rezyume avtomatik biriktiriladi.</p>
         <button className="btn btn-primary btn-lg btn-block" onClick={send}><Icon name="send" size={18} /> Yuborish</button>
+      </Sheet>
+
+      <Sheet open={ask !== null} onClose={() => setAsk(null)} title="Ish beruvchiga savol">
+        <div className="apply-head">
+          <CompanyLogo name={job.company} color={job.color} />
+          <div><b>{job.title}</b><span className="muted">{job.company}</span></div>
+        </div>
+        <label className="field"><span>Savolingiz</span>
+          <textarea rows={4} value={ask || ''} onChange={(e) => setAsk(e.target.value)} placeholder="Savolingizni yozing" /></label>
+        <button className="btn btn-primary btn-lg btn-block" disabled={!ask?.trim()}
+          onClick={() => { setAsk(null); notify('Savolingiz ish beruvchiga yuborildi') }}><Icon name="send" size={18} /> Yuborish</button>
+      </Sheet>
+
+      <Sheet open={report !== null} onClose={() => setReport(null)} title="Vakansiyadan shikoyat">
+        <div className="jd-reasons" role="radiogroup" aria-label="Shikoyat sababi">
+          {REPORTS.map((r) => (
+            <button key={r} type="button" role="radio" aria-checked={report === r} className={report === r ? 'on' : ''} onClick={() => setReport(r)}>
+              <i /> {r}
+            </button>
+          ))}
+        </div>
+        <button className="btn btn-primary btn-lg btn-block" disabled={!report}
+          onClick={() => { setReport(null); notify('Shikoyatingiz qabul qilindi. Rahmat!') }}>Yuborish</button>
       </Sheet>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Icon3D from '../components/Icon3D'
 import { Avatar, Empty, Select, Sheet, TopBar } from '../components/UI'
@@ -26,7 +26,11 @@ const NO_FILTER = { city: '', exp: 0, active: false }
 export function Candidates() {
   const [params] = useSearchParams()
   const [cat, setCat] = useState(params.get('cat') || '')
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState(params.get('q') || '')
+  // sarlavhadagi qidiruv va kategoriyalar menyusi sahifa ochiq turganda ham ishlaydi
+  const urlQ = params.get('q'), urlCat = params.get('cat')
+  useEffect(() => { if (urlQ !== null) setQ(urlQ) }, [urlQ])
+  useEffect(() => { if (urlCat !== null) setCat(urlCat) }, [urlCat])
   const [f, setF] = useState(NO_FILTER)
   const [draft, setDraft] = useState(NO_FILTER) // filtr oynasidagi qoralama — "Ko'rsatish" bosilganda qo'llanadi
   const [sheet, setSheet] = useState(false)

@@ -1,11 +1,35 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, Check, Heart, House, MapTrifold, Plus, SealCheck, SortAscending, Sparkle, UsersThree } from '@phosphor-icons/react'
+import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, ChatCircleText, Check, Desktop, DotsThree, Globe, Heart, House, MagnifyingGlass, MapPin, MapTrifold, Moon, Plus, SealCheck, SortAscending, Sparkle, SquaresFour, Sun, UsersThree } from '@phosphor-icons/react'
 import Icon from './Icons'
 import Icon3D from './Icon3D'
+import LocationSheet from './LocationSheet'
 import { useApp } from '../context/AppContext'
-import { catName, salaryText, formatSum } from '../data/mock'
+import { CATEGORIES, NOTIFICATIONS, catName, salaryText, formatSum } from '../data/mock'
+import { AUTH_LANGS } from '../data/authText'
+import { originOf } from '../lib/theme'
+
+export const THEME_OPTIONS = [
+  { id: 'light', label: "Yorug'", hint: 'Doim yorug\'', icon: Sun },
+  { id: 'dark', label: "Qorong'i", hint: "Doim qorong'i", icon: Moon },
+  { id: 'system', label: 'Tizim', hint: 'Qurilmaga mos', icon: Desktop },
+]
+
+// Tezkor almashtirish tugmasi (yorug' ⇄ qorong'i). Ikonka joriy ko'rinishga qarab CSS orqali almashadi
+export function ThemeToggle({ className = '', size = 24 }) {
+  const { setTheme } = useApp()
+  const toggle = (e) => {
+    const dark = document.documentElement.dataset.theme === 'dark'
+    setTheme(dark ? 'light' : 'dark', originOf(e))
+  }
+  return (
+    <button type="button" className={`theme-toggle ${className}`} onClick={toggle} aria-label="Mavzuni almashtirish" title="Mavzuni almashtirish">
+      <Sun size={size} className="tt-sun" />
+      <Moon size={size} className="tt-moon" />
+    </button>
+  )
+}
 
 /* photo — foydalanuvchi yuklagan rasm; silhouette — rasm yo'q bo'lsa harflar o'rniga standart ayol siluyeti */
 export function Avatar({ name = '', color = '#6366F6', size = 40, radius, photo, silhouette }) {
@@ -183,6 +207,142 @@ export function TabBar({ items, pathname }) {
   )
 }
 
+// Desktop sarlavhasi (≥1024px): mobil tab bar o'rniga sayt ko'rinishidagi yuqori menyu
+function SiteHeader() {
+  const { user, saved, prefs, setPrefs, setTheme, requireAuth } = useApp()
+  const [locOpen, setLocOpen] = useState(false)
+  const nav = useNavigate()
+  const { pathname } = useLocation()
+  const isEmp = user?.role === 'employer'
+  const [q, setQ] = useState('')
+  const [catsOpen, setCatsOpen] = useState(false)
+  const catsRef = useRef(null)
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef(null)
+  const curLang = AUTH_LANGS.find((l) => l.id === prefs.lang) || AUTH_LANGS[0]
+
+  useEffect(() => { setCatsOpen(false); setLangOpen(false) }, [pathname])
+  useEffect(() => {
+    if (!langOpen) return
+    const onDown = (e) => { if (!langRef.current?.contains(e.target)) setLangOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setLangOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [langOpen])
+  useEffect(() => {
+    if (!catsOpen) return
+    const onDown = (e) => { if (!catsRef.current?.contains(e.target)) setCatsOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setCatsOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [catsOpen])
+
+  const listPath = isEmp ? '/candidates' : '/jobs'
+  const submit = (e) => {
+    e.preventDefault()
+    const t = q.trim()
+    nav(t ? `${listPath}?q=${encodeURIComponent(t)}` : listPath)
+  }
+
+  return (
+    <header className="site-header">
+      <div className="sh-top">
+        <div className="sh-wrap">
+          <Link to="/" className="sh-brand">
+            <img src="/ayolqadami-mark.png" alt="" width="32" height="32" />
+            <span>AyolQadami</span>
+          </Link>
+          <div className="sh-tools">
+            <button type="button" className="sh-region" onClick={() => requireAuth(() => setLocOpen(true))}>
+              <MapPin size={18} /> {user?.city || 'Barcha hududlar'} <CaretDown size={13} weight="bold" />
+            </button>
+            <div className="sh-theme" role="group" aria-label="Mavzu">
+              {THEME_OPTIONS.map(({ id, label, icon: Ic }) => {
+                const on = prefs.theme === id
+                return (
+                  <button key={id} type="button" className={on ? 'on' : ''} aria-pressed={on} aria-label={`Mavzu: ${label}`} title={label}
+                    onClick={(e) => setTheme(id, originOf(e))}><Ic size={16} weight={on ? 'bold' : 'regular'} /></button>
+                )
+              })}
+            </div>
+            <div className="sh-lang" ref={langRef}>
+              <button type="button" className="sh-region" aria-expanded={langOpen} aria-label="Til" onClick={() => setLangOpen((o) => !o)}>
+                <Globe size={18} /> {curLang.short} <CaretDown size={13} weight="bold" />
+              </button>
+              {langOpen && (
+                <div className="sh-lang-menu">
+                  {AUTH_LANGS.map((l) => (
+                    <button key={l.id} type="button" className={l.id === curLang.id ? 'on' : ''}
+                      onClick={() => { setPrefs({ lang: l.id }); setLangOpen(false) }}>
+                      <b>{l.short}</b> {l.label} {l.id === curLang.id && <Check size={15} weight="bold" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {user && <LocationSheet open={locOpen} onClose={() => setLocOpen(false)} />}
+      <div className="sh-bar">
+        <div className="sh-wrap">
+          <div className="sh-cats" ref={catsRef}>
+            <button type="button" className="sh-cats-btn" aria-expanded={catsOpen} onClick={() => setCatsOpen((o) => !o)}>
+              <SquaresFour size={20} /> Kategoriyalar
+            </button>
+            {catsOpen && (
+              <div className="sh-cats-menu">
+                {CATEGORIES.map((c) => (
+                  <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="sh-cat-item">
+                    <Icon3D name={c.icon} size={26} /> <span>{c.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <form className="sh-search" onSubmit={submit} role="search">
+            <MagnifyingGlass size={20} className="sh-search-ico" />
+            <input value={q} onChange={(e) => setQ(e.target.value)}
+              placeholder={isEmp ? "Kasb, ko'nikma yoki ism bo'yicha qidiring..." : 'Ish, kompaniya yoki lavozimni qidiring...'} />
+            <button type="submit" className="sh-search-btn" aria-label="Qidirish"><MagnifyingGlass size={18} weight="bold" /></button>
+          </form>
+
+          <div className="sh-icons">
+            <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>
+            <Link to="/notifications" className="sh-ico" aria-label="Bildirishnomalar" title="Bildirishnomalar">
+              <Bell size={21} />
+              {NOTIFICATIONS.length > 0 && <em className="sh-badge">{NOTIFICATIONS.length}</em>}
+            </Link>
+            {!isEmp && (
+              <Link to="/applications?tab=saved" className="sh-ico" aria-label="Saqlanganlar" title="Saqlanganlar">
+                <Heart size={21} />
+                {saved.length > 0 && <em className="sh-badge">{saved.length}</em>}
+              </Link>
+            )}
+            <Link to="/map" className="sh-ico" aria-label="Xarita" title="Xarita"><MapTrifold size={21} /></Link>
+          </div>
+
+          <NavLink to={listPath} className="sh-link sh-link-outline">
+            {isEmp ? <UsersThree size={19} /> : <Briefcase size={19} />} {isEmp ? 'Nomzodlar' : "Ish e'lonlari"}
+          </NavLink>
+          <NavLink to="/companies" className="sh-link">Kompaniyalar</NavLink>
+
+          <Link to={isEmp ? '/post-job' : '/profile/edit'} className="sh-cta">
+            {isEmp ? "E'lon joylashtirish" : 'Rezyume joylash'} <span className="sh-cta-plus"><Plus size={16} weight="bold" /></span>
+          </Link>
+          <Link to="/profile" className="sh-avatar" aria-label="Profil">
+            {user ? <Avatar name={user.name} photo={user.photo} silhouette size={44} radius={22} /> : <WomanFace size={22} />}
+          </Link>
+          <Link to="/more" className="sh-more" aria-label="Boshqa bo'limlar"><DotsThree size={26} weight="bold" /></Link>
+        </div>
+      </div>
+    </header>
+  )
+}
+
 export function Layout() {
   const { user, toast } = useApp()
   const { pathname } = useLocation()
@@ -191,34 +351,8 @@ export function Layout() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
   return (
-    <div className={`shell ${chat ? 'no-tabs' : ''}`}>
-      <aside className="sidebar">
-        <Link to="/" className="brand">
-          <img src="/logo.png" alt="" />
-          <span>Ayol<b>Qadami</b></span>
-        </Link>
-        <nav>
-          {items.map((it) => (
-            <NavLink key={it.to} to={it.to} end={it.end} className="side-link">
-              <Icon name={it.icon} size={20} /> {it.fab ? 'Vakansiya joylash' : it.label}
-            </NavLink>
-          ))}
-          {user?.role !== 'employer' && (
-            <NavLink to="/qadam-ai" className="side-link"><Icon name="sparkle" size={20} /> QadamAI</NavLink>
-          )}
-          {user?.role === 'employer' && (
-            <NavLink to="/courses" className="side-link"><Icon name="book" size={20} /> Kurslar</NavLink>
-          )}
-          <NavLink to="/applications" className="side-link"><Icon name="grid" size={20} /> {user?.role === 'employer' ? 'Vakansiyalarim' : 'Arizalarim'}</NavLink>
-          <NavLink to="/events" className="side-link"><Icon name="calendar" size={20} /> Tadbirlar</NavLink>
-        </nav>
-        <div className="side-promo">
-          <Icon3D name="sparkle" size={56} />
-          <b>QadamAI</b>
-          <p>{user?.role === 'employer' ? "Bir jumlada kerakli kadrni toping" : 'Sizga mos ishni AI topib beradi'}</p>
-          <Link to="/qadam-ai" className="btn btn-primary btn-sm">Sinab ko'rish</Link>
-        </div>
-      </aside>
+    <div className={`shell ${chat ? 'no-tabs' : ''} ${pathname === '/' ? 'is-home' : ''}`}>
+      <SiteHeader />
 
       <main className="main">
         <Outlet />
