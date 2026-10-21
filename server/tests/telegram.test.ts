@@ -40,14 +40,15 @@ test('vakansiya posti: maydonlar ekranlangan, heshteglar', () => {
 
 test('kanal posti: skrinshotdagi format, telefon va qisqa havola', () => {
   const job = {
-    id: 'abc', title: 'Buxgalter', companyName: 'Turkish baby', city: 'Toshkent', district: 'Usta Shirin', type: "To'liq stavka",
+    id: 'abc', number: 1001, title: 'Buxgalter', companyName: 'Turkish baby', city: 'Toshkent', district: 'Usta Shirin', type: "To'liq stavka",
     salaryFrom: 0, salaryTo: 0, tags: [], category: 'finance', details: { contact: { name: 'Malika', phone: '+998 90 123 45 67', telegram: '@hr_uz' } },
   } as unknown as Parameters<typeof jobPostHtml>[0]
   const html = jobPostHtml(job, { jobFooter: '', publicUrl: 'https://api.ayolqadami.uz', webAppUrl: 'https://ayolqadami.uz' })
   assert.match(html, /^<b>Buxgalter<\/b>\n\n🏢 Kompaniya: Turkish baby\n\n📍 Hudud: Toshkent, Usta Shirin\n\n💰 Maosh: Kelishilgan/)
   assert.match(html, /☎️ Aloqa: \+998 90 123 45 67 \(Malika\)/)
   assert.match(html, /✈️ Telegram: @hr_uz/)
-  assert.match(html, /📞 Batafsil: https:\/\/api\.ayolqadami\.uz\/l\/abc/)
+  assert.match(html, /📞 Batafsil: https:\/\/api\.ayolqadami\.uz\/l\/1001/) // qisqa havola — vakansiya raqami
+  assert.match(html, /🕒 Ish turi: To'liq stavka/)
 })
 
 test('rangli tugmalar', () => {

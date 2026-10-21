@@ -17,7 +17,7 @@ export function jobUrl(job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: 
 // Kanal postidagi "Batafsil" havolasi: server manzili bo'lsa — qisqa havola (/l/:id) — Telegram undan
 // rasmli kartochka (Open Graph) chizadi va bosilganda web ilovadagi vakansiyaga yo'naltiradi
 export function jobShareUrl(job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'publicUrl'>) {
-  return /^https?:\/\//.test(cfg.publicUrl) ? `${cfg.publicUrl.replace(/\/$/, '')}/l/${encodeURIComponent(job.id)}` : jobUrl(job, cfg)
+  return /^https?:\/\//.test(cfg.publicUrl) ? `${cfg.publicUrl.replace(/\/$/, '')}/l/${job.number}` : jobUrl(job, cfg)
 }
 
 export type JobContact = { name?: string; phone?: string; telegram?: string }
@@ -44,6 +44,7 @@ export function jobPostHtml(job: Job, cfg: Pick<TelegramConfig, 'jobFooter'> & P
     `📍 Hudud: ${esc(place)}`,
     '',
     `💰 Maosh: ${esc(salaryShort(job.salaryFrom, job.salaryTo))}`,
+    ...(job.type ? ['', `🕒 Ish turi: ${esc(job.type)}`] : []),
   ]
   if (phone) lines.push('', `☎️ Aloqa: ${esc(phone)}${contact.name ? ` (${esc(contact.name)})` : ''}`)
   if (tgUser && /^[A-Za-z0-9_]{4,32}$/.test(tgUser)) lines.push('', `✈️ Telegram: @${tgUser}`)

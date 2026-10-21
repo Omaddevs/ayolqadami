@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { salaryText } from '@/lib/format'
 import { getTelegramConfig } from '@/lib/telegram/config'
 import { esc, jobUrl } from '@/lib/telegram/format'
+import { jobNumberFromRef } from '@/lib/slug'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const cfg = await getTelegramConfig()
   const origin = (cfg.publicUrl || new URL(req.url).origin).replace(/\/$/, '')
-  const job = await db.job.findUnique({ where: { id } })
+  // qisqa havola: /l/1001 (raqam); eski /l/<id> havolalar ham ishlaydi
+  const num = jobNumberFromRef(id)
+  const job = await db.job.findUnique({ where: num ? { number: num } : { id } })
   const site = cfg.webAppUrl.replace(/\/$/, '')
   if (!job || job.status !== 'ACTIVE') return Response.redirect(site ? `${site}/jobs` : origin, 302)
 
@@ -21,7 +24,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const salary = job.salaryFrom || job.salaryTo ? salaryText(job.salaryFrom, job.salaryTo) : 'Kelishilgan'
   const title = `${job.title}, ${place} — ${job.companyName}`
   const desc = `${job.title} vakansiyasi ${job.companyName} kompaniyasida, ${place}. Maosh: ${salary}.`
-  const image = `${origin}/l/${encodeURIComponent(job.id)}/og?v=${job.updatedAt.getTime()}`
+  const image = `${origin}/l/${job.number}/og?v=${job.updatedAt.getTime()}`
   const a = (s: string) => esc(s).replace(/"/g, '&quot;')
 
   const html = `<!doctype html>
@@ -34,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 <meta property="og:site_name" content="AyolQadami">
 <meta property="og:title" content="${a(title)}">
 <meta property="og:description" content="${a(desc)}">
-<meta property="og:url" content="${a(`${origin}/l/${job.id}`)}">
+<meta property="og:url" content="${a(`${origin}/l/${job.number}`)}">
 <meta property="og:image" content="${a(image)}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
