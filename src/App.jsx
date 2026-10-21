@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import { Layout } from './components/UI'
+import { useTelegramBackButton } from './lib/telegram'
 import Auth from './pages/Auth'
 import Splash from './pages/Splash'
 import Onboarding from './pages/Onboarding'
@@ -19,8 +20,12 @@ import { ArticleDetail, Articles } from './pages/Articles'
 import Support from './pages/Support'
 import { Companies, CompanyDetail } from './pages/Companies'
 
+// Kirish ekranlari (Splash + 3 slayd) faqat birinchi ochilishda ko'rsatiladi. localStorage'da saqlanadi:
+// sessionStorage Telegram mini app har ochilganda tozalanib, ekranlar qayta-qayta chiqardi.
 const OB_KEY = 'aq_onboarded_v2'
-const seenIntro = () => { try { return sessionStorage.getItem(OB_KEY) === '1' } catch { return false } }
+const seenIntro = () => {
+  try { return localStorage.getItem(OB_KEY) === '1' || sessionStorage.getItem(OB_KEY) === '1' } catch { return false }
+}
 
 // Shaxsiy sahifalar: mehmon asosiy sahifaga qaytariladi va ro'yxatdan o'tish oynasi ochiladi,
 // muvaffaqiyatli o'tgach so'ralgan sahifaga o'tkaziladi
@@ -36,9 +41,10 @@ function Gate({ children, role }) {
 
 export default function App() {
   const { user, authOpen } = useApp()
+  useTelegramBackButton()
   const [intro, setIntro] = useState(() => (user || seenIntro() ? 'done' : 'splash'))
   const finishIntro = () => {
-    try { sessionStorage.setItem(OB_KEY, '1') } catch { /* private mode */ }
+    try { localStorage.setItem(OB_KEY, '1') } catch { /* private mode */ }
     setIntro('done')
   }
 

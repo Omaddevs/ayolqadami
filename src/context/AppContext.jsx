@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { JOBS } from '../data/mock'
+import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
 
 const KEY = 'ayolkaryera_v1'
 // Backend yo'q: yaratilgan hisoblar telefon raqami bo'yicha brauzerda saqlanadi, "Kirish" shu yerdan tiklaydi
@@ -88,7 +89,10 @@ export function AppProvider({ children }) {
           applications: [{ jobId, letter, date: new Date().toISOString(), status: "Ko'rib chiqilmoqda" }, ...s.applications.filter((a) => a.jobId !== jobId)],
         })),
       enroll: (id) => set((s) => ({ courses: s.courses.includes(id) ? s.courses : [...s.courses, id] })),
-      postJob: (job) => set((s) => ({ posted: [{ id: 'p' + Date.now(), ...job, posted: 'Hozirgina', applicants: 0, own: true }, ...s.posted] })),
+      postJob: (job) => {
+        sendJobToBot(job)
+        set((s) => ({ posted: [{ id: 'p' + Date.now(), ...job, posted: 'Hozirgina', applicants: 0, own: true }, ...s.posted] }))
+      },
       removeJob: (id) => set((s) => ({ posted: s.posted.filter((j) => j.id !== id) })),
       addAd: (ad) => set((s) => ({ ads: [{ ...ad, id: 'u' + Date.now(), posted: 'Hozirgina', own: true }, ...s.ads] })),
       removeAd: (id) => set((s) => ({ ads: s.ads.filter((a) => a.id !== id) })),
@@ -140,8 +144,16 @@ export function AppProvider({ children }) {
     return true
   }, [signUp])
 
+  // Telegram botdagi vakansiyalar (VITE_BOT_API_URL sozlangan bo'lsa)
+  const [botJobs, setBotJobs] = useState([])
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetchBotJobs(ctrl.signal).then(setBotJobs)
+    return () => ctrl.abort()
+  }, [])
+
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
-  const jobsAll = useMemo(() => [...state.posted, ...JOBS], [state.posted])
+  const jobsAll = useMemo(() => [...state.posted, ...botJobs, ...JOBS], [state.posted, botJobs])
   const allJobs = useMemo(
     () => jobsAll.filter((j) => !state.hiddenJobs.includes(j.id) && !state.hiddenCompanies.includes(j.company)),
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
