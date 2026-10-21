@@ -10,6 +10,7 @@ import { tx, useT } from '../i18n'
 export default function ArticlesRail({ limit = 5 }) {
   const t = useT()
   const { articles: ARTICLES } = useContent()
+  if (!ARTICLES.length) return null // maqola yo'q — bo'lim ko'rinmaydi
   return (
     <section className="ac-sec">
       <SectionHead title={t('Foydali maqolalar')} to="/articles" />

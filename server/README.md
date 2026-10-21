@@ -38,7 +38,6 @@ VITE_API_URL=http://localhost:3100
 | `npm run db:seed` | administrator va maqolalar (demo ma'lumotlar yo'q) |
 | `npm run admin:create -- +998901234567 "Parol" "Ism" ADMIN` | administrator/moderator yaratish yoki parolini tiklash |
 | `npm test` · `npm run typecheck` | unit testlar · tip tekshiruvi |
-| `npm run seed:export` | web ilovadagi `src/data` → `prisma/seed-data.json` |
 
 ## API qisqacha
 

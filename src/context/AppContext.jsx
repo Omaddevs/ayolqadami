@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { ARTICLES } from '../data/articles'
 import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
 import { api as server, apiEnabled, getToken, setToken } from '../lib/api'
 import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
@@ -29,12 +28,12 @@ function hashPw(str) {
 }
 const Ctx = createContext(null)
 
-// Kurslar va tadbirlar admin paneldan (API) keladi; maqolalar — ilovaga kiritilgan tayyor kontent
-const STATIC_CONTENT = { courses: [], articles: ARTICLES, events: [], banners: [] }
+// Kurslar, maqolalar, tadbirlar va bannerlar — admin paneldan (API) keladi
+const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [] }
 const listOr = (v, fallback) => (Array.isArray(v) ? v : fallback)
 const normalizeContent = (d) => ({
   courses: listOr(d?.courses, []),
-  articles: listOr(d?.articles, ARTICLES),
+  articles: listOr(d?.articles, []),
   events: listOr(d?.events, []),
   banners: listOr(d?.banners, []),
 })

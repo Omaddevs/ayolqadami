@@ -23,6 +23,7 @@ export function Articles() {
     <div className="page more">
       <TopBar title={tr("Maqolalar")} />
       <div className="page-body">
+        {ARTICLES.length === 0 && <Empty icon="books" title={tr("Hozircha maqolalar yo'q")} text={tr("Yangi maqolalar e'lon qilinishi bilan shu yerda ko'rinadi")} />}
         <div className="ar-list">
           {ARTICLES.map((a) => (
             <Link key={a.id} to={`/articles/${a.id}`} className="ar-card">

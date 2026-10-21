@@ -34,8 +34,11 @@ export async function seoUrls(): Promise<SeoUrl[]> {
     db.job.groupBy({ by: ['companyName'], where: { status: 'ACTIVE', OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, _max: { updatedAt: true } }),
   ])
   const iso = (d: Date | null | undefined) => d?.toISOString()
+  // bo'sh bo'limlar (kontent qo'shilmagan) sitemap'ga kirmaydi
+  const eventCount = await db.event.count({ where: { status: 'PUBLISHED' } })
+  const empty = new Set([!articles.length && '/articles', !courses.length && '/courses', !eventCount && '/events'].filter(Boolean))
   return [
-    ...STATIC,
+    ...STATIC.filter((u) => !empty.has(u.path)),
     ...jobs.map((j) => ({ path: jobPath(j), lastmod: iso(j.updatedAt), changefreq: 'daily' as const, priority: 0.8 })),
     ...companies.map((c) => ({ path: `/companies/${encodeURIComponent(c.companyName)}`, lastmod: iso(c._max.updatedAt), changefreq: 'daily' as const, priority: 0.6 })),
     ...articles.map((a) => ({ path: `/articles/${encodeURIComponent(a.id)}`, lastmod: iso(a.updatedAt), changefreq: 'monthly' as const, priority: 0.5 })),

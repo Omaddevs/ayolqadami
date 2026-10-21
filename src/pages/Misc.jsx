@@ -200,6 +200,7 @@ function MoreDesktop({ sections }) {
 
 export function More() {
   const { notify } = useApp()
+  const { articles } = useContent()
   const t = useT()
   const sections = [
     { title: t('Hisob'), items: [
@@ -208,7 +209,7 @@ export function More() {
     ] },
     { title: t('Kashf eting'), items: [
       { label: t('Kompaniyalar'), desc: t('Ish beruvchilar, ularning vakansiyalari va sharhlari'), icon: Buildings, to: '/companies', tone: '#0EA5E9' },
-      { label: t('Maqolalar'), desc: t("Karyera, rezyume va suhbat bo'yicha foydali maslahatlar"), icon: BookOpen, to: '/articles', tone: '#10B981' },
+      ...(articles.length ? [{ label: t('Maqolalar'), desc: t("Karyera, rezyume va suhbat bo'yicha foydali maslahatlar"), icon: BookOpen, to: '/articles', tone: '#10B981' }] : []),
     ] },
     { title: t('Yordam'), items: [
       { label: t('Ilova haqida'), desc: t("AyolQadami nima, qanday ishlaydi va versiya ma'lumoti"), icon: WarningCircle, onClick: () => notify(t('Tez orada')), tone: '#8B5CF6' },

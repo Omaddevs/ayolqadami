@@ -4,7 +4,7 @@ import { ArrowRight, Plus } from '@phosphor-icons/react'
 import { FaTelegramPlane } from 'react-icons/fa'
 import { FaInstagram, FaRobot } from 'react-icons/fa6'
 import Icon3D from './Icon3D'
-import { useApp } from '../context/AppContext'
+import { useApp, useContent } from '../context/AppContext'
 import { useT } from '../i18n'
 import '../styles/home-footer.css'
 
@@ -46,6 +46,9 @@ function FaqItem({ q, a, open, onToggle }) {
 
 export default function HomeFooter() {
   const { user, notify } = useApp()
+  const content = useContent()
+  // bo'sh bo'limlarga havola ko'rsatilmaydi
+  const hidden = new Set([!content.articles.length && '/articles', !content.events.length && '/events'].filter(Boolean))
   const t = useT()
   const [openQ, setOpenQ] = useState(-1)
   const [email, setEmail] = useState('')
@@ -121,7 +124,7 @@ export default function HomeFooter() {
             {LINKS.map((c) => (
               <div key={c.title}>
                 <b>{t(c.title)}</b>
-                {c.items.map(([label, to]) => <Link key={label} to={to}>{t(label)}</Link>)}
+                {c.items.filter(([, to]) => !hidden.has(to)).map(([label, to]) => <Link key={label} to={to}>{t(label)}</Link>)}
               </div>
             ))}
           </nav>
