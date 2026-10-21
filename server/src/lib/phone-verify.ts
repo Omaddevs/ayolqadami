@@ -11,7 +11,9 @@ import { db } from './db'
 import { ApiError } from './http'
 import { signPhoneToken, verifyPhoneToken, type PhonePurpose } from './token'
 
-export const VERIFY_TTL_MS = 10 * 60_000
+export const VERIFY_TTL_MS = 10 * 60_000 // ro'yxatdan o'tish / parolni tiklash (botga o'tib, kontakt ulashishga vaqt kerak)
+export const LOGIN_TTL_MS = 5 * 60_000 // kod bilan kirish
+export const ttlFor = (purpose: string) => (purpose === 'login' ? LOGIN_TTL_MS : VERIFY_TTL_MS)
 export const MAX_CODE_ATTEMPTS = 5
 // Kontakt orqali isbotlangan raqam shuncha vaqt eslab qolinadi (keyin yana kontakt so'raladi)
 export const PHONE_LINK_TTL_MS = 180 * 24 * 3600_000
@@ -22,17 +24,26 @@ const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(
 export const newCode = () => String(randomInt(0, 1_000_000)).padStart(6, '0')
 export const newLinkToken = () => randomBytes(24).toString('base64url') // 32 belgi: Telegram start payload ≤ 64
 
-export function createVerification(phone: string, purpose: PhonePurpose) {
+export function createVerification(phone: string, purpose: PhonePurpose, telegramId?: string) {
   return db.phoneVerification.create({
-    data: { phone, purpose, token: newLinkToken(), expiresAt: new Date(Date.now() + VERIFY_TTL_MS) },
+    data: { phone, purpose, token: newLinkToken(), telegramId, expiresAt: new Date(Date.now() + ttlFor(purpose)) },
   })
 }
 
-// Yangi kod: xeshi saqlanadi, kodning o'zi faqat botga yuboriladi
-export async function setCode(vid: string, telegramId: string) {
+// Yangi kod: xeshi saqlanadi, kodning o'zi faqat botga yuboriladi. Muddat yangi koddan boshlab hisoblanadi
+export async function setCode(vid: string, telegramId: string, purpose: string) {
   const code = newCode()
-  await db.phoneVerification.update({ where: { id: vid }, data: { telegramId, codeHash: hashCode(vid, code), attempts: 0 } })
-  return code
+  const expiresAt = new Date(Date.now() + ttlFor(purpose))
+  await db.phoneVerification.update({ where: { id: vid }, data: { telegramId, codeHash: hashCode(vid, code), attempts: 0, expiresAt } })
+  return { code, expiresAt }
+}
+
+// Kod bilan kirish: botdagi «Kirish kodi» orqali olingan hali amal qilayotgan kod bo'lsa — saytda yangisi yaratilmaydi
+export function activeLoginCode(phone: string) {
+  return db.phoneVerification.findFirst({
+    where: { phone, purpose: 'login', usedAt: null, verifiedAt: null, codeHash: { not: null }, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: 'desc' },
+  })
 }
 
 export async function checkCode(vid: string, code: string) {

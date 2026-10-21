@@ -8,9 +8,13 @@ import { initTelegram } from './lib/telegram'
 import './styles/global.css'
 import './styles/pages-extra.css'
 import './styles/resume.css'
+import { initAnalytics } from './lib/analytics'
+import { initSiteSeo } from './lib/seo'
 import './styles/fixes.css'
 
 initTelegram()
+initAnalytics()
+initSiteSeo()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

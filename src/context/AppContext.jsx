@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { COURSES, EVENTS, JOBS } from '../data/mock'
 import { ARTICLES } from '../data/articles'
 import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
 import { api as server, apiEnabled, getToken, setToken } from '../lib/api'
 import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
+import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
 
 const KEY = 'ayolkaryera_v1'
@@ -29,13 +29,14 @@ function hashPw(str) {
 }
 const Ctx = createContext(null)
 
-// Kurslar, maqolalar, tadbirlar: server bo'lmasa yoki noto'g'ri javob bersa — ilovadagi statik ro'yxatlar
-const STATIC_CONTENT = { courses: COURSES, articles: ARTICLES, events: EVENTS }
+// Kurslar va tadbirlar admin paneldan (API) keladi; maqolalar — ilovaga kiritilgan tayyor kontent
+const STATIC_CONTENT = { courses: [], articles: ARTICLES, events: [], banners: [] }
 const listOr = (v, fallback) => (Array.isArray(v) ? v : fallback)
 const normalizeContent = (d) => ({
-  courses: listOr(d?.courses, COURSES),
+  courses: listOr(d?.courses, []),
   articles: listOr(d?.articles, ARTICLES),
-  events: listOr(d?.events, EVENTS),
+  events: listOr(d?.events, []),
+  banners: listOr(d?.banners, []),
 })
 
 const initial = {
@@ -76,6 +77,8 @@ export function AppProvider({ children }) {
   // Mehmon rejimi: kirish talab qilinadigan amalda ro'yxatdan o'tish oynasi ochiladi,
   // muvaffaqiyatli o'tgach kutib turgan amal bajariladi
   const [authOpen, setAuthOpen] = useState(false)
+  // kirish oynasi qaysi bo'limdan ochilsin: welcome | login | signup | code (bot havolasi: /?auth=signup)
+  const [authMode, setAuthMode] = useState('welcome')
   const pending = useRef(null)
   const userRef = useRef(state.user)
   userRef.current = state.user
@@ -114,6 +117,7 @@ export function AppProvider({ children }) {
       toggleSave: (id) => set((s) => ({ saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] })),
       apply: (jobId, letter) => {
         if (apiEnabled) server.apply(jobId, letter)
+        trackEvent('apply', { job_id: jobId })
         set((s) => ({
           applications: [{ jobId, letter, date: new Date().toISOString(), status: "Ko'rib chiqilmoqda" }, ...s.applications.filter((a) => a.jobId !== jobId)],
         }))
@@ -165,7 +169,18 @@ export function AppProvider({ children }) {
     setAuthOpen(true)
     return false
   }, [])
-  const closeAuth = useCallback(() => { pending.current = null; setAuthOpen(false) }, [])
+  const closeAuth = useCallback(() => { pending.current = null; setAuthOpen(false); setAuthMode('welcome') }, [])
+  // Kirish botidagi «Saytga o'tish» / «Ro'yxatdan o'tish» havolalari: ?auth=login|signup|code
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const mode = url.searchParams.get('auth')
+    if (!['login', 'signup', 'code'].includes(mode)) return
+    url.searchParams.delete('auth')
+    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
+    if (userRef.current) return
+    setAuthMode(mode)
+    setAuthOpen(true)
+  }, [])
   const finishAuth = useCallback((user) => {
     api.register(user)
     const fn = pending.current
@@ -185,6 +200,7 @@ export function AppProvider({ children }) {
     if (apiEnabled) {
       try {
         acceptSession(await server.register({ ...user, password: password || undefined, googleAccessToken, ...extra }))
+        trackEvent('sign_up', { method: googleAccessToken ? 'google' : 'phone', role: user.role })
         return 'ok'
       } catch (e) {
         return e.code || 'error'
@@ -201,6 +217,7 @@ export function AppProvider({ children }) {
     if (apiEnabled) {
       try {
         acceptSession(await server.login(phone, password))
+        trackEvent('login', { method: 'password' })
         return 'ok'
       } catch (e) {
         return e.code || 'error'
@@ -214,6 +231,16 @@ export function AppProvider({ children }) {
     finishAuth(acc)
     return 'ok'
   }, [acceptSession, finishAuth])
+  // Parolsiz kirish: kirish botidan olingan kod tasdiqlangach. 'ok' | xato kodi
+  const signInCode = useCallback(async (phone, phoneToken) => {
+    try {
+      acceptSession(await server.phoneLogin(phone, phoneToken))
+      trackEvent('login', { method: 'telegram_code' })
+      return 'ok'
+    } catch (e) {
+      return e.code || 'error'
+    }
+  }, [acceptSession])
   // Parolni tiklash (raqam kirish boti orqali tasdiqlangandan keyin): 'ok' | xato kodi
   const resetPassword = useCallback(async (phone, phoneToken, password) => {
     try {
@@ -241,7 +268,7 @@ export function AppProvider({ children }) {
   }, [acceptSession, finishAuth])
 
   // --- Server bilan sinxronlash (VITE_API_URL berilgan bo'lsa) ---
-  const [serverJobs, setServerJobs] = useState(null) // null — yuklanmagan yoki xato: demo ro'yxat ko'rsatiladi
+  const [serverJobs, setServerJobs] = useState(null) // null — yuklanmagan yoki xato: faqat o'z va bot e'lonlari ko'rsatiladi
   const [content, setContent] = useState(STATIC_CONTENT)
   useEffect(() => {
     if (!apiEnabled) return
@@ -283,7 +310,7 @@ export function AppProvider({ children }) {
 
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
   const jobsAll = useMemo(() => {
-    const list = [...state.posted, ...botJobs, ...(serverJobs || JOBS)]
+    const list = [...state.posted, ...botJobs, ...(serverJobs || [])]
     const seen = new Set()
     return list.filter((j) => !seen.has(j.id) && seen.add(j.id)) // o'z vakansiyasi umumiy ro'yxatda ham bor
   }, [state.posted, botJobs, serverJobs])
@@ -292,7 +319,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, setTheme, jobsAll, allJobs, content, notify, toast, authOpen, requireAuth, closeAuth, signUp, signIn, signInGoogle, resetPassword }
+  const value = { ...state, ...api, setTheme, jobsAll, allJobs, content, notify, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

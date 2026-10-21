@@ -5,6 +5,8 @@ import { Layout } from './components/UI'
 import { useTelegramBackButton } from './lib/telegram'
 import Auth from './pages/Auth'
 import Home from './pages/Home'
+import { applySeo, routeSeo } from './lib/seo'
+import { trackPage } from './lib/analytics'
 import NotFound, { Unauthorized } from './pages/NotFound'
 
 // Bosh sahifadan boshqa bo'limlar alohida yuklanadi — birinchi ochilish tezlashadi (xarita, rezyume ustasi va h.k.)
@@ -49,9 +51,21 @@ function Gate({ children, role }) {
   return children
 }
 
+// Bo'lim sahifalari uchun SEO (sarlavha, tavsif, canonical) va Google Analytics page_view.
+// Tafsilot sahifalari (vakansiya, kurs, maqola, kompaniya) o'zlari useSeo chaqiradi.
+function useRouteSeo() {
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    const r = routeSeo(pathname)
+    if (r) applySeo({ ...r, path: pathname })
+    trackPage(pathname + search)
+  }, [pathname, search])
+}
+
 export default function App() {
   const { user, authOpen } = useApp()
   useTelegramBackButton()
+  useRouteSeo()
 
   return (
     <>

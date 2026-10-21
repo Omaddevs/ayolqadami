@@ -2,6 +2,7 @@
 import type { Job } from '@prisma/client'
 import { catName } from '../catalog'
 import { salaryText } from '../format'
+import { jobPath } from '../slug'
 import type { TelegramConfig } from './config'
 
 export const esc = (s: string | null | undefined) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -9,13 +10,13 @@ export const esc = (s: string | null | undefined) => String(s ?? '').replace(/&/
 // Teglar: #IT_va_dizayn #Toshkent — kanalda qidirish oson bo'lsin
 const hashtag = (s: string) => '#' + s.replace(/['ʻʼ‘’`]/g, '').replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_|_$/g, '')
 
-export function jobUrl(job: Pick<Job, 'id'>, cfg: Pick<TelegramConfig, 'webAppUrl'>) {
-  return cfg.webAppUrl ? `${cfg.webAppUrl.replace(/\/$/, '')}/jobs/${encodeURIComponent(job.id)}` : ''
+export function jobUrl(job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl'>) {
+  return cfg.webAppUrl ? `${cfg.webAppUrl.replace(/\/$/, '')}${jobPath(job)}` : ''
 }
 
 // Kanal postidagi "Batafsil" havolasi: server manzili bo'lsa — qisqa havola (/l/:id) — Telegram undan
 // rasmli kartochka (Open Graph) chizadi va bosilganda web ilovadagi vakansiyaga yo'naltiradi
-export function jobShareUrl(job: Pick<Job, 'id'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'publicUrl'>) {
+export function jobShareUrl(job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'publicUrl'>) {
   return /^https?:\/\//.test(cfg.publicUrl) ? `${cfg.publicUrl.replace(/\/$/, '')}/l/${encodeURIComponent(job.id)}` : jobUrl(job, cfg)
 }
 
@@ -87,7 +88,7 @@ export const botLink = (cfg: Pick<TelegramConfig, 'botUsername'>, start?: string
   cfg.botUsername ? `https://t.me/${cfg.botUsername}${start ? `?start=${start}` : ''}` : ''
 
 // Vakansiya posti tugmalari: har biri alohida qatorda (skrinshotdagidek to'liq kenglikda)
-export function buttonsKeyboard(src: string, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername'>, job?: Pick<Job, 'id'>) {
+export function buttonsKeyboard(src: string, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername'>, job?: Pick<Job, 'id' | 'number' | 'title' | 'city'>) {
   const site = cfg.webAppUrl.replace(/\/$/, '')
   const buttons = parseChannelButtons(src, {
     site,
@@ -98,7 +99,7 @@ export function buttonsKeyboard(src: string, cfg: Pick<TelegramConfig, 'webAppUr
   return buttons.length ? { inline_keyboard: buttons.map((b) => [b]) } : undefined
 }
 
-export const jobKeyboard = (job: Pick<Job, 'id'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername' | 'channelButtons'>) =>
+export const jobKeyboard = (job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername' | 'channelButtons'>) =>
   buttonsKeyboard(cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS, cfg, job)
 
 // Qo'lda yozilgan post/tarqatma tugmalari. Eski tarqatmalarda bitta tugma (buttonText/buttonUrl) saqlangan

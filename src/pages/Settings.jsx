@@ -9,6 +9,7 @@ import { inTelegram } from '../lib/telegram'
 import { api as server, apiEnabled } from '../lib/api'
 import { originOf } from '../lib/theme'
 import { MoreList } from './Misc'
+import { jobPath } from '../lib/seo'
 import { LANGS, tx, useT } from '../i18n'
 
 export function Settings() {
@@ -236,7 +237,7 @@ export function HiddenItems() {
               {jobs.map((j) => (
                 <div key={j.id} className="st-hidden-item">
                   <CompanyLogo name={j.company} color={j.color} size={44} />
-                  <Link to={`/jobs/${j.id}`} className="grow"><b>{tx(j.title)}</b><span>{j.company} · {tx(j.city)}</span></Link>
+                  <Link to={jobPath(j)} className="grow"><b>{tx(j.title)}</b><span>{j.company} · {tx(j.city)}</span></Link>
                   <button type="button" className="btn btn-soft btn-sm" onClick={() => { unhideJob(j.id); notify(t('Vakansiya qaytarildi')) }}>{t('Qaytarish')}</button>
                 </div>
               ))}

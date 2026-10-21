@@ -5,7 +5,6 @@ import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import { Empty, JobCard, TopBar } from '../components/UI'
 import { useApp, useContent } from '../context/AppContext'
-import { NOTIFICATIONS } from '../data/mock'
 import { LANGS, getLang, tx, useT } from '../i18n'
 
 const dateLocale = () => ({ uz: 'uz-UZ', 'uz-cyrl': 'uz-Cyrl-UZ', ru: 'ru-RU', en: 'en-GB' })[getLang()] || LANGS[0].html
@@ -96,6 +95,7 @@ export function Events() {
     <div className="page more">
       <TopBar title={t('Tadbirlar')} />
       <div className="page-body">
+        {EVENTS.length === 0 && <Empty icon="calendar" title={t("Hozircha tadbirlar yo'q")} text={t("Yangi tadbirlar e'lon qilinishi bilan shu yerda ko'rinadi")} />}
         <div className="ar-list">
           {EVENTS.map((e) => {
             const on = joined.includes(e.id)
@@ -130,14 +130,7 @@ export function Notifications() {
     <div className="page">
       <TopBar title={t('Bildirishnomalar')} />
       <div className="page-body">
-        <div className="list-grid">
-          {NOTIFICATIONS.map((n) => (
-            <div key={n.id} className="notif">
-              <div className="notif-ico"><Icon3D name={n.icon} size={44} /></div>
-              <div className="grow"><b>{t(n.title)}</b><span>{t(n.text)}</span><span className="muted small">{t(n.time)}</span></div>
-            </div>
-          ))}
-        </div>
+        <Empty icon="bell" title={t("Bildirishnomalar yo'q")} text={t("Arizalaringiz holati va yangi takliflar shu yerda ko'rinadi")} />
       </div>
     </div>
   )

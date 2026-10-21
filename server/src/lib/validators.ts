@@ -41,7 +41,8 @@ export const registerSchema = z
   .refine((v) => v.password || v.googleAccessToken, { message: 'Parol kiriting', path: ['password'] })
   .refine((v) => v.role !== 'employer' || (v.company && v.company.length > 0), { message: 'Kompaniya nomini kiriting', path: ['company'] })
 
-export const phoneStartSchema = z.object({ phone: phoneSchema, purpose: z.enum(['register', 'reset']) })
+export const phoneStartSchema = z.object({ phone: phoneSchema, purpose: z.enum(['register', 'reset', 'login']) })
+export const phoneLoginSchema = z.object({ phone: phoneSchema, phoneToken: z.string().min(10).max(2000) })
 export const phoneVerifySchema = z.object({ id: z.string().min(1).max(64), code: z.string().trim().regex(/^\d{6}$/, '6 xonali kod') })
 export const resetPasswordSchema = z.object({ phone: phoneSchema, phoneToken: z.string().min(10).max(2000), password: passwordSchema })
 

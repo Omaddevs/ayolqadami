@@ -13,6 +13,8 @@ import { CATEGORIES, JOB_TYPES, catName, salaryText } from '../data/mock'
 import { placeJobs } from '../data/geo'
 import { companySlug } from '../data/companies'
 import { WORK_MODES, WORK_TIME } from '../data/resume'
+import { breadcrumbLd, findJobByRef, jobPath, jobPostingLd, siteUrl, useSeo } from '../lib/seo'
+import { api as server, apiEnabled } from '../lib/api'
 import { tr, tx, useT } from '../i18n'
 
 const PER_PAGE = 20
@@ -157,11 +159,32 @@ function JobMiniMap({ pos }) {
 }
 
 export function JobDetail() {
-  const { id } = useParams()
+  const { id: ref } = useParams()
   const nav = useNavigate()
   const { jobsAll, allJobs, user, saved, toggleSave, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
   const t = useT()
-  const job = jobsAll.find((j) => j.id === id)
+  // /jobs/1001-nom (raqam) yoki eski /jobs/<id>; ro'yxatda bo'lmasa — serverdan (to'g'ridan-to'g'ri havola, Google)
+  const [loaded, setLoaded] = useState(null) // null — kutilmoqda, false — topilmadi
+  const listed = findJobByRef(jobsAll, ref)
+  const job = listed || loaded || undefined
+  const id = job?.id
+  useEffect(() => {
+    if (listed || !apiEnabled) return
+    const ctrl = new AbortController()
+    setLoaded(null)
+    server.job(ref, ctrl.signal).then((d) => setLoaded(d?.job || false)).catch((e) => { if (e.name !== 'AbortError') setLoaded(false) })
+    return () => ctrl.abort()
+  }, [ref, listed])
+  // manzil eski yoki nomi o'zgargan bo'lsa — kanonik manzilga (dublikat sahifa bo'lmasin)
+  useEffect(() => {
+    if (job?.number && decodeURIComponent(window.location.pathname) !== jobPath(job)) nav(jobPath(job), { replace: true })
+  }, [job?.number, job?.title]) // eslint-disable-line react-hooks/exhaustive-deps
+  useSeo(job ? {
+    title: `${job.title} — ${job.company}, ${job.city}`,
+    description: `${job.title} vakansiyasi: ${job.company}, ${job.city}. Maosh: ${salaryText(job)}. ${job.type || ''}. ${String(job.description || '').slice(0, 110)}`,
+    path: jobPath(job),
+    jsonLd: [jobPostingLd(job), breadcrumbLd([['AyolQadami', '/'], ['Vakansiyalar', '/jobs'], [job.title, jobPath(job)]])],
+  } : { title: 'Vakansiya topilmadi', noindex: true }, [job?.id, job?.title])
   const [open, setOpen] = useState(false)
   const [letter, setLetter] = useState('')
   const [ask, setAsk] = useState(null) // savol matni (null — oyna yopiq)
@@ -182,6 +205,7 @@ export function JobDetail() {
   const pos = useMemo(() => placeJobs(jobsAll).find((j) => j.id === id)?.pos, [jobsAll, id])
   const similar = useMemo(() => (job ? allJobs.filter((j) => j.id !== job.id && j.category === job.category) : []), [allJobs, job])
 
+  if (!job && loaded === null && apiEnabled) return <div className="page" aria-busy="true"><TopBar title={t('Vakansiya')} /></div>
   if (!job) return <div className="page"><TopBar title={t('Vakansiya')} /><Empty title={t('Vakansiya topilmadi')} action={<Link to="/jobs" className="btn btn-primary">{t('Barcha vakansiyalar')}</Link>} /></div>
 
   const applied = applications.some((a) => a.jobId === job.id)
@@ -196,7 +220,7 @@ export function JobDetail() {
 
   const share = async () => {
     setMenu(false)
-    const url = window.location.href
+    const url = siteUrl() + jobPath(job)
     try {
       if (navigator.share) await navigator.share({ title: job.title, text: `${job.title} — ${job.company}`, url })
       else { await navigator.clipboard.writeText(url); notify(t('Havola nusxalandi')) }
@@ -378,7 +402,7 @@ export function JobDetail() {
             <section className="jd-similar">
               <h3>{t('Sizga mos boshqa vakansiyalar')}</h3>
               {similar.slice(0, 3).map((j) => (
-                <Link key={j.id} to={`/jobs/${j.id}`} className="jd-card jd-sim">
+                <Link key={j.id} to={jobPath(j)} className="jd-card jd-sim">
                   <b>{tx(j.title)}</b>
                   <span className="jd-sim-pay">{salaryText(j)}</span>
                   <span className="jd-sim-co"><CompanyLogo name={j.company} color={j.color} size={26} /> {j.company} · {tx(j.city)}</span>

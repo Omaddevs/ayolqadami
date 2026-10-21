@@ -6,8 +6,9 @@ import Icon from './Icons'
 import Icon3D from './Icon3D'
 import LocationSheet from './LocationSheet'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES, NOTIFICATIONS, catName, salaryText, formatSum } from '../data/mock'
+import { CATEGORIES, catName, salaryText, formatSum } from '../data/mock'
 import { LANGS, tr, tx, useT } from '../i18n'
+import { jobPath } from '../lib/seo'
 import { originOf } from '../lib/theme'
 
 export const THEME_OPTIONS = [
@@ -316,7 +317,6 @@ function SiteHeader() {
             <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>
             <Link to="/notifications" className="sh-ico" aria-label={t('Bildirishnomalar')} title={t('Bildirishnomalar')}>
               <Bell size={21} />
-              {NOTIFICATIONS.length > 0 && <em className="sh-badge">{NOTIFICATIONS.length}</em>}
             </Link>
             {!isEmp && (
               <Link to="/applications?tab=saved" className="sh-ico" aria-label={t('Saqlanganlar')} title={t('Saqlanganlar')}>
@@ -636,7 +636,7 @@ export function JobCard({ job, compact }) {
     <article className={`job-card ${compact ? 'compact' : ''}`}>
       <div className="job-title-row">
         {/* sarlavha havolasi butun kartani bosiladigan qiladi (::after orqali) */}
-        <h3><Link to={`/jobs/${job.id}`} className="job-link">{tx(job.title)}</Link></h3>
+        <h3><Link to={jobPath(job)} className="job-link">{tx(job.title)}</Link></h3>
         <button type="button" className={`save-btn ${isSaved ? 'on' : ''}`} aria-label={t('Saqlash')} aria-pressed={isSaved}
           onClick={() => requireAuth(() => toggleSave(job.id))}>
           <Heart size={26} weight={isSaved ? 'fill' : 'regular'} />
@@ -672,7 +672,7 @@ export function JobCard({ job, compact }) {
           <button type="button" className="btn btn-primary" disabled={applied} onClick={quickApply}>
             {applied ? t('Ariza yuborildi') : t('Ariza yuborish')}
           </button>
-          <button type="button" className="btn btn-soft" onClick={() => nav(`/jobs/${job.id}`)}>{t("Bog'lanish")}</button>
+          <button type="button" className="btn btn-soft" onClick={() => nav(jobPath(job))}>{t("Bog'lanish")}</button>
         </div>
       )}
     </article>

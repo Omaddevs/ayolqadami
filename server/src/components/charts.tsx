@@ -141,7 +141,8 @@ export function StackedBars({ months, series }: { months: string[]; series: (Seg
   const totals = months.map((_, i) => series.reduce((n, s) => n + s.values[i], 0))
   const rawMax = Math.max(1, ...totals)
   const mag = Math.pow(10, Math.floor(Math.log10(rawMax)))
-  const max = Math.ceil((rawMax * 1.1) / mag) * mag
+  // 5 ga karrali — o'qdagi 6 ta belgi butun sonlar bo'lsin (kichik qiymatlarda 1, 1, 2, 2 kabi takrorlanmasin)
+  const max = Math.ceil(Math.ceil((rawMax * 1.1) / mag) * mag / 5) * 5
   const cur = months.length - 1
   const ticks = [0, 0.2, 0.4, 0.6, 0.8, 1]
   const colW = 100 / months.length

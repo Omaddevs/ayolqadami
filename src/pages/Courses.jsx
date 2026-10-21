@@ -5,6 +5,7 @@ import Icon3D from '../components/Icon3D'
 import { CourseCard, Empty, Sheet, TopBar } from '../components/UI'
 import { useApp, useContent } from '../context/AppContext'
 import { formatSum } from '../data/mock'
+import { useSeo } from '../lib/seo'
 import { tr, tx } from '../i18n'
 
 
@@ -36,7 +37,9 @@ export function Courses() {
         {list.length ? (
           <div className="course-grid">{list.map((c) => <CourseCard key={c.id} c={c} />)}</div>
         ) : (
-          <Empty icon="books" title={tr("Hali kursga yozilmagansiz")} text={tr("Bepul kurslardan boshlang — sertifikat ham beriladi")} />
+          tab === 'my' && COURSES.length
+            ? <Empty icon="books" title={tr("Hali kursga yozilmagansiz")} text={tr("Bepul kurslardan boshlang — sertifikat ham beriladi")} />
+            : <Empty icon="books" title={tr("Hozircha kurslar yo'q")} text={tr("Yangi kurslar qo'shilishi bilan shu yerda ko'rinadi")} />
         )}
       </div>
     </div>
@@ -49,6 +52,16 @@ export function CourseDetail() {
   const { courses: COURSES } = useContent()
   const [pay, setPay] = useState(false)
   const c = COURSES.find((x) => x.id === id)
+  useSeo(c ? {
+    title: `${c.title} — ${c.price ? 'kurs' : 'bepul kurs'}`,
+    description: `${c.title} (${c.provider}): ${c.duration}, ${c.lessons} dars, ${c.format}. ${c.description || ''}`,
+    path: `/courses/${encodeURIComponent(c.id)}`,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'Course', name: c.title, description: c.description || c.title,
+      provider: { '@type': 'Organization', name: c.provider },
+      offers: { '@type': 'Offer', category: c.price ? 'Paid' : 'Free', price: c.price || 0, priceCurrency: 'UZS' },
+    },
+  } : { title: 'Kurs topilmadi', noindex: true }, [c?.id])
   if (!c) return <div className="page"><TopBar title={tr("Kurs")} /><Empty title={tr("Kurs topilmadi")} /></div>
   const enrolled = courses.includes(c.id)
 

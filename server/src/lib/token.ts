@@ -34,8 +34,8 @@ export async function verifyToken(token: string, aud: Audience): Promise<TokenPa
   }
 }
 
-// Telefon tasdiqlanganini bildiruvchi qisqa muddatli token (ro'yxatdan o'tish / parolni tiklash uchun)
-export type PhonePurpose = 'register' | 'reset'
+// Telefon tasdiqlanganini bildiruvchi qisqa muddatli token (ro'yxatdan o'tish / parolni tiklash / kod bilan kirish)
+export type PhonePurpose = 'register' | 'reset' | 'login'
 export type PhoneTokenPayload = { phone: string; purpose: PhonePurpose; vid: string }
 
 export async function signPhoneToken(p: PhoneTokenPayload) {
@@ -52,8 +52,8 @@ export async function signPhoneToken(p: PhoneTokenPayload) {
 export async function verifyPhoneToken(token: string): Promise<PhoneTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret(), { audience: 'phone', issuer: 'ayolqadami', algorithms: ['HS256'] })
-    if (!payload.sub || typeof payload.phone !== 'string' || (payload.purpose !== 'register' && payload.purpose !== 'reset')) return null
-    return { vid: payload.sub, phone: payload.phone, purpose: payload.purpose }
+    if (!payload.sub || typeof payload.phone !== 'string' || !['register', 'reset', 'login'].includes(String(payload.purpose))) return null
+    return { vid: payload.sub, phone: payload.phone, purpose: payload.purpose as PhonePurpose }
   } catch {
     return null
   }

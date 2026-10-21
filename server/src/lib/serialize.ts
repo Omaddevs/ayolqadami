@@ -1,6 +1,7 @@
 import type { Application, Article, Course, Event, Job, User } from '@prisma/client'
 import { formatUzPhone } from './phone'
 import { timeAgo } from './format'
+import { jobPath } from './slug'
 
 type JobWithCount = Job & { _count?: { applications: number } }
 const obj = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {})
@@ -11,6 +12,8 @@ export function jobOut(j: JobWithCount) {
   return {
     ...details,
     id: j.id,
+    number: j.number,
+    path: jobPath(j),
     title: j.title,
     company: j.companyName,
     color: j.color,

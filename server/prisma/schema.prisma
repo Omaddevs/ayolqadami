@@ -114,6 +114,7 @@ model Company {
 
 model Job {
   id           String    @id @default(cuid())
+  number       Int           @unique @default(autoincrement()) // ochiq raqamli ID: /jobs/1024-frontend-dasturchi
   title        String
   companyName  String
   companyId    String?
@@ -399,7 +400,7 @@ model TelegramBroadcast {
 model PhoneVerification {
   id         String    @id @default(cuid())
   phone      String // 998901234567
-  purpose    String // register | reset
+  purpose    String // register | reset | login
   token      String    @unique // deep link payload
   telegramId String? // havolani birinchi ochgan Telegram hisobi — boshqasi ishlata olmaydi
   codeHash   String?
@@ -419,7 +420,39 @@ model TelegramPhone {
   phone      String
   firstName  String
   username   String?
+  lang       String? // bot tili: uz | ru (null — Telegram tiliga qarab)
+  notifyLogin Boolean @default(true) // hisobga kirilganda xabar yuborish
   updatedAt  DateTime @updatedAt
 
   @@index([phone])
+}
+
+// ================= Bannerlar va yuklangan rasmlar =================
+
+// Bosh sahifadagi bannerlar — admin paneldan boshqariladi
+model Banner {
+  id        String    @id @default(cuid())
+  title     String // alt matn va admin uchun nom
+  imageUrl  String // /media/<id> (yuklangan) yoki https://... yoki saytdagi /banners/x.jpg
+  linkUrl   String    @default("") // /courses (sayt ichida) yoki https://... (tashqi)
+  active    Boolean   @default(true)
+  sort      Int       @default(0)
+  startsAt  DateTime? // shu vaqtdan ko'rsatiladi
+  endsAt    DateTime? // shu vaqtgacha
+  clicks    Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([active, sort])
+}
+
+// Admin yuklagan rasmlar (bazada — alohida disk/volume kerak emas, pg_dump zaxirasiga ham kiradi)
+model Media {
+  id        String   @id @default(cuid())
+  mime      String // image/png | image/jpeg | image/webp
+  size      Int
+  data      Bytes
+  name      String   @default("")
+  authorId  String?
+  createdAt DateTime @default(now())
 }

@@ -5,6 +5,7 @@ import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { userOut } from '@/lib/serialize'
 import { googleLoginSchema } from '@/lib/validators'
+import { notifyLogin } from '@/lib/login-bot'
 
 // Google hisobi bilan kirish. Hisob topilmasa 404 — web ilova ro'yxatdan o'tishni davom ettiradi
 export const POST = api(async (req) => {
@@ -20,5 +21,6 @@ export const POST = api(async (req) => {
     where: { id: user.id },
     data: { googleSub: user.googleSub || g.sub, photo: user.photo || g.photo || null, lastLoginAt: new Date() },
   })
+  notifyLogin(user, req, 'google', clientIp(req))
   return json({ token: await issueToken(user, 'app'), user: userOut(user) })
 })

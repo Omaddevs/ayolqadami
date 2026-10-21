@@ -10,6 +10,7 @@ import { Avatar, CompanyLogo, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
 import { EMPLOYER_PROMPTS, SEEKER_PROMPTS, matchCandidates, matchJobs } from '../data/qadam'
 import { catName, salaryText } from '../data/mock'
+import { jobPath } from '../lib/seo'
 import { tr, tx } from '../i18n'
 
 
@@ -215,7 +216,7 @@ export default function QadamAI() {
                           </div>
                         ) : (
                           <div key={item.id} className="match">
-                            <Link to={`/jobs/${item.id}`} className="match-main">
+                            <Link to={jobPath(item)} className="match-main">
                               <CompanyLogo name={item.company} color={item.color} size={44} />
                               <div className="grow">
                                 <b>{tx(item.title)}</b>

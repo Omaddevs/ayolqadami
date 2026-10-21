@@ -4,6 +4,7 @@ import { Clock, ThumbsDown, ThumbsUp } from '@phosphor-icons/react'
 import ArticleArt from '../components/ArticleArt'
 import { Empty, TopBar } from '../components/UI'
 import { useApp, useContent } from '../context/AppContext'
+import { siteUrl, useSeo } from '../lib/seo'
 import { tr, tx } from '../i18n'
 
 
@@ -50,6 +51,18 @@ function ArticleView({ id }) {
   const { articles: ARTICLES } = useContent()
   const [vote, setVote] = useState(null)
   const a = ARTICLES.find((x) => x.id === id)
+  useSeo(a ? {
+    title: a.title,
+    description: a.excerpt,
+    path: `/articles/${encodeURIComponent(a.id)}`,
+    image: a.img || undefined,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'Article', headline: a.title, description: a.excerpt,
+      ...(a.img && { image: a.img.startsWith('http') ? a.img : siteUrl() + a.img }),
+      author: { '@type': 'Organization', name: 'AyolQadami' }, publisher: { '@id': `${siteUrl()}/#organization` },
+      mainEntityOfPage: `${siteUrl()}/articles/${encodeURIComponent(a.id)}`, inLanguage: 'uz',
+    },
+  } : { title: 'Maqola topilmadi', noindex: true }, [a?.id])
   if (!a) return <div className="page"><TopBar title={tr("Maqola")} /><Empty title={tr("Maqola topilmadi")} /></div>
   const more = ARTICLES.filter((x) => x.id !== a.id).slice(0, 2)
   const rate = (v) => requireAuth(() => { setVote(v); notify(tr('Fikringiz uchun rahmat!')) })

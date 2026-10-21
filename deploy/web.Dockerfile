@@ -8,6 +8,8 @@ ARG VITE_API_URL
 ARG VITE_GOOGLE_CLIENT_ID
 ARG VITE_BOT_API_URL
 ARG WEB_DOMAIN
+ARG VITE_SITE_URL
+ARG VITE_GA_ID
 RUN npm run build && node deploy/sitemap.mjs
 
 FROM caddy:2.8-alpine

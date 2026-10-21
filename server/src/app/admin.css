@@ -449,3 +449,8 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tg-kb-arrow { position: absolute; top: 3px; right: 7px; font-size: 10px; opacity: .85; }
 @media (max-width: 640px) { .btn-editor-fields { grid-template-columns: 1fr; } }
 .tg-preview .tg-kb { margin-top: 5px; }
+
+/* Bannerlar */
+.banner-thumb { width: 120px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg); flex-shrink: 0; }
+.banner-preview { aspect-ratio: 3 / 1; max-width: 560px; border-radius: 14px; overflow: hidden; background: var(--bg); border: 1px dashed #d9dce6; display: grid; place-items: center; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+.banner-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }

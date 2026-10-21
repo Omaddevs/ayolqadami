@@ -4,6 +4,7 @@ import Icon from './Icons'
 import Icon3D from './Icon3D'
 import { Avatar, CompanyLogo } from './UI'
 import { CANDIDATES, CATEGORIES, salaryText } from '../data/mock'
+import { jobPath } from '../lib/seo'
 import { tx, useT } from '../i18n'
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
@@ -96,7 +97,7 @@ export default function SearchSheet({ open, onClose, isEmp, jobs, inputRef }) {
                       <Icon name="right" size={18} />
                     </Link>
                   ) : (
-                    <Link key={r.id} to={`/jobs/${r.id}`} className="ss-result">
+                    <Link key={r.id} to={jobPath(r)} className="ss-result">
                       <CompanyLogo name={r.company} color={r.color} size={44} />
                       <div className="grow"><b>{tx(r.title)}</b><span className="muted">{r.company} · {salaryText(r)}</span></div>
                       <Icon name="right" size={18} />

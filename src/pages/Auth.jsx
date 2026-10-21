@@ -217,16 +217,18 @@ function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
 }
 
 export default function Auth() {
-  const { signUp, signIn, signInGoogle, resetPassword, closeAuth, notify, prefs, setPrefs } = useApp()
+  const { signUp, signIn, signInGoogle, signInCode, resetPassword, closeAuth, authMode, notify, prefs, setPrefs } = useApp()
   const navigate = useNavigate()
   const closeToHome = () => { closeAuth(); navigate('/') }
   const lang = AUTH_TEXT[prefs.lang] ? prefs.lang : 'uz'
   const t = AUTH_TEXT[lang]
-  const [mode, setMode] = useState('welcome') // 'welcome' | 'login' | 'signup' | 'reset'
+  // bot havolasidan kelganda (?auth=...) — kerakli bo'lim; kod bilan kirish server bo'lmasa ishlamaydi
+  const [mode, setMode] = useState(authMode === 'code' && !apiEnabled ? 'login' : authMode || 'welcome') // 'welcome' | 'login' | 'signup' | 'reset' | 'code'
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ role: null, name: '', phone: PHONE_PREFIX, password: '', company: '', city: 'Toshkent', categories: [], otherCategory: '', email: '', photo: '', google: false, googleToken: '', phoneToken: '', verifiedPhone: '', terms: false })
   const [verifying, setVerifying] = useState(false) // ro'yxatdan o'tishda raqam tasdiqlanmoqda
   const [resetStage, setResetStage] = useState('phone') // 'phone' | 'verify' | 'password'
+  const [codeStage, setCodeStage] = useState('phone') // kod bilan kirish: 'phone' | 'verify'
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k, v) => { setErr(''); setForm((f) => ({ ...f, [k]: v })) }
@@ -243,13 +245,14 @@ export default function Auth() {
   }, [closeAuth])
 
   const langPicker = <LangPicker value={lang} onChange={(id) => setPrefs({ lang: id })} label={t.lang} />
-  const go = (m) => { setErr(''); setMode(m); setStep(1); setVerifying(false); setResetStage('phone') }
+  const go = (m) => { setErr(''); setMode(m); setStep(1); setVerifying(false); setResetStage('phone'); setCodeStage('phone') }
   const back = () => {
     setErr('')
     if (mode === 'signup' && verifying) setVerifying(false)
     else if (mode === 'signup' && step > 1) setStep(step - 1)
     else if (mode === 'reset' && resetStage !== 'phone') setResetStage('phone')
-    else go(mode === 'reset' ? 'login' : 'welcome')
+    else if (mode === 'code' && codeStage !== 'phone') setCodeStage('phone')
+    else go(mode === 'reset' || mode === 'code' ? 'login' : 'welcome')
   }
 
   const phoneError = () => (phoneState === 'code' ? t.errCode : phoneState !== 'ok' ? t.errPhone : '')
@@ -341,6 +344,20 @@ export default function Auth() {
     notify(t.hello)
   }
 
+  const codePhone = (e) => {
+    e.preventDefault()
+    if (phoneError()) return setErr(phoneError())
+    setErr('')
+    setCodeStage('verify')
+  }
+  const onCodeVerified = async (token) => {
+    setBusy(true)
+    const r = await signInCode(form.phone, token)
+    setBusy(false)
+    if (r !== 'ok') { setCodeStage('phone'); return setErr(authError(r)) }
+    notify(t.hello)
+  }
+
   const login = async (e) => {
     e.preventDefault()
     if (phoneError()) return setErr(phoneError())
@@ -421,9 +438,35 @@ export default function Auth() {
             <button className="aw-btn" type="submit" disabled={busy || phoneState !== 'ok' || !form.password}>{t.signIn}</button>
             {apiEnabled && <p className="aw-foot aw-forgot"><button type="button" onClick={() => { set('password', ''); go('reset') }}>{t.forgot}</button></p>}
             <div className="aw-or"><span>{t.or}</span></div>
+            {apiEnabled && (
+              <button type="button" className="aw-btn aw-tg aw-tg-login" onClick={() => go('code')} disabled={busy}>
+                <TelegramLogo size={20} weight="fill" /> {t.codeLogin}
+              </button>
+            )}
             {googleBtn}
             <p className="aw-foot">{t.noAccount} <button type="button" onClick={() => go('signup')}>{t.signUp}</button></p>
           </form>
+        )}
+
+        {mode === 'code' && (
+          <div className="aw-step fade-in" key={`code-${codeStage}`}>
+            <Head onBack={back} right={langPicker} backLabel={t.back} />
+            <div className="aw-body">
+              {dkBrand}
+              {codeStage === 'phone' ? (
+                <form onSubmit={codePhone} noValidate>
+                  <h2>{t.codeLoginTitle}</h2>
+                  <p className="aw-sub">{t.codeLoginSub}</p>
+                  <div className="aw-fields"><PhoneField label={t.phone} value={form.phone} onChange={(v) => set('phone', v)} t={t} autoFocus /></div>
+                  {err && <div className="aw-err" role="alert">{err}</div>}
+                  <button className="aw-btn aw-mt" type="submit" disabled={phoneState !== 'ok'}>{t.cont}</button>
+                </form>
+              ) : (
+                <PhoneVerify phone={form.phone} purpose="login" t={t} onVerified={onCodeVerified}
+                  onError={(code) => { setCodeStage('phone'); setErr(authError(code)) }} />
+              )}
+            </div>
+          </div>
         )}
 
         {mode === 'reset' && (

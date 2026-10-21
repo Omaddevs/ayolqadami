@@ -16,7 +16,7 @@ cp .env.example .env              # JWT_SECRET va ADMIN_PASSWORD ni to'ldiring
 docker compose up -d db           # PostgreSQL → 127.0.0.1:5440
 npm install
 npx prisma migrate deploy         # jadvallar
-npm run db:seed                   # admin + kontent + demo ma'lumotlar
+npm run db:seed                   # administrator + maqolalar
 npm run dev                       # http://localhost:3100/admin
 ```
 
@@ -35,7 +35,7 @@ VITE_API_URL=http://localhost:3100
 | `npm run dev` / `build` / `start` | ishlab chiqish / production build / ishga tushirish |
 | `npm run db:migrate -- --name x` | sxema o'zgargach yangi migratsiya |
 | `npm run db:deploy` | production'da migratsiyalarni qo'llash |
-| `npm run db:seed` | boshlang'ich ma'lumotlar (`SEED_DEMO=false` — demo foydalanuvchilarsiz) |
+| `npm run db:seed` | administrator va maqolalar (demo ma'lumotlar yo'q) |
 | `npm run admin:create -- +998901234567 "Parol" "Ism" ADMIN` | administrator/moderator yaratish yoki parolini tiklash |
 | `npm test` · `npm run typecheck` | unit testlar · tip tekshiruvi |
 | `npm run seed:export` | web ilovadagi `src/data` → `prisma/seed-data.json` |
@@ -92,7 +92,7 @@ cd server
 cp .env.example .env    # haqiqiy qiymatlar: kuchli JWT_SECRET, POSTGRES_PASSWORD, WEB_ORIGINS=https://ayolqadami.uz
 docker compose up -d --build
 # boshlang'ich ma'lumotlar — bir marta, serverning o'zidan (baza 127.0.0.1:5440 da):
-npm ci && SEED_DEMO=false npm run db:seed
+npm ci && npm run db:seed
 ```
 
 Server konteyneri har ishga tushganda `prisma migrate deploy` bajaradi. Oldiga Nginx/Caddy (HTTPS) qo'ying va

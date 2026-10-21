@@ -26,8 +26,13 @@ services:
     env_file: ../server/.env
     environment:
       DATABASE_URL: postgresql://ayolqadami:${POSTGRES_PASSWORD}@db:5432/ayolqadami?schema=public
-      WEB_ORIGINS: https://${WEB_DOMAIN:?deploy/.env da WEB_DOMAIN kerak},https://www.${WEB_DOMAIN}
+      # EXTRA_WEB_ORIGINS — sayt boshqa joyda ham ochilsa (masalan https://ayolqadami.vercel.app)
+      WEB_ORIGINS: https://${WEB_DOMAIN:?deploy/.env da WEB_DOMAIN kerak},https://www.${WEB_DOMAIN},${EXTRA_WEB_ORIGINS:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # kirish botidagi «Saytga o'tish» tugmalari shu manzilga
+      WEB_URL: ${WEB_URL:-https://${WEB_DOMAIN}}
+      # yuklangan rasmlar (bannerlar) havolasi uchun API serverning ochiq manzili
+      PUBLIC_URL: https://${API_DOMAIN}
       NODE_ENV: production
 
   web:
@@ -39,6 +44,8 @@ services:
         VITE_API_URL: https://${API_DOMAIN:?deploy/.env da API_DOMAIN kerak}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
         VITE_BOT_API_URL: ${BOT_API_ORIGIN:-}
+        VITE_SITE_URL: https://${WEB_DOMAIN}
+        VITE_GA_ID: ${GA_ID:-}
     restart: unless-stopped
     depends_on: [server]
     environment:

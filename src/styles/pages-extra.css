@@ -871,3 +871,4 @@ button.pd-ico-btn { border: 0; cursor: pointer; }
 .legal-doc li { position: relative; padding-left: 18px; }
 .legal-doc li::before { content: ''; position: absolute; left: 4px; top: .65em; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
 .legal-doc a { color: var(--primary-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.aw-btn.aw-tg-login { margin: 0 0 10px; width: 100%; }

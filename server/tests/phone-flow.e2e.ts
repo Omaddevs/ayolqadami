@@ -106,10 +106,11 @@ test("to'liq oqim: bot havolasi → kontakt → kod → ro'yxatdan o'tish → pa
 
   // tokenni qayta ishlatib bo'lmaydi
   const { db } = await import('../src/lib/db')
-  await db.user.update({ where: { phone: PHONE }, data: { phone: PHONE.slice(0, -1) + '0' } }).catch(() => {})
+  const MOVED = '99870' + PHONE.slice(5) // har doim boshqa raqam (operator kodi 70)
+  await db.user.update({ where: { phone: PHONE }, data: { phone: MOVED } })
   const again = await post('../src/app/api/v1/auth/register/route', { ...regBody, phoneToken })
   assert.equal(again.json.error.code, 'phone_unverified')
-  await db.user.updateMany({ where: { phone: PHONE.slice(0, -1) + '0', name: regBody.name }, data: { phone: PHONE } })
+  await db.user.update({ where: { phone: MOVED }, data: { phone: PHONE } })
 
   // parolni tiklash: raqam endi botga ulangan — kod darhol shu chatga keladi
   const before = sent.length
@@ -131,10 +132,123 @@ test('kod urinishlari 5 ta bilan cheklangan', async () => {
   const { db } = await import('../src/lib/db')
   const { createVerification, setCode } = await import('../src/lib/phone-verify')
   const v = await createVerification(PHONE, 'reset')
-  const code = await setCode(v.id, String(ME))
+  const { code } = await setCode(v.id, String(ME), 'reset')
   const bad = code === '000000' ? '111111' : '000000'
   for (let i = 0; i < 5; i++) await post('../src/app/api/v1/auth/phone/verify/route', { id: v.id, code: bad })
   const r = await post('../src/app/api/v1/auth/phone/verify/route', { id: v.id, code })
   assert.equal(r.json.error.code, 'code_attempts')
   await db.phoneVerification.delete({ where: { id: v.id } })
+})
+
+const cb = (from: number, data: string, messageId = 5) => ({
+  update_id: 2, callback_query: { id: 'q', from: { id: from, is_bot: false, first_name: 'Test' }, data, message: { message_id: messageId, date: 0, chat: { id: from, type: 'private' }, text: 'x' } },
+})
+const sentSince = (n: number, method = 'sendMessage') => sent.slice(n).filter((s) => s.method === method)
+
+test("bot menyusi: kirish kodi → saytda kod bilan kirish → xabar → «Bu men emasman»", async () => {
+  const { handleLoginUpdate } = await import('../src/lib/login-bot')
+  const { db } = await import('../src/lib/db')
+
+  // menyu tugmasi «🔑 Kirish kodi» — raqam ulangan (oldingi test), hisob bor
+  let n = sent.length
+  await handleLoginUpdate(msg(ME, { text: '🔑 Kirish kodi' }))
+  const codeMsg = sentSince(n)[0].body
+  const code = codeFrom(codeMsg.text)!
+  assert.ok(code)
+  assert.match(codeMsg.text, /Kirish kodi/)
+  assert.match(codeMsg.text, /5 daqiqa/)
+  const kb = codeMsg.reply_markup.inline_keyboard
+  assert.equal(kb[0][0].copy_text.text, code) // 📋 Nusxalash
+  assert.match(kb[0][1].callback_data, /^lc:new:/) // 🔄 Yangi kod
+
+  // saytda shu raqam bilan «kod bilan kirish» — yangi kod yuborilmaydi, botdagisi ishlaydi
+  n = sent.length
+  const start = await post('../src/app/api/v1/auth/phone/start/route', { phone: DISPLAY, purpose: 'login' })
+  assert.equal(start.json.sent, true)
+  assert.equal(sentSince(n).length, 0)
+
+  // 🔄 Yangi kod: eski kod bekor bo'ladi
+  n = sent.length
+  await handleLoginUpdate(cb(ME, kb[0][1].callback_data))
+  assert.equal(sentSince(n, 'editMessageText').length, 1)
+  const code2 = codeFrom(sentSince(n)[0].body.text)!
+  if (code2 !== code) {
+    const old = await post('../src/app/api/v1/auth/phone/verify/route', { id: start.json.id, code })
+    assert.equal(old.json.error.code, 'code_invalid')
+  }
+  const ok = await post('../src/app/api/v1/auth/phone/verify/route', { id: start.json.id, code: code2 })
+  assert.equal(ok.status, 200)
+
+  n = sent.length
+  const login = await post('../src/app/api/v1/auth/phone/login/route', { phone: DISPLAY, phoneToken: ok.json.phoneToken })
+  assert.equal(login.status, 200)
+  assert.ok(login.json.token)
+  const again = await post('../src/app/api/v1/auth/phone/login/route', { phone: DISPLAY, phoneToken: ok.json.phoneToken })
+  assert.equal(again.json.error.code, 'phone_unverified')
+
+  // kirish haqida xabar (fonda yuboriladi)
+  await new Promise((r) => setTimeout(r, 300))
+  const alert = sentSince(n).find((s) => /Hisobingizga kirildi/.test(s.body.text))
+  assert.ok(alert, 'kirish xabari kelmadi')
+  assert.equal(alert!.body.reply_markup.inline_keyboard[0][0].callback_data, 'lg:revoke')
+
+  const before = (await db.user.findUnique({ where: { phone: PHONE } }))!.tokenVersion
+  await handleLoginUpdate(cb(OTHER, 'lg:revoke')) // boshqa Telegram — ta'sir qilmaydi
+  assert.equal((await db.user.findUnique({ where: { phone: PHONE } }))!.tokenVersion, before)
+  await handleLoginUpdate(cb(ME, 'lg:revoke'))
+  assert.equal((await db.user.findUnique({ where: { phone: PHONE } }))!.tokenVersion, before + 1)
+})
+
+test('bot menyusi: profil, sozlamalar (til, xabarlar), yordam', async () => {
+  const { handleLoginUpdate } = await import('../src/lib/login-bot')
+  const { db } = await import('../src/lib/db')
+  let n = sent.length
+  await handleLoginUpdate(msg(ME, { text: '👤 Profil' }))
+  assert.match(sentSince(n)[0].body.text, /Test Foydalanuvchi/)
+  assert.match(sentSince(n)[0].body.text, /Raqam tasdiqlangan/)
+
+  await handleLoginUpdate(cb(ME, 'st:notify'))
+  assert.equal((await db.telegramPhone.findUnique({ where: { telegramId: String(ME) } }))!.notifyLogin, false)
+  n = sent.length
+  await handleLoginUpdate(cb(ME, 'st:lang'))
+  assert.equal((await db.telegramPhone.findUnique({ where: { telegramId: String(ME) } }))!.lang, 'ru')
+  assert.match(sentSince(n, 'editMessageText')[0].body.text, /Настройки/)
+  assert.equal(sentSince(n)[0].body.reply_markup.keyboard[0][0].text, '🔑 Код для входа')
+
+  // ruscha menyu tugmasi ham ishlaydi
+  n = sent.length
+  await handleLoginUpdate(msg(ME, { text: '🆘 Помощь' }))
+  assert.match(sentSince(n)[0].body.text, /Помощь/)
+
+  // ulanmagan Telegram — avval raqam so'raladi
+  n = sent.length
+  await handleLoginUpdate(msg(OTHER, { text: '🔑 Kirish kodi' }))
+  assert.equal(sentSince(n)[0].body.reply_markup.keyboard[0][0].request_contact, true)
+})
+
+test('kod bilan kirish: raqam botga ulanmagan foydalanuvchi — havola → kontakt → kod → kirish', async () => {
+  const { handleLoginUpdate } = await import('../src/lib/login-bot')
+  const { db } = await import('../src/lib/db')
+  const phone2 = '99891' + String(Date.now()).slice(-7)
+  const NEW_TG = ME + 7
+  await db.user.create({ data: { phone: phone2, name: 'Ulanmagan', role: 'SEEKER' } })
+  try {
+    const start = await post('../src/app/api/v1/auth/phone/start/route', { phone: '+' + phone2, purpose: 'login' })
+    assert.equal(start.status, 201)
+    assert.equal(start.json.sent, false)
+    const payload = /start=(v_[\w-]+)/.exec(start.json.botUrl)![1]
+    await handleLoginUpdate(msg(NEW_TG, { text: `/start ${payload}` }))
+    assert.equal(lastText().reply_markup.keyboard[0][0].request_contact, true)
+    const n = sent.length
+    await handleLoginUpdate(msg(NEW_TG, { contact: { phone_number: '+' + phone2, first_name: 'U', user_id: NEW_TG } }))
+    const code = sentSince(n).map((s) => codeFrom(s.body.text)).find(Boolean)
+    assert.ok(code, 'kontakt ulashilgach kirish kodi kelmadi')
+    const v = await post('../src/app/api/v1/auth/phone/verify/route', { id: start.json.id, code })
+    const login = await post('../src/app/api/v1/auth/phone/login/route', { phone: '+' + phone2, phoneToken: v.json.phoneToken })
+    assert.equal(login.status, 200)
+  } finally {
+    await db.phoneVerification.deleteMany({ where: { phone: phone2 } })
+    await db.telegramPhone.deleteMany({ where: { telegramId: String(NEW_TG) } })
+    await db.user.deleteMany({ where: { phone: phone2 } })
+  }
 })

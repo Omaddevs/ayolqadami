@@ -11,6 +11,7 @@ import {
 import { CONTACT_WAYS, DURATIONS, EDU_REQ, PERKS } from '../data/vacancy'
 import { matchForVacancy } from '../data/qadam'
 import { PHONE_PREFIX, checkUzPhone, formatUzPhone } from '../lib/phone'
+import { jobPath } from '../lib/seo'
 import { tr, tx } from '../i18n'
 
 
@@ -388,7 +389,7 @@ function Published({ job, matches }) {
           <h2>{tr("«{title}» e'lon qilindi", { title: tx(job.title) })}</h2>
           <p>{tr("Vakansiya ish izlovchilar ro'yxatida va QadamAI tavsiyalarida ko'rinadi. Arizalar «Vakansiyalarim» bo'limiga tushadi.")}</p>
           <div className="vj-done-btns">
-            <Link to={`/jobs/${job.id}`} className="btn btn-ghost">{tr("Vakansiyani ko'rish")}</Link>
+            <Link to={jobPath(job)} className="btn btn-ghost">{tr("Vakansiyani ko'rish")}</Link>
             <Link to="/applications" className="btn btn-soft">{tr("Vakansiyalarim")}</Link>
           </div>
         </section>

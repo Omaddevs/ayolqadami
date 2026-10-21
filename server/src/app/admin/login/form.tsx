@@ -1,11 +1,19 @@
 'use client'
-import { useActionState } from 'react'
+import { startTransition, useActionState, type FormEvent } from 'react'
 import { login, type LoginState } from './actions'
 
+// React 19 `<form action>` amal tugagach formani tozalaydi — parol xato bo'lsa telefon raqami o'chib ketmasligi uchun
+// forma onSubmit orqali yuboriladi (ActionForm'dagi kabi)
 export default function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, {})
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (pending) return
+    const data = new FormData(e.currentTarget)
+    startTransition(() => action(data))
+  }
   return (
-    <form action={action}>
+    <form onSubmit={onSubmit}>
       {next && <input type="hidden" name="next" value={next} />}
       <div className="field">
         <label htmlFor="phone">Telefon raqam</label>

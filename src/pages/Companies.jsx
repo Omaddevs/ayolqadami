@@ -7,6 +7,7 @@ import { CompanyLogo, Empty, JobCard, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
 import { CATEGORIES, catName, catShort } from '../data/mock'
 import { buildCompanies, companySlug } from '../data/companies'
+import { breadcrumbLd, siteUrl, useSeo } from '../lib/seo'
 import { tr, tx, useT } from '../i18n'
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
@@ -82,6 +83,13 @@ export function CompanyDetail() {
   const companies = useCompanies()
   const t = useT()
   const c = companies.find((x) => x.name === name)
+  useSeo(c ? {
+    title: `${c.name} — vakansiyalar va ish sharoitlari`,
+    description: `${c.name}: ${c.jobs.length} ta ochiq vakansiya${c.cities?.length ? ` (${c.cities.join(', ')})` : ''}. ${c.about || ''}`,
+    path: `/companies/${encodeURIComponent(c.name)}`,
+    jsonLd: [{ '@context': 'https://schema.org', '@type': 'Organization', name: c.name, description: c.about || undefined, url: `${siteUrl()}/companies/${encodeURIComponent(c.name)}` },
+      breadcrumbLd([['AyolQadami', '/'], ['Kompaniyalar', '/companies'], [c.name, `/companies/${encodeURIComponent(c.name)}`]])],
+  } : { title: 'Kompaniya topilmadi', noindex: true }, [c?.name, c?.jobs.length])
   if (!c) return <div className="page"><TopBar title={t('Kompaniya')} /><Empty icon="building" title={t('Kompaniya topilmadi')} action={<Link to="/companies" className="btn btn-primary">{t('Barcha kompaniyalar')}</Link>} /></div>
 
   return (

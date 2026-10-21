@@ -55,3 +55,15 @@ test('maqola matni ↔ bloklar', () => {
   const text = articleBodyToText([{ h: 'Sarlavha' }, { p: 'Matn' }, { list: ['a', 'b'] }])
   assert.equal(text, '## Sarlavha\n\nMatn\n\n- a\n- b')
 })
+
+test("slug va vakansiya manzili: lotin, kirill, o'zbekcha tutuq belgisi", async () => {
+  const { slugify, jobPath, jobNumberFromRef } = await import('../src/lib/slug')
+  assert.equal(slugify("Bosh buxgalter (1C), Farg'ona"), 'bosh-buxgalter-1c-fargona')
+  assert.equal(slugify('Ингliz тили ўқитувчиси'), 'ingliz-tili-oqituvchisi')
+  assert.equal(slugify("O‘qituvchi"), 'oqituvchi')
+  assert.equal(jobPath({ number: 1024, title: 'Frontend dasturchi (React)', city: 'Toshkent' }), '/jobs/1024-frontend-dasturchi-react-toshkent')
+  assert.equal(jobNumberFromRef('1024-frontend-dasturchi'), 1024)
+  assert.equal(jobNumberFromRef('1024'), 1024)
+  assert.equal(jobNumberFromRef('cmvi8a8mb000bvtxc9xfzwn25'), null)
+  assert.ok(slugify('a'.repeat(200)).length <= 60)
+})

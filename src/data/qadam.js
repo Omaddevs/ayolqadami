@@ -1,4 +1,5 @@
-import { CANDIDATES, CITIES, JOBS } from './mock'
+import { CANDIDATES, CITIES } from './mock'
+import { SKILL_SUGGEST } from './resume'
 
 /*
  * QadamAI — MVP uchun lokal moslash (matching) dvigateli.
@@ -27,7 +28,8 @@ const CATEGORY_WORDS = {
   logistics: ['logist', 'logistika', 'haydovchi', 'transport', 'kuryer', 'ombor', 'yetkazib'],
 }
 
-const ALL_SKILLS = [...new Set([...CANDIDATES.flatMap((c) => c.skills), ...JOBS.flatMap((j) => j.skills)])]
+// so'rovdan ajratiladigan ko'nikmalar — rezyume ustasidagi ma'lumotnoma asosida
+const ALL_SKILLS = [...new Set(Object.values(SKILL_SUGGEST).flat())]
 
 export function analyzeQuery(text) {
   const q = norm(text) + ' '
@@ -69,7 +71,7 @@ export function matchCandidates(text) {
   return { analysis: a, results: results.sort((x, y) => y.score - x.score).filter((r) => r.score >= 55).slice(0, 5) }
 }
 
-export function matchJobs(text, profile, jobs = JOBS) {
+export function matchJobs(text, profile, jobs = []) {
   const a = analyzeQuery(`${text} ${profile?.headline || ''} ${(profile?.skills || []).join(' ')}`)
   const results = jobs.map((j) => {
     let score = 30

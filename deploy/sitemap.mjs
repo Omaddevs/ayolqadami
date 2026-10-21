@@ -1,15 +1,16 @@
-// Build paytida dist/sitemap.xml yaratadi va robots.txt'ga havolasini qo'shadi (WEB_DOMAIN kerak)
-import { appendFileSync, writeFileSync } from 'node:fs'
+// Build paytida dist/robots.txt yaratadi (WEB_DOMAIN kerak).
+// Sitemap dinamik: sayt domenidagi /sitemap.xml Caddy orqali serverga yo'naltiriladi (faol vakansiyalar, maqolalar...).
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const domain = process.env.WEB_DOMAIN
-if (!domain) {
-  console.log('[sitemap] WEB_DOMAIN berilmagan — o\'tkazib yuborildi')
-  process.exit(0)
+const PRIVATE = ['/profile', '/applications', '/settings', '/notifications', '/post-job', '/candidates', '/401']
+const lines = ['User-agent: *', 'Allow: /', ...PRIVATE.map((p) => `Disallow: ${p}`), 'Disallow: /*?auth=']
+if (domain) lines.push('', `Sitemap: https://${domain}/sitemap.xml`)
+writeFileSync('dist/robots.txt', lines.join('\n') + '\n')
+
+// Telegram/Facebook havola kartochkasi JavaScript bajarmaydi — og:image to'liq manzil bo'lishi kerak
+if (domain) {
+  const html = readFileSync('dist/index.html', 'utf8').replace('content="/logo.png"', `content="https://${domain}/logo.png"`)
+  writeFileSync('dist/index.html', html)
 }
-const base = `https://${domain}`
-const routes = ['', 'jobs', 'map', 'courses', 'qadam-ai', 'events', 'articles', 'companies', 'categories', 'candidates', 'support', 'privacy', 'terms']
-const today = new Date().toISOString().slice(0, 10)
-const urls = routes.map((r) => `  <url><loc>${base}/${r}</loc><lastmod>${today}</lastmod></url>`).join('\n')
-writeFileSync('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`)
-appendFileSync('dist/robots.txt', `\nSitemap: ${base}/sitemap.xml\n`)
-console.log(`[sitemap] ${routes.length} ta sahifa → dist/sitemap.xml`)
+console.log(`[robots] dist/robots.txt${domain ? ` (sitemap: https://${domain}/sitemap.xml)` : ''}`)

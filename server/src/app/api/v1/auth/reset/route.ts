@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { userOut } from '@/lib/serialize'
 import { consumePhoneToken } from '@/lib/phone-verify'
 import { resetPasswordSchema } from '@/lib/validators'
+import { notifyLogin } from '@/lib/login-bot'
 
 // Parolni tiklash: raqam kirish boti orqali tasdiqlangan bo'lishi kerak. Barcha eski sessiyalar bekor bo'ladi
 export const POST = api(async (req) => {
@@ -20,5 +21,6 @@ export const POST = api(async (req) => {
     where: { id: user.id },
     data: { passwordHash: await hashPassword(password), tokenVersion: { increment: 1 }, phoneVerifiedAt: now, lastLoginAt: now },
   })
+  notifyLogin(updated, req, 'reset', clientIp(req))
   return json({ token: await issueToken(updated, 'app'), user: userOut(updated) })
 })

@@ -92,7 +92,10 @@ export function Privacy() {
           'huquqlaringiz buzilgan deb hisoblasangiz — vakolatli davlat organiga yoki sudga murojaat qilish.',
         ])}
       </>],
-      ['8. Cookie va mahalliy xotira', <p>Ilova sessiya tokeni, til va mavzu sozlamalarini brauzeringizning mahalliy xotirasida (localStorage) saqlaydi. Reklama yoki kuzatuv cookie&apos;lari ishlatilmaydi. Admin panel faqat xavfsiz (httpOnly) sessiya cookie&apos;sidan foydalanadi.</p>],
+      ['8. Cookie, mahalliy xotira va statistika', <>
+        <p>Ilova sessiya tokeni, til va mavzu sozlamalarini brauzeringizning mahalliy xotirasida (localStorage) saqlaydi. Admin panel faqat xavfsiz (httpOnly) sessiya cookie&apos;sidan foydalanadi. Reklama cookie&apos;lari ishlatilmaydi.</p>
+        <p>Saytdan foydalanish statistikasi (qaysi sahifalar ochilgani, qurilma turi, taxminiy hudud) uchun Google Analytics ishlatilishi mumkin. U IP manzilni qisqartirilgan holda qayta ishlaydi va sizni shaxsan aniqlamaydi. Brauzer sozlamalarida cookie&apos;larni o&apos;chirib, statistikadan voz kechishingiz mumkin.</p>
+      </>],
       ['9. Yosh cheklovi', <p>Platformadan 16 yoshga to&apos;lgan shaxslar foydalanishi mumkin. 16 yoshga to&apos;lmagan shaxsning ma&apos;lumotlari bizga berilganini aniqlasak, ular o&apos;chiriladi.</p>],
       ['10. O\'zgartirishlar va aloqa', <>
         <p>Siyosat o&apos;zgarganda yangi tahrir shu sahifada e&apos;lon qilinadi; muhim o&apos;zgarishlar haqida ilova orqali xabar beramiz.</p>

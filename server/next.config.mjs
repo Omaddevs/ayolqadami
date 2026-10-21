@@ -16,6 +16,8 @@ const nextConfig = {
   outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
   poweredByHeader: false,
   reactStrictMode: true,
+  // admin paneldan banner rasmi yuklash (3 MB gacha)
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

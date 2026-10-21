@@ -3,25 +3,23 @@ import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
-import { CompanyLogo, JobCard, SectionHead, Sheet, ThemeToggle } from '../components/UI'
+import { CompanyLogo, Empty, JobCard, SectionHead, Sheet, ThemeToggle } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
 import HomeFooter from '../components/HomeFooter'
 import ArticlesRail from '../components/ArticlesRail'
-import { useApp } from '../context/AppContext'
+import { useApp, useContent } from '../context/AppContext'
 import { ArrowRight, Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGlass, SlidersHorizontal, SquaresFour } from '@phosphor-icons/react'
 import CandidateCard from '../components/CandidateCard'
-import { CANDIDATES, CATEGORIES, JOB_TYPES, NOTIFICATIONS, catShort } from '../data/mock'
+import { CANDIDATES, CATEGORIES, JOB_TYPES, catShort } from '../data/mock'
 import { buildCompanies, companySlug } from '../data/companies'
+import { api as server, apiEnabled } from '../lib/api'
+import { trackEvent } from '../lib/analytics'
 import { useT } from '../i18n'
 
-// Bosh sahifa bannerlari — yangi banner qo'shish uchun rasmni public/banners/ ga qo'yib, shu ro'yxatga yozing
-const BANNERS = [
-  { to: '/courses', img: '/banners/haydovchilik.jpg', alt: 'Haydovchilik kursi' },
-  { to: '/courses', promo: { chip: 'Bepul', title: 'Python noldan: ayollar uchun dasturlash', sub: '8 hafta · sertifikat · stajirovka' } },
-]
-
+// Bosh sahifa bannerlari — admin panel → Bannerlar (rasm, havola, ko'rsatish davri, yoqish/o'chirish)
 function BannerCarousel() {
   const t = useT()
+  const BANNERS = useContent().banners || []
   const trackRef = useRef(null)
   const [cur, setCur] = useState(0)
   const paused = useRef(false)
@@ -50,27 +48,23 @@ function BannerCarousel() {
       if (!paused.current) goTo((cur + 1) % BANNERS.length)
     }, 4500)
     return () => clearInterval(id)
-  }, [cur])
+  }, [cur, BANNERS.length])
 
+  if (!BANNERS.length) return null
+  const click = (b) => { if (apiEnabled) server.bannerClick(b.id); trackEvent('banner_click', { banner: b.title }) }
   return (
     <div className="hb">
-      <div className="hb-track" ref={trackRef} onScroll={onScroll}
+      <div className={`hb-track ${BANNERS.length === 1 ? 'single' : ''}`} ref={trackRef} onScroll={onScroll}
         onPointerDown={() => { paused.current = true }} onPointerUp={() => { paused.current = false }}
         onPointerLeave={() => { paused.current = false }}>
-        {BANNERS.map((b, i) => (
-          <Link key={i} to={b.to} className={`hb-slide ${i === cur ? 'on' : ''}`}>
-            {b.img ? <img src={b.img} alt={t(b.alt)} draggable="false" /> : (
-              <div className="promo">
-                <div className="promo-text">
-                  <span className="chip chip-light">{t(b.promo.chip)}</span>
-                  <b>{t(b.promo.title)}</b>
-                  <span>{t(b.promo.sub)}</span>
-                </div>
-                <Icon3D name="laptop" size={110} className="promo-art" />
-              </div>
-            )}
-          </Link>
-        ))}
+        {BANNERS.map((b, i) => {
+          const img = <img src={b.img} alt={b.title} draggable="false" loading={i ? 'lazy' : 'eager'} />
+          const cls = `hb-slide ${i === cur ? 'on' : ''}`
+          // tashqi havola — yangi oynada; sayt ichidagi — Link; havolasiz — oddiy rasm
+          return b.external ? <a key={b.id} href={b.to} target="_blank" rel="noopener noreferrer" className={cls} onClick={() => click(b)}>{img}</a>
+            : b.to ? <Link key={b.id} to={b.to} className={cls} onClick={() => click(b)}>{img}</Link>
+            : <div key={b.id} className={cls}>{img}</div>
+        })}
       </div>
       {BANNERS.length > 1 && (
         <div className="hb-dots">
@@ -212,7 +206,6 @@ export default function Home() {
               <ThemeToggle className="hero-btn" size={24} />
               <Link to="/notifications" className="hero-btn" aria-label={t('Bildirishnomalar')}>
                 <Bell size={25} />
-                {NOTIFICATIONS.length > 0 && <em className="hero-badge">{NOTIFICATIONS.length}</em>}
               </Link>
               <Link to="/qadam-ai" className="hero-btn" aria-label="QadamAI"><ChatCircleText size={25} /></Link>
             </div>
@@ -294,7 +287,7 @@ export default function Home() {
 
 
         {isEmp ? (
-          <>
+          CANDIDATES.length > 0 && (
             <section className="rec-box">
               <div className="rec-head">
                 <span className="rec-ico"><Fire size={24} weight="fill" /></span>
@@ -310,7 +303,9 @@ export default function Home() {
                   .map((c) => <CandidateCard key={c.id} c={c} />)}
               </div>
             </section>
-          </>
+          )
+        ) : uniqueRec.length === 0 ? (
+          <Empty icon="briefcase" title={t("Hozircha vakansiyalar yo'q")} text={t("Yangi e'lonlar joylanishi bilan shu yerda ko'rinadi")} />
         ) : (
           <>
             <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />

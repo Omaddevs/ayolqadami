@@ -4,6 +4,7 @@ import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { userOut } from '@/lib/serialize'
 import { loginSchema } from '@/lib/validators'
+import { notifyLogin } from '@/lib/login-bot'
 
 // Javob kodlari web ilovadagi signIn() natijalariga mos: nouser | badpass | google | blocked
 export const POST = api(async (req) => {
@@ -22,5 +23,6 @@ export const POST = api(async (req) => {
   if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan. Qo\'llab-quvvatlash xizmatiga murojaat qiling')
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
+  notifyLogin(user, req, 'password', ip)
   return json({ token: await issueToken(user, 'app'), user: userOut(user) })
 })

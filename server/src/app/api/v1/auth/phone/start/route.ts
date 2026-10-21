@@ -3,7 +3,7 @@ import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { getSettings } from '@/lib/settings'
 import { phoneStartSchema } from '@/lib/validators'
-import { createVerification, recentPhoneLink } from '@/lib/phone-verify'
+import { activeLoginCode, createVerification, recentPhoneLink } from '@/lib/phone-verify'
 import { loginBotUsername, sendVerificationCode } from '@/lib/login-bot'
 
 // Telefonni tasdiqlashni boshlash: bot havolasi qaytadi. Raqam shu botda avval ulangan bo'lsa — kod darhol yuboriladi
@@ -20,6 +20,7 @@ export const POST = api(async (req) => {
       throw new ApiError(409, 'exists', "Bu raqam bilan hisob allaqachon ochilgan. Kirish bo'limidan foydalaning")
     }
   } else {
+    // reset va login: hisob mavjud va faol bo'lishi kerak
     const user = await db.user.findUnique({ where: { phone }, select: { status: true } })
     if (!user) throw new ApiError(404, 'nouser', 'Bu raqam bilan hisob topilmadi')
     if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
@@ -27,6 +28,12 @@ export const POST = api(async (req) => {
 
   const bot = await loginBotUsername()
   if (!bot) throw new ApiError(503, 'verify_unavailable', 'Tasdiqlash xizmati vaqtincha ishlamayapti')
+
+  // botdagi «Kirish kodi» orqali olingan kod hali amal qilsa — o'sha ishlatiladi (yangi kod yuborilmaydi)
+  if (purpose === 'login') {
+    const active = await activeLoginCode(phone)
+    if (active) return json({ id: active.id, bot: `@${bot}`, botUrl: `https://t.me/${bot}?start=v_${active.token}`, sent: true, expiresAt: active.expiresAt.toISOString() }, 201)
+  }
 
   const v = await createVerification(phone, purpose)
   let sent = false

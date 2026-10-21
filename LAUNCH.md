@@ -61,7 +61,7 @@ Web ilova `VITE_API_URL` bo'lmasa oflayn demo rejimida qoladi — backend tayyor
 - [ ] `JWT_SECRET` — 48+ belgili tasodifiy (`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`)
 - [ ] `POSTGRES_PASSWORD` — kuchli parol; port tashqariga ochilmagan (compose'da faqat 127.0.0.1)
 - [ ] `WEB_ORIGINS=https://ayolqadami.uz,https://www.ayolqadami.uz`
-- [ ] `SEED_DEMO=false npm run db:seed` — demo foydalanuvchilarsiz
+- [ ] `npm run db:seed` — administrator va maqolalar
 - [ ] Administrator: `npm run admin:create -- +998XXXXXXXXX "KuchliParol" "Ism" ADMIN`, so'ng birinchi kirishda parolni almashtirish
 - [ ] Web ilova: `VITE_API_URL=https://api.ayolqadami.uz`, `VITE_GOOGLE_CLIENT_ID` (Google Console'da production origin qo'shilgan)
 
@@ -85,3 +85,25 @@ Web ilova `VITE_API_URL` bo'lmasa oflayn demo rejimida qoladi — backend tayyor
 - [ ] `docker compose up -d --build` → `/api/health` = `{"ok":true}`
 - [ ] Admin panelga kirish, test vakansiya joylash → moderatsiya → saytda ko'rinishini tekshirish
 - [ ] Telefondan (Telegram Mini App ichida ham) ro'yxatdan o'tish va ariza topshirish
+
+## 5. SEO va Google
+
+**Nima qilingan**
+- Har sahifada o'z sarlavhasi, tavsifi, canonical manzili va Open Graph teglari; shaxsiy sahifalar (`/profile`, `/settings`…) — `noindex`
+- Vakansiya manzillari: `/jobs/1001-hamshira-tungi-smena-fargona` (raqam 1001 dan boshlanadi, nom — o'qish uchun). Eski havolalar va noto'g'ri nom avtomatik to'g'ri manzilga o'tadi
+- Strukturali ma'lumot (JSON-LD): `Organization` + `WebSite` (Google'da sayt nomi va logotip), vakansiyalarda `JobPosting` (**Google for Jobs** — qidiruvda alohida vakansiya kartochkasi), `BreadcrumbList`, kurslarda `Course`, maqolalarda `Article`
+- `/sitemap.xml` — dinamik: barcha faol vakansiyalar, kompaniyalar, maqolalar, kurslar (yangi vakansiya tasdiqlanishi bilan qo'shiladi); `/robots.txt`
+
+**Launch'dan keyin (siz)**
+1. [Google Search Console](https://search.google.com/search-console) → domenni qo'shish (DNS TXT orqali tasdiqlash)
+2. Sitemaps → `https://ayolqadami.uz/sitemap.xml` yuborish
+3. URL Inspection → bosh sahifa va bitta vakansiya → "Request indexing"
+4. Vercel → Environment Variables: `VITE_SITE_URL` va `SITE_URL` = `https://ayolqadami.uz`, `VITE_API_URL` = API manzili → Redeploy
+5. Google Analytics: analytics.google.com → yangi property → Web stream → `G-XXXXXXXXXX` ni `VITE_GA_ID` ga (VPS'da `deploy/.env` → `GA_ID`). Hodisalar: `page_view`, `sign_up`, `login`, `apply`, `banner_click`
+6. [Rich Results Test](https://search.google.com/test/rich-results) — vakansiya sahifasi `JobPosting` deb tanilishini tekshirish
+
+> Mohirdev'dagi kabi sitelinks (Kurslar, Biz haqimizda…) ni Google o'zi tanlaydi: sayt bir necha hafta indekslangach, aniq bo'limlar, sarlavhalar va sitemap bo'lsa paydo bo'ladi. Ularni qo'lda qo'shib bo'lmaydi.
+
+## 6. Bannerlar
+
+Admin panel → **Bannerlar** (chap menyu): rasm yuklash (PNG/JPEG/WebP, 3 MB gacha) yoki havola, bosilganda qayerga olib borishi (`/courses` yoki `https://…`), ko'rsatish davri, tartib, yoqish/o'chirish, bosishlar soni. O'zgarish saytda 1 daqiqa ichida ko'rinadi.

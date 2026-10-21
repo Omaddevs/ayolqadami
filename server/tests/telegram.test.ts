@@ -51,7 +51,7 @@ test('kanal posti: skrinshotdagi format, telefon va qisqa havola', () => {
 })
 
 test('rangli tugmalar', () => {
-  const kb = jobKeyboard({ id: 'abc' }, { webAppUrl: 'https://ayolqadami.uz', botUsername: 'ayolqadami_bot', channelButtons: DEFAULT_CHANNEL_BUTTONS })!
+  const kb = jobKeyboard({ id: 'abc', number: 1001, title: 'Dasturchi', city: 'Toshkent' }, { webAppUrl: 'https://ayolqadami.uz', botUsername: 'ayolqadami_bot', channelButtons: DEFAULT_CHANNEL_BUTTONS })!
   assert.deepEqual(kb.inline_keyboard, [
     [{ text: "📢 E'lon joylash / Разместить вакансию", url: 'https://t.me/ayolqadami_bot?start=post', style: 'primary' }],
     [{ text: '💼 Website AyolQadami', url: 'https://ayolqadami.uz', style: 'success' }],
