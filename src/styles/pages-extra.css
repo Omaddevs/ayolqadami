@@ -815,7 +815,7 @@ button.pd-ico-btn { border: 0; cursor: pointer; }
 .ac-notch::before { right: 0; top: calc(var(--ac-r) * -1); }
 .ac-notch::after { bottom: 0; left: calc(var(--ac-r) * -1); }
 .ac-notch i { width: 100%; height: 100%; display: grid; place-items: center; border-radius: 50%; background: var(--primary); color: #fff;
-  box-shadow: 0 10px 20px -6px rgba(91, 87, 240, .6); transition: transform .3s cubic-bezier(.2, .7, .2, 1), background .2s; }
+  transition: transform .3s cubic-bezier(.2, .7, .2, 1), background .2s; }
 
 @media (hover: hover) {
   .ac-card:hover .ac-art { transform: translateY(-6px) scale(1.06) rotate(-4deg); }
