@@ -27,7 +27,7 @@ export async function saveFolderLink(_: FormState, f: FormData): Promise<FormSta
   }
   await audit(admin.id, 'telegram.folder_link', 'telegram', null, { url })
   revalidatePath('/admin/telegram', 'layout')
-  const ok = url ? 'Saqlandi — keyingi kanal postlarida «📂 Ish kanallari» tugmasi chiqadi.' : "Havola olib tashlandi — tugma kanal postlarida chiqmaydi."
+  const ok = url ? 'Saqlandi — keyingi kanal postlarida «📂 Ish kanallari» tugmasi chiqadi.' : 'Saqlandi — standart AyolQadam papkasi ishlatiladi.'
   return botNote ? { error: ok + botNote } : { ok }
 }
 

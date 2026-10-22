@@ -4,7 +4,7 @@ import { Card, PageHead } from '@/components/ui'
 import { ActionForm } from '@/components/action-form'
 import { ButtonsEditor } from '@/components/buttons-editor'
 import { getTelegramConfig } from '@/lib/telegram/config'
-import { DEFAULT_CHANNEL_BUTTONS, folderLinkOf } from '@/lib/telegram/format'
+import { DEFAULT_CHANNEL_BUTTONS, DEFAULT_FOLDER_LINK, folderLinkOf } from '@/lib/telegram/format'
 import { TgTabs } from '../shared'
 import { saveChannelButtons, saveFolderLink } from './actions'
 
@@ -24,7 +24,7 @@ export default async function ChannelButtonsPage() {
   }
 
   const cfg = await getTelegramConfig()
-  const folder = folderLinkOf(cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS) || (data ? folderLinkOf(buttonsToLines(data.buttons)) : '')
+  const folder = folderLinkOf(cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS) || (data ? folderLinkOf(buttonsToLines(data.buttons)) : '') || DEFAULT_FOLDER_LINK
 
   return (
     <>
@@ -40,7 +40,7 @@ export default async function ChannelButtonsPage() {
                 <input id="folder" className="input" name="folder" defaultValue={folder} placeholder="https://t.me/addlist/AbCdEf123" />
                 <small>
                   Kanal postlari tagida <b>«📂 Ish kanallari»</b> tugmasi chiqadi. Bosgan odamga Telegram barcha kanallaringiz ro&apos;yxatini
-                  ko&apos;rsatadi va u hammasiga bir bosishda qo&apos;shiladi. Bo&apos;sh qoldirsangiz — tugma chiqmaydi.
+                  ko&apos;rsatadi va u hammasiga bir bosishda qo&apos;shiladi. Bo&apos;sh qoldirsangiz — AyolQadam papkasi (standart) ishlatiladi.
                 </small>
               </div>
             </ActionForm>

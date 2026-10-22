@@ -55,6 +55,7 @@ test('rangli tugmalar', () => {
   const kb = jobKeyboard({ id: 'abc', number: 1001, title: 'Dasturchi', city: 'Toshkent' }, { webAppUrl: 'https://ayolqadami.uz', botUsername: 'ayolqadami_bot', channelButtons: DEFAULT_CHANNEL_BUTTONS })!
   assert.deepEqual(kb.inline_keyboard, [
     [{ text: "📢 E'lon joylash / Разместить вакансию", url: 'https://t.me/ayolqadami_bot?start=post', style: 'primary' }],
+    [{ text: '📂 Ish kanallari / Каналы с вакансиями', url: 'https://t.me/addlist/URvgf3qbEus5ZDcy', style: 'danger' }],
     [{ text: '💼 Website AyolQadami', url: 'https://ayolqadami.uz', style: 'success' }],
   ])
   const b = parseChannelButtons('A | https://t.me/addlist/x | qizil\nB | {job} |\n# izoh | https://x.uz | red\nC | javascript:x | green', { job: 'https://s.uz/jobs/1' })
@@ -78,8 +79,8 @@ test('token formati va niqoblash', () => {
   assert.equal(maskToken('123456789:AAHfakeTokenForTestingPurposes1234567'), '123456789:AA…567')
 })
 
-test("«📂 Ish kanallari» papka havolasi: eski qator yangilanadi, yo'q bo'lsa qo'shiladi, bo'sh — yashirinadi", async () => {
-  const { folderLinkOf, withFolderLink, buttonsKeyboard, FOLDER_LINK_RE } = await import('../src/lib/telegram/format')
+test("«📂 Ish kanallari» papka havolasi: eski qator yangilanadi, yo'q bo'lsa qo'shiladi, bo'sh — standart papka", async () => {
+  const { folderLinkOf, withFolderLink, buttonsKeyboard, FOLDER_LINK_RE, DEFAULT_FOLDER_LINK } = await import('../src/lib/telegram/format')
   const link = 'https://t.me/addlist/AbCdEf123'
   const old = "📢 E'lon joylash | {post} | blue\n🗂 Kanallar to'plami / Подборка каналов |  | red"
   const next = withFolderLink(old, link)
@@ -88,6 +89,8 @@ test("«📂 Ish kanallari» papka havolasi: eski qator yangilanadi, yo'q bo'lsa
   const kb = buttonsKeyboard(next, { webAppUrl: '', botUsername: 'b' })!
   assert.equal(kb.inline_keyboard[1][0].url, link)
   assert.match(withFolderLink('A | https://a.uz', link), /📂 Ish kanallari .*addlist/)
-  assert.equal(buttonsKeyboard(withFolderLink(next, ''), { webAppUrl: '', botUsername: 'b' })!.inline_keyboard.length, 1)
+  // havolasiz saqlangan (eski «Kanallar to'plami» ham) — standart papka havolasi ishlatiladi
+  assert.equal(buttonsKeyboard(withFolderLink(next, ''), { webAppUrl: '', botUsername: 'b' })!.inline_keyboard[1][0].url, DEFAULT_FOLDER_LINK)
+  assert.equal(buttonsKeyboard(old, { webAppUrl: '', botUsername: 'b' })!.inline_keyboard[1][0].url, DEFAULT_FOLDER_LINK)
   assert.ok(FOLDER_LINK_RE.test(link) && !FOLDER_LINK_RE.test('https://t.me/kanal'))
 })

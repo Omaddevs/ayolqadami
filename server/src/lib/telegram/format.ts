@@ -58,15 +58,17 @@ export function jobPostHtml(job: Job, cfg: Pick<TelegramConfig, 'jobFooter'> & P
 // Sozlamada har qator: "Matn | havola | rang". Rang: blue/ko'k, red/qizil, green/yashil (bo'sh — oddiy).
 // Havolada: {post} — botda e'lon joylash, {site} — web ilova, {job} — shu vakansiya, {bot} — t.me/bot
 
-export const DEFAULT_CHANNEL_BUTTONS = [
-  "📢 E'lon joylash / Разместить вакансию | {post} | blue",
-  '📂 Ish kanallari / Каналы с вакансиями |  | red',
-  '💼 Website AyolQadami | {site} | green',
-].join('\n')
-
 // --- «📂 Ish kanallari» — Telegram chat papkasi (t.me/addlist/...): bosilsa barcha kanallarga bir bosishda qo'shiladi ---
 export const FOLDER_LINK_RE = /^https:\/\/t\.me\/addlist\/[\w-]{6,}$/
 export const FOLDER_BUTTON_TEXT = '📂 Ish kanallari / Каналы с вакансиями'
+// AyolQadam ish kanallari papkasi — tugma havolasi bo'sh qolsa shu ishlatiladi (FOLDER_LINK muhit o'zgaruvchisi bilan almashtiriladi)
+export const DEFAULT_FOLDER_LINK = process.env.FOLDER_LINK || 'https://t.me/addlist/URvgf3qbEus5ZDcy'
+
+export const DEFAULT_CHANNEL_BUTTONS = [
+  "📢 E'lon joylash / Разместить вакансию | {post} | blue",
+  `${FOLDER_BUTTON_TEXT} | ${DEFAULT_FOLDER_LINK} | red`,
+  '💼 Website AyolQadami | {site} | green',
+].join('\n')
 // eski «🗂 Kanallar to'plami» qatori ham shu tugma hisoblanadi
 const isFolderRow = (text: string, url: string) => /t\.me\/addlist\//.test(url) || /📂|🗂|kanallar|каналы/i.test(text)
 
@@ -121,7 +123,8 @@ export function parseChannelButtons(src: string, vars: Record<string, string>): 
   for (const raw of src.split(/\r?\n/)) {
     const [text = '', url = '', color = ''] = raw.split('|').map((s) => s.trim())
     if (!text || text.startsWith('#')) continue
-    const href = url.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m)
+    // «📂 Ish kanallari» havolasiz saqlangan bo'lsa (eski sozlama) — standart papka havolasi
+    const href = (url || (isFolderRow(text, '') ? DEFAULT_FOLDER_LINK : '')).replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m)
     if (!/^(https?:\/\/|tg:\/\/)[^\s{}]+$/.test(href)) continue // to'ldirilmagan yoki noto'g'ri havola — tugma chiqmaydi
     const style = STYLES[color.toLowerCase().replace(/[ʻʼ‘’`]/g, "'")]
     out.push({ text: text.slice(0, 64), url: href, ...(style && { style }) })
