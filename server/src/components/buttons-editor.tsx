@@ -26,7 +26,8 @@ function parse(src: string): Row[] {
 const serialize = (rows: Row[]) =>
   rows.filter((r) => r.text.trim()).map((r) => [r.text, r.url, r.color].map((s) => s.replace(/\|/g, '/').trim()).join(' | ')).join('\n')
 
-const urlOk = (u: string) => /^(https?:\/\/|tg:\/\/)\S+$/.test(u) || /^\{(post|site|job|bot)\}\S*$/.test(u)
+// @kanal, t.me/... ham bo'ladi — serverda https://t.me/... ga aylantiriladi (format.ts normalizeButtonUrl)
+const urlOk = (u: string) => /^(https?:\/\/|tg:\/\/)\S+$/.test(u) || /^\{(post|site|job|bot)\}\S*$/.test(u) || /^@[A-Za-z0-9_]{4,64}$/.test(u) || /^(t\.me|telegram\.me|www\.)\S+$/i.test(u)
 
 // Telegram'dagi ko'rinish: har tugma alohida qatorda, to'liq kenglikda
 export function TgKeyboard({ rows }: { rows: Row[] }) {
@@ -64,7 +65,7 @@ export function ButtonsEditor({ name, defaultValue, max = 8, preview = true, onC
             <div className="btn-editor-fields">
               <input className="input" value={r.text} onChange={(e) => set(i, { text: e.target.value })} maxLength={64} placeholder="Tugma matni, masalan: 📢 E'lon joylash" aria-label="Tugma matni" />
               <input className={`input${r.url && !urlOk(r.url) ? ' invalid' : ''}`} value={r.url} onChange={(e) => set(i, { url: e.target.value.trim() })}
-                maxLength={500} placeholder="https://… yoki {post}, {site}" aria-label="Havola" spellCheck={false} />
+                maxLength={500} placeholder="https://…, @kanal yoki {post}, {site}" aria-label="Havola" spellCheck={false} />
             </div>
             <div className="btn-editor-tools">
               <div className="swatches" role="radiogroup" aria-label="Rang">
@@ -78,7 +79,7 @@ export function ButtonsEditor({ name, defaultValue, max = 8, preview = true, onC
               <button type="button" className="icon-btn danger" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))} title="O'chirish"><Trash2 size={15} /></button>
             </div>
             {!r.url && <small className="btn-editor-hint">Havolasi bo&apos;sh tugma postda chiqmaydi</small>}
-            {r.url && !urlOk(r.url) && <small className="btn-editor-hint err">Havola https:// bilan boshlanishi kerak</small>}
+            {r.url && !urlOk(r.url) && <small className="btn-editor-hint err">Havola https://, @kanal yoki t.me/... bo&apos;lishi kerak</small>}
           </div>
         ))}
       </div>

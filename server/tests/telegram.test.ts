@@ -94,3 +94,12 @@ test("«📂 Ish kanallari» papka havolasi: eski qator yangilanadi, yo'q bo'lsa
   assert.equal(buttonsKeyboard(old, { webAppUrl: '', botUsername: 'b' })!.inline_keyboard[1][0].url, DEFAULT_FOLDER_LINK)
   assert.ok(FOLDER_LINK_RE.test(link) && !FOLDER_LINK_RE.test('https://t.me/kanal'))
 })
+
+test("post tugmalari: qisqa havolalar to'ldiriladi, chiqmaydigan tugmalar aniqlanadi", async () => {
+  const { customKeyboard, droppedButtons } = await import('../src/lib/telegram/format')
+  const cfg = { webAppUrl: '', botUsername: 'ayolbot' }
+  const src = 'Kanal | @ayolqadami | blue\nAdmin | t.me/leyken_li\nBo\'sh |\nSayt | {site}\nPost | {post}'
+  assert.deepEqual(customKeyboard(cfg, src)!.inline_keyboard.map(([b]) => b.url), ['https://t.me/ayolqadami', 'https://t.me/leyken_li', 'https://t.me/ayolbot?start=post'])
+  assert.deepEqual(droppedButtons(src, cfg), ["Bo'sh", 'Sayt'])
+  assert.deepEqual(droppedButtons(DEFAULT_CHANNEL_BUTTONS, { webAppUrl: 'https://ayolqadami.uz', botUsername: 'ayolbot' }), [])
+})

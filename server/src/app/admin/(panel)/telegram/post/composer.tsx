@@ -19,7 +19,8 @@ function previewHtml(src: string) {
     .replace(/\n/g, '<br/>')
 }
 
-export function Composer({ channels, canBroadcast, subscribers }: { channels: { id: string; title: string; active: boolean }[]; canBroadcast: boolean; subscribers: number }) {
+// defaultButtons — kanal postlarining standart tugmalari (Sozlamalar): post ular bilan ochiladi, kerak bo'lmasa o'chiriladi
+export function Composer({ channels, canBroadcast, subscribers, defaultButtons }: { channels: { id: string; title: string; active: boolean }[]; canBroadcast: boolean; subscribers: number; defaultButtons: string }) {
   const [text, setText] = useState('')
   const [photo, setPhoto] = useState('')
   const [buttons, setButtons] = useState<BtnRow[]>([])
@@ -60,7 +61,7 @@ export function Composer({ channels, canBroadcast, subscribers }: { channels: { 
         <div className="field"><label htmlFor="photo">Rasm manzili (ixtiyoriy)</label><input id="photo" className="input" name="photo" value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="https://…/rasm.jpg" /></div>
         <div className="field">
           <label>Tugmalar (ixtiyoriy)</label>
-          <ButtonsEditor name="buttons" defaultValue="" onChange={setButtons} preview={false} />
+          <ButtonsEditor name="buttons" defaultValue={defaultButtons} onChange={setButtons} preview={false} />
           <small>Rang: ko&apos;k, qizil, yashil yoki oddiy — Telegram faqat shularni qo&apos;llaydi</small>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { audit } from '@/lib/audit'
 import { TelegramError, tg } from '@/lib/telegram/api'
 import { envToken, getTelegramConfig, isTokenFormat, saveTelegramConfig, type BotMode } from '@/lib/telegram/config'
 import { syncBotProfile } from '@/lib/telegram/bot'
+import { droppedButtons } from '@/lib/telegram/format'
 import { checkBot, deletePost, errText, inspectChannel, parseChatRef, postCustom, postJobToChannels, startBroadcast } from '@/lib/telegram/service'
 import type { FormState } from '../actions'
 
@@ -22,7 +23,6 @@ const tgMsg = (e: unknown) => {
   return (e as Error)?.message || 'Xatolik'
 }
 const httpsUrl = z.string().trim().max(500).refine((v) => !v || /^https:\/\/[^\s]+$/.test(v), 'https:// bilan boshlanishi kerak')
-const anyUrl = z.string().trim().max(500).refine((v) => !v || /^(https?:\/\/|tg:\/\/)[^\s]+$/.test(v), "havola noto'g'ri")
 
 // ================= Bot sozlamalari =================
 
@@ -192,8 +192,9 @@ export async function sendCustomPost(_: FormState, f: FormData): Promise<FormSta
   const parsed = postForm.safeParse(Object.fromEntries(f))
   if (!parsed.success) return { error: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`)[0] }
   const v = parsed.data
-  const badBtn = v.buttons.split('\n').map((l) => l.split('|').map((s) => s.trim())).find(([t, u]) => t && u && !anyUrl.safeParse(u).success && !/^\{\w+\}/.test(u))
-  if (badBtn) return { error: `«${badBtn[0]}» tugmasining havolasi noto'g'ri` }
+  // havolasi bo'sh/noto'g'ri tugma Telegram'ga ketmaydi — post tugmasiz chiqib qolmasin, oldindan aytamiz
+  const dropped = droppedButtons(v.buttons, await getTelegramConfig())
+  if (dropped.length) return { error: `«${dropped[0]}» tugmasining havolasi bo'sh yoki noto'g'ri (https://…, @kanal, {post} yoki {site})` }
   const channelIds = f.getAll('channels').map(String).filter(Boolean)
   const broadcast = f.get('broadcast') === 'on'
   if (!channelIds.length && !broadcast) return { error: 'Kamida bitta kanal yoki «Bot obunachilari»ni tanlang' }

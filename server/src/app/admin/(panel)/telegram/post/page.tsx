@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { getTelegramConfig } from '@/lib/telegram/config'
+import { DEFAULT_CHANNEL_BUTTONS } from '@/lib/telegram/format'
 import { dateTime } from '@/lib/format'
 import { Badge, Card, Empty, PageHead } from '@/components/ui'
 import { ActionForm } from '@/components/action-form'
@@ -29,7 +30,7 @@ export default async function PostPage() {
         <div className="grid" style={{ gap: 14 }}>
           <Card>
             <ActionForm action={sendCustomPost} submit="Yuborish">
-              <Composer channels={channels} canBroadcast={admin.role === 'ADMIN'} subscribers={subscribers} />
+              <Composer channels={channels} canBroadcast={admin.role === 'ADMIN'} subscribers={subscribers} defaultButtons={cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS} />
             </ActionForm>
           </Card>
           <Card title="Obunachilarga tarqatishlar">

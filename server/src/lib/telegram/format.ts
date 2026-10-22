@@ -118,13 +118,21 @@ export function colorizeKeyboard<T>(markup: T): T {
   return { ...markup, inline_keyboard: rows.map((row) => row.map((b) => (b.style ? b : { ...b, style: styleFor(b.text) }))) }
 }
 
+// Qisqa yozilgan havolalar: @kanal, t.me/kanal, www.sayt.uz → https://...
+export function normalizeButtonUrl(url: string) {
+  const u = url.trim()
+  if (/^@[A-Za-z0-9_]{4,64}$/.test(u)) return `https://t.me/${u.slice(1)}`
+  if (/^(t\.me|telegram\.me|www\.)\S+$/i.test(u)) return `https://${u}`
+  return u
+}
+
 export function parseChannelButtons(src: string, vars: Record<string, string>): TgButton[] {
   const out: TgButton[] = []
   for (const raw of src.split(/\r?\n/)) {
     const [text = '', url = '', color = ''] = raw.split('|').map((s) => s.trim())
     if (!text || text.startsWith('#')) continue
     // «📂 Ish kanallari» havolasiz saqlangan bo'lsa (eski sozlama) — standart papka havolasi
-    const href = (url || (isFolderRow(text, '') ? DEFAULT_FOLDER_LINK : '')).replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m)
+    const href = normalizeButtonUrl(url || (isFolderRow(text, '') ? DEFAULT_FOLDER_LINK : '')).replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m)
     if (!/^(https?:\/\/|tg:\/\/)[^\s{}]+$/.test(href)) continue // to'ldirilmagan yoki noto'g'ri havola — tugma chiqmaydi
     const style = STYLES[color.toLowerCase().replace(/[ʻʼ‘’`]/g, "'")]
     out.push({ text: text.slice(0, 64), url: href, ...(style && { style }) })
@@ -153,6 +161,12 @@ export const jobKeyboard = (job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, 
 // Qo'lda yozilgan post/tarqatma tugmalari. Eski tarqatmalarda bitta tugma (buttonText/buttonUrl) saqlangan
 export function customKeyboard(cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername'>, buttons?: string | null, text?: string | null, url?: string | null) {
   return buttonsKeyboard(buttons || (text && url ? `${text} | ${url}` : ''), cfg)
+}
+
+// Postda chiqmaydigan tugmalar (havolasi bo'sh, noto'g'ri yoki {site}/{post} sozlanmagan) — admin oldindan bilsin
+export function droppedButtons(src: string, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername'>) {
+  const shown = new Set((buttonsKeyboard(src, cfg)?.inline_keyboard ?? []).map(([b]) => b.text))
+  return src.split(/\r?\n/).map((l) => l.split('|')[0].trim()).filter((t) => t && !t.startsWith('#') && !shown.has(t.slice(0, 64)))
 }
 
 // Telegram HTML rejimi faqat ma'lum teglarni qabul qiladi — ruxsat etilmaganlari matn sifatida ko'rsatiladi
