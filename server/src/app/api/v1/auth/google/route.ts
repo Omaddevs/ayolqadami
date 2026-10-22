@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { issueToken } from '@/lib/auth'
+import { assertAppRole, issueToken } from '@/lib/auth'
 import { verifyGoogleToken } from '@/lib/google'
 import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
@@ -16,6 +16,7 @@ export const POST = api(async (req) => {
   let user = await db.user.findFirst({ where: { OR: [{ googleSub: g.sub }, { email: g.email }] } })
   if (!user) return json({ error: { code: 'nouser', message: 'Hisob topilmadi' }, profile: { email: g.email, name: g.name, photo: g.photo } }, 404)
   if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
+  assertAppRole(user)
 
   user = await db.user.update({
     where: { id: user.id },

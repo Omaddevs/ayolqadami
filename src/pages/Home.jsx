@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
@@ -8,7 +9,7 @@ import SearchSheet from '../components/SearchSheet'
 import HomeFooter from '../components/HomeFooter'
 import ArticlesRail from '../components/ArticlesRail'
 import { useApp, useContent } from '../context/AppContext'
-import { ArrowRight, Bell, CaretRight, ChatCircleText, Fire, Heart, MagnifyingGlass, SlidersHorizontal, SquaresFour } from '@phosphor-icons/react'
+import { ArrowRight, Bell, CaretRight, Fire, Heart, MagnifyingGlass, SlidersHorizontal, SquaresFour, X } from '@phosphor-icons/react'
 import CandidateCard from '../components/CandidateCard'
 import { CANDIDATES, CATEGORIES, JOB_TYPES, catShort } from '../data/mock'
 import { buildCompanies, companySlug } from '../data/companies'
@@ -74,6 +75,50 @@ function BannerCarousel() {
         </div>
       )}
     </div>
+  )
+}
+
+// Mobil sarlavhadagi menyu: tezkor kartalar blur fon ustida popup bo'lib ochiladi
+function QuickMenu({ children }) {
+  const t = useT()
+  const [state, setState] = useState('closed') // closed | open | closing
+  // yopilish animatsiyasi tugagach olib tashlanadi (reduced-motion'da animationend kelmaydi — shuning uchun taymer)
+  const close = useCallback(() => setState((s) => (s === 'open' ? 'closing' : s)), [])
+  useEffect(() => {
+    if (state !== 'closing') return
+    const id = setTimeout(() => setState('closed'), 240)
+    return () => clearTimeout(id)
+  }, [state])
+
+  useEffect(() => {
+    if (state !== 'open') return
+    const onKey = (e) => { if (e.key === 'Escape') close() }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', onKey) }
+  }, [state, close])
+
+  return (
+    <>
+      <button type="button" className={`hero-btn qm-burger ${state === 'open' ? 'on' : ''}`} aria-label={t('Menyu')}
+        aria-expanded={state === 'open'} onClick={() => setState('open')}>
+        <span /><span /><span />
+      </button>
+      {state !== 'closed' && createPortal(
+        <div className={`qm-backdrop ${state}`} onClick={close}>
+          <div className="qm-panel" role="dialog" aria-modal="true" aria-label={t('Menyu')} onClick={(e) => e.stopPropagation()}>
+            <div className="qm-head">
+              <b>{t('Menyu')}</b>
+              <button type="button" className="qm-close" onClick={close} aria-label={t('Yopish')} autoFocus><X size={20} weight="bold" /></button>
+            </div>
+            {/* karta bosilganda sahifa almashadi — menyu ham yopiladi */}
+            <div onClick={(e) => { if (e.target.closest('a')) setState('closed') }}>{children}</div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
 
@@ -147,7 +192,7 @@ function DesktopIntro({ isEmp }) {
 }
 
 export default function Home() {
-  const { user, allJobs, applications, posted, saved } = useApp()
+  const { user, allJobs, applications, posted, saved, unreadNotifs } = useApp()
   const t = useT()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
@@ -182,10 +227,46 @@ export default function Home() {
       ]
     : [
         { to: '/applications', label: t('Ariza-\nlarim'), icon: 'folder', img: '/arizalar.png', badge: applications.length || null },
-        { to: '/jobs', label: t('Yangi\nishlar'), icon: 'briefcase', img: '/yangi-ishlar.png' },
+        { to: '/jobs?period=3d&sort=new', label: t('Yangi\nishlar'), icon: 'briefcase', img: '/yangi-ishlar.png' },
         { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
         { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.png' },
       ]
+
+  // tezkor kartalar: desktopda sahifada, mobilda sarlavhadagi menyu ichida
+  const features = (
+    <div className="feature-grid">
+      {isEmp ? (
+        <Link to="/post-job" className="fcard fcard-big">
+          <b>{t('Vakansiya joylash')}</b>
+          <span>{t("E'lon bering, arizalar oling")}</span>
+          <img src="/vacancy-plus.png" alt="" className="fcard-art plus-art" draggable="false" />
+        </Link>
+      ) : (
+        <Link to="/profile/edit" className="fcard fcard-big">
+          <b>{t('Rezyume yaratish')}</b>
+          <span>{t("Profilingizni to'ldiring")}</span>
+          <img src="/rezyume.png" alt="" className="fcard-art resume-art" />
+        </Link>
+      )}
+      <Link to="/qadam-ai" className="fcard fcard-ai">
+        <b>QadamAI</b>
+        <span className="ai-sub">{t('HR yordamchi')}</span>
+        <img src="/qadam-ai.png" alt="" className="fcard-art ai-art" />
+      </Link>
+      {isEmp ? (
+        <Link to="/candidates" className="fcard">
+          <b>{t('Nomzodlar')}</b>
+          <Icon3D name="users" size={80} className="fcard-art" />
+        </Link>
+      ) : (
+        <div className="fcard is-soon" aria-disabled="true">
+          <em className="tile-soon">{t('Soon')}</em>
+          <b>{t('Kurslar')}</b>
+          <img src="/kurslar.png" alt="" className="fcard-art books-art" />
+        </div>
+      )}
+    </div>
+  )
 
   const myCats = user?.categories?.length ? user.categories : user?.category ? [user.category] : []
   // avval foydalanuvchi sohasiga moslari, keyin qolganlari — takrorlarsiz 30 ta
@@ -206,8 +287,9 @@ export default function Home() {
               <ThemeToggle className="hero-btn" size={24} />
               <Link to="/notifications" className="hero-btn" aria-label={t('Bildirishnomalar')}>
                 <Bell size={25} />
+                {unreadNotifs > 0 && <span className="dot" />}
               </Link>
-              <Link to="/qadam-ai" className="hero-btn" aria-label="QadamAI"><ChatCircleText size={25} /></Link>
+              <QuickMenu>{features}</QuickMenu>
             </div>
           </div>
 
@@ -250,38 +332,7 @@ export default function Home() {
         </div>
 
 
-        <div className="feature-grid">
-          {isEmp ? (
-            <Link to="/post-job" className="fcard fcard-big">
-              <b>{t('Vakansiya joylash')}</b>
-              <span>{t("E'lon bering, arizalar oling")}</span>
-              <img src="/vacancy-plus.png" alt="" className="fcard-art plus-art" draggable="false" />
-            </Link>
-          ) : (
-            <Link to="/profile/edit" className="fcard fcard-big">
-              <b>{t('Rezyume yaratish')}</b>
-              <span>{t("Profilingizni to'ldiring")}</span>
-              <img src="/rezyume.png" alt="" className="fcard-art resume-art" />
-            </Link>
-          )}
-          <Link to="/qadam-ai" className="fcard fcard-ai">
-            <b>QadamAI</b>
-            <span className="ai-sub">{isEmp ? t('Mos kadr') : t('Mos ish')}</span>
-            <img src="/qadam-ai.png" alt="" className="fcard-art ai-art" />
-          </Link>
-          {isEmp ? (
-            <Link to="/candidates" className="fcard">
-              <b>{t('Nomzodlar')}</b>
-              <Icon3D name="users" size={80} className="fcard-art" />
-            </Link>
-          ) : (
-            <div className="fcard is-soon" aria-disabled="true">
-              <em className="tile-soon">{t('Soon')}</em>
-              <b>{t('Kurslar')}</b>
-              <img src="/kurslar.png" alt="" className="fcard-art books-art" />
-            </div>
-          )}
-        </div>
+        <div className="home-feat">{features}</div>
 
         <BannerCarousel />
 

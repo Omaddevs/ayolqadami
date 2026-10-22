@@ -44,7 +44,10 @@ docker compose ps                     # hammasi "running/healthy"
 curl https://api.ayolqadami.uz/api/health   # {"ok":true,"db":"up",...}
 ```
 
-Birinchi administrator (bir marta; vaqtinchalik Node konteyneri ichki tarmoq orqali bazaga ulanadi):
+Birinchi administrator — eng oson yo'li: `deploy/.env` da `ADMIN_PHONE`, `ADMIN_PASSWORD` (kamida 10 belgi; `$` bo'lsa — `'...'` ichida), `ADMIN_NAME` ni to'ldiring.
+Server har ishga tushganda tekshiradi: hisob yo'q bo'lsa yaratadi, allaqachon admin bo'lsa tegmaydi. Natija: `docker compose logs server | grep admin`.
+
+Yoki qo'lda (bir marta; vaqtinchalik Node konteyneri ichki tarmoq orqali bazaga ulanadi):
 
 ```bash
 set -a; . ./.env; set +a

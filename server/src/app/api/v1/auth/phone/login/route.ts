@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { issueToken } from '@/lib/auth'
+import { assertAppRole, issueToken } from '@/lib/auth'
 import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { userOut } from '@/lib/serialize'
@@ -15,6 +15,7 @@ export const POST = api(async (req) => {
   const user = await db.user.findUnique({ where: { phone } })
   if (!user) throw new ApiError(404, 'nouser', 'Bu raqam bilan hisob topilmadi')
   if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
+  assertAppRole(user)
   await consumePhoneToken(phoneToken, phone, 'login')
 
   const now = new Date()

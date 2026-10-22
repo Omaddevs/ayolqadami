@@ -10,19 +10,21 @@ const COLUMNS = ['name', 'city', 'region', 'company', 'photo', 'categories', 'em
 const PROTECTED = new Set(['id', 'role', 'phone', 'google', 'googleSub', 'status', 'passwordHash', 'tokenVersion', 'createdAt', 'category', 'industry'])
 const MAX_PROFILE_BYTES = 200 * 1024
 
-// Joriy foydalanuvchi + uning holati (arizalar, kurslar, joylagan vakansiyalari id'lari)
+// Joriy foydalanuvchi + uning holati (arizalar, kurslar, taklif qilingan nomzodlar, yoqtirgan vakansiyalari)
 export const GET = api(async (req) => {
   const user = await requireApiUser(req)
-  const [applications, enrollments, invites] = await Promise.all([
+  const [applications, enrollments, invites, likes] = await Promise.all([
     db.application.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } }),
     db.enrollment.findMany({ where: { userId: user.id }, select: { courseId: true } }),
     db.invite.findMany({ where: { employerId: user.id }, select: { candidateRef: true } }),
+    db.jobLike.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { jobId: true } }),
   ])
   return json({
     user: userOut(user),
     applications: applications.map(appOut),
     courses: enrollments.map((e) => e.courseId),
     invites: invites.map((i) => i.candidateRef),
+    saved: likes.map((l) => l.jobId),
   })
 })
 
@@ -31,7 +33,12 @@ export const PATCH = api(async (req) => {
   const patch = await body(req, profilePatchSchema)
 
   const data: Prisma.UserUpdateInput = {}
-  for (const k of COLUMNS) if (patch[k] !== undefined) (data as Record<string, unknown>)[k] = patch[k] === '' && k === 'email' ? null : patch[k]
+  for (const k of COLUMNS) {
+    if (patch[k] === undefined) continue
+    // kompaniya nomi — faqat ish beruvchiniki (vakansiyalarda ko'rinadi); ish izlovchidan kelsa e'tiborsiz qoldiriladi
+    if (k === 'company' && user.role !== 'EMPLOYER') continue
+    ;(data as Record<string, unknown>)[k] = patch[k] === '' && k === 'email' ? null : patch[k]
+  }
 
   const extra = Object.fromEntries(Object.entries(patch).filter(([k]) => !PROTECTED.has(k) && !(COLUMNS as readonly string[]).includes(k)))
   if (Object.keys(extra).length) {

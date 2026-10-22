@@ -28,9 +28,19 @@ async function userFromToken(token: string | undefined | null, aud: Audience) {
 }
 
 // --- Web ilova API: Authorization: Bearer <token> ---
+// Web ilova faqat ish izlovchi va ish beruvchilar uchun. Xodimlar (ADMIN/MODERATOR) faqat admin panel orqali ishlaydi:
+// aks holda ilovada "ish izlovchi" bo'lib ko'rinib, server rad etadigan amallarni bajarishga urinadi, parolni esa
+// ilovadagi zaifroq oqimlar (6 belgili parol, Telegram orqali tiklash) bilan almashtirib, admin panelga kirish yo'li ochiladi.
+export const APP_ROLES: Role[] = ['SEEKER', 'EMPLOYER']
+
+export function assertAppRole(user: Pick<User, 'role'>) {
+  if (!APP_ROLES.includes(user.role)) throw new ApiError(403, 'staff', 'Xodim hisobi bilan saytga kirib bo\'lmaydi — admin paneldan foydalaning')
+}
+
 export async function getApiUser(req: Request) {
   const h = req.headers.get('authorization') || ''
-  return userFromToken(h.startsWith('Bearer ') ? h.slice(7) : null, 'app')
+  const user = await userFromToken(h.startsWith('Bearer ') ? h.slice(7) : null, 'app')
+  return user && APP_ROLES.includes(user.role) ? user : null
 }
 
 export async function requireApiUser(req: Request, roles?: Role[]) {

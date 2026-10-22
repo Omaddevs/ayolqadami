@@ -107,3 +107,16 @@ Web ilova `VITE_API_URL` bo'lmasa oflayn demo rejimida qoladi — backend tayyor
 ## 6. Bannerlar
 
 Admin panel → **Bannerlar** (chap menyu): rasm yuklash (PNG/JPEG/WebP, 3 MB gacha) yoki havola, bosilganda qayerga olib borishi (`/courses` yoki `https://…`), ko'rsatish davri, tartib, yoqish/o'chirish, bosishlar soni. O'zgarish saytda 1 daqiqa ichida ko'rinadi.
+
+## 7. Botdan e'lon berish (@ayolqadam_bot → admin panel → kanallar)
+
+**Oqim:** botda «📢 E'lon berish» → shablon (💼 Xodim kerak · 💻 IT vakansiya · 🏠 Uy xizmati kerak · 👩‍🍼 Xizmat taklif qilaman · 🙋‍♀️ Ish joyi kerak · 🎓 Shogird kerak) → savollar birma-bir → ko'rib chiqish → yuborish → **Admin panel → E'lonlar** → tekshirish/tahrirlash → kanal va guruhlarni belgilab **«Tasdiqlash va joylash»** → post loyiha rangidagi tugmalar bilan chiqadi, vakansiyalar saytda ham ochiladi, e'lon beruvchiga natija botda xabar qilinadi (rad etilsa — sababi bilan).
+
+- Shablonlar bitta joyda: `server/src/lib/ad-templates.ts` — o'zgartirilsa bot 5 daqiqada yangilaydi
+- Avtomatik ogohlantirishlar: nomzoddan pul so'rash (pullik «amaliyot»), boshqa kanal reklamasi, xorijga ishga jo'natish, voyaga yetmagan
+- Bot menyusi — inline tugmalar (Telegram faqat 3 rang beradi: ko'k/yashil/qizil, matn oq; loyiha rangiga eng yaqini — ko'k). Pastki doimiy tugma faqat adminlarga: «🛠 Admin panel»
+
+**Sozlash**
+- [ ] `ayolqadam-bot/.env`: `SERVER_URL=https://api.ayolqadami.uz`, `SERVER_API_KEY` = serverdagi `BOT_API_KEY` (bo'sh bo'lsa `WEB_API_KEY` olinadi — hozir ikkalasi bir xil)
+- [ ] Admin panel → Telegram → Sozlamalar: @ayolqadam_bot tokeni (kanalga shu bot yozadi; rejim **Off** qolsin — botning o'zi Python'da ishlaydi, server faqat xabar yuboradi)
+- [ ] Botni kanal/guruhlarga **administrator** qilib qo'shing va ularni Admin panel → Telegram'da ro'yxatga oling; «avtomatik» belgilanganlari tasdiqlashda oldindan tanlangan bo'ladi

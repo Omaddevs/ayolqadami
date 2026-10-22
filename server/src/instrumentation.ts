@@ -1,7 +1,12 @@
 // Server ishga tushganda bir marta bajariladi:
 //  • asosiy Telegram bot polling rejimi (admin panelda yoqilgan bo'lsa)
 //  • kirish boti (TELEGRAM_LOGIN_BOT_TOKEN berilgan bo'lsa) — telefonni tasdiqlash kodlari
+//  • birinchi administrator (ADMIN_PHONE + ADMIN_PASSWORD berilgan bo'lsa)
 export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { ensureBootstrapAdmin } = await import('./lib/bootstrap-admin')
+    await ensureBootstrapAdmin()
+  }
   if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.TELEGRAM_POLLING !== 'false') {
     const { startPoller } = await import('./lib/telegram/runtime')
     startPoller()

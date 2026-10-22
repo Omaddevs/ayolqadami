@@ -72,6 +72,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <dt>Chop etilgan</dt><dd>{job.publishedAt ? dateTime(job.publishedAt) : '—'}</dd>
               <dt>Muddati</dt><dd>{job.expiresAt ? dateTime(job.expiresAt) : '—'}</dd>
               <dt>Ko&apos;rishlar</dt><dd>{job.views}</dd>
+              <dt>Yoqtirishlar</dt><dd>{job.likes}</dd>
               <dt>Arizalar</dt><dd>{job._count.applications}</dd>
               {job.rejectReason && <><dt>Rad sababi</dt><dd>{job.rejectReason}</dd></>}
               {job.author?.phone && <><dt>Muallif tel.</dt><dd>{formatUzPhone(job.author.phone)}</dd></>}

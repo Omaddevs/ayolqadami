@@ -118,3 +118,11 @@
 }
 :root[data-theme="dark"] .hf { box-shadow: 0 0 0 1px var(--line); }
 @media (prefers-reduced-motion: reduce) { .hf-float { animation: none; transform: rotate(var(--r)); } }
+
+/* Mobil va planshet (desktop 1024px dan): FAQ va pastki havolalar bloki ko'rsatilmaydi.
+   Huquqiy sahifalar va yordam — Sozlamalar / Qo'shimcha menyusida. */
+@media (max-width: 1023px) {
+  .hf-faq, .hf-icard { display: none; }
+  .hf-cta { margin-top: 0; } /* FAQ yo'q — CTA uning ustiga chiqmasin */
+  .hf { padding-bottom: 12px; } /* tab bar uchun joyni .main o'zi qoldiradi — ikki marta bo'sh joy bo'lmasin */
+}

@@ -81,6 +81,8 @@ export function AppProvider({ children }) {
   const pending = useRef(null)
   const userRef = useRef(state.user)
   userRef.current = state.user
+  const savedRef = useRef(state.saved)
+  savedRef.current = state.saved
   useThemeEffect(state.prefs.theme)
   // til modul darajasida o'rnatiladi — bolalar shu render ichida yangi tilda chiziladi
   setLang(state.prefs.lang)
@@ -113,13 +115,16 @@ export function AppProvider({ children }) {
         }
       },
       switchRole: () => set((s) => ({ user: { ...s.user, role: s.user.role === 'seeker' ? 'employer' : 'seeker' } })),
-      toggleSave: (id) => set((s) => ({ saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] })),
+      // Ariza — faqat ish izlovchidan. Mehmon tugmani bosib, keyin ish beruvchi sifatida kirsa ham shu yerda to'xtaydi.
+      // false — ariza yuborilmadi (chaqiruvchi "yuborildi" deb xabar bermasin)
       apply: (jobId, letter) => {
+        if (userRef.current?.role !== 'seeker') return false
         if (apiEnabled) server.apply(jobId, letter)
         trackEvent('apply', { job_id: jobId })
         set((s) => ({
           applications: [{ jobId, letter, date: new Date().toISOString(), status: "Ko'rib chiqilmoqda" }, ...s.applications.filter((a) => a.jobId !== jobId)],
         }))
+        return true
       },
       enroll: (id) => { if (apiEnabled) server.enroll(id); set((s) => ({ courses: s.courses.includes(id) ? s.courses : [...s.courses, id] })) },
       // Serverli rejimda vakansiya moderatsiyaga tushadi; saqlangan vakansiya (status: PENDING | ACTIVE) qaytariladi
@@ -152,7 +157,7 @@ export function AppProvider({ children }) {
         return add.length ? { support: [...s.support, ...add].sort((a, b) => String(a.time).localeCompare(String(b.time))) } : {}
       }),
       clearSupport: () => set(() => ({ support: [] })),
-      invite: (id) => { if (apiEnabled) server.invite(id); set((s) => ({ invites: s.invites.includes(id) ? s.invites : [...s.invites, id] })) },
+      invite: (id) => { if (userRef.current?.role !== 'employer') return; if (apiEnabled) server.invite(id); set((s) => ({ invites: s.invites.includes(id) ? s.invites : [...s.invites, id] })) },
       toggleSaveCand: (id) => set((s) => ({ savedCands: s.savedCands.includes(id) ? s.savedCands.filter((x) => x !== id) : [...s.savedCands, id] })),
     }
   }, [])
@@ -182,6 +187,7 @@ export function AppProvider({ children }) {
   }, [])
   const finishAuth = useCallback((user) => {
     api.register(user)
+    userRef.current = user // kutib turgan amal (masalan, ariza) yangi foydalanuvchi roli bilan tekshirilsin — qayta chizilishni kutmasdan
     const fn = pending.current
     pending.current = null
     setAuthOpen(false)
@@ -284,12 +290,17 @@ export function AppProvider({ children }) {
     server.me(ctrl.signal).then(async (d) => {
       if (!d?.user?.role) return
       const posted = d.user.role === 'employer' ? listOr((await server.myJobs(ctrl.signal))?.items, []) : []
+      // serverdagi yoqtirishlar + avval faqat brauzerda saqlanganlari (bir marta serverga yuboriladi)
+      const remote = listOr(d.saved, null)
+      const localOnly = remote ? savedRef.current.filter((id) => !remote.includes(id)) : []
+      localOnly.forEach((id) => server.like(id, true))
       setState((s) => ({
         ...s,
         user: { ...s.user, ...d.user },
         applications: listOr(d.applications, s.applications),
         courses: listOr(d.courses, s.courses),
         invites: listOr(d.invites, s.invites),
+        saved: remote ? [...remote, ...localOnly] : s.saved,
         posted,
       }))
     }).catch((e) => {
@@ -299,6 +310,30 @@ export function AppProvider({ children }) {
     return () => ctrl.abort()
   }, [userId])
 
+  // Bildirishnomalar (admin paneldan yuborilganlar): kirganda, sahifaga qaytilganda va har 2 daqiqada yangilanadi
+  const [notifs, setNotifs] = useState({ items: [], unread: 0 })
+  const notifsRef = useRef(notifs)
+  notifsRef.current = notifs
+  useEffect(() => {
+    setNotifs({ items: [], unread: 0 })
+    if (!apiEnabled || !userId || !getToken()) return
+    const ctrl = new AbortController()
+    const load = () => {
+      if (document.visibilityState !== 'visible') return
+      server.notifications(ctrl.signal).then((d) => { if (Array.isArray(d?.items)) setNotifs({ items: d.items, unread: d.unread || 0 }) }).catch(() => {})
+    }
+    load()
+    const timer = setInterval(load, 120_000)
+    document.addEventListener('visibilitychange', load)
+    return () => { ctrl.abort(); clearInterval(timer); document.removeEventListener('visibilitychange', load) }
+  }, [userId])
+  // Sahifa ochilganda: son nolga tushadi, ro'yxatdagi «yangi» belgilari shu tashrif davomida qoladi
+  const markNotifsRead = useCallback(() => {
+    if (!notifsRef.current.unread) return
+    setNotifs((n) => ({ ...n, unread: 0 }))
+    server.readNotifications()
+  }, [])
+
   // Telegram botdagi vakansiyalar (VITE_BOT_API_URL sozlangan bo'lsa)
   const [botJobs, setBotJobs] = useState([])
   useEffect(() => {
@@ -306,6 +341,25 @@ export function AppProvider({ children }) {
     fetchBotJobs(ctrl.signal).then(setBotJobs)
     return () => ctrl.abort()
   }, [])
+
+  // Yoqtirish (saqlash): ro'yxat darhol yangilanadi, hisoblagich ham (server javobi bilan aniqlashtiriladi)
+  const setJobStat = useCallback((id, patch) => {
+    const upd = (list) => list.map((j) => (j.id === id ? { ...j, ...(typeof patch === 'function' ? patch(j) : patch) } : j))
+    setServerJobs((l) => (l ? upd(l) : l))
+    setState((s) => ({ ...s, posted: upd(s.posted) }))
+  }, [])
+  const toggleSave = useCallback((id) => {
+    const on = !savedRef.current.includes(id)
+    setState((s) => ({ ...s, saved: on ? [...s.saved.filter((x) => x !== id), id] : s.saved.filter((x) => x !== id) }))
+    setJobStat(id, (j) => ({ likes: Math.max(0, (j.likes || 0) + (on ? 1 : -1)) }))
+    if (on) trackEvent('job_like', { job_id: id })
+    if (apiEnabled) server.like(id, on).then((d) => { if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes }) })
+  }, [setJobStat])
+  // Vakansiya sahifasi ochilganda: server noyob ko'rishni hisoblaydi va joriy sonni qaytaradi
+  const viewJob = useCallback((id) => {
+    if (!apiEnabled || !id) return
+    server.view(id).then((d) => { if (typeof d?.views === 'number') setJobStat(id, { views: d.views }) })
+  }, [setJobStat])
 
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
   const jobsAll = useMemo(() => {
@@ -318,7 +372,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, setTheme, jobsAll, allJobs, content, notify, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
+  const value = { ...state, ...api, toggleSave, viewJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

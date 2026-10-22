@@ -96,7 +96,21 @@ async function ask(cfg: TelegramConfig, chatId: number, d: JobDraft) {
   }
 }
 
+const NOT_EMPLOYER =
+  "Bu Telegram hisobi saytdagi ish izlovchi hisobiga bog'langan — vakansiya faqat ish beruvchi nomidan joylanadi.\n\nIsh beruvchi sifatida saytda alohida ro'yxatdan o'ting yoki texnik yordamga yozing."
+
+// Bot murojaat uchun yaratgan hisob: saytga kirish yo'li yo'q (parol, Google, raqam yo'q) — ish beruvchiga aylantirsa bo'ladi
+const isBotPlaceholder = (u: { role: string; passwordHash: string | null; googleSub: string | null; phone: string | null }) =>
+  u.role === 'SEEKER' && !u.passwordHash && !u.googleSub && !u.phone
+
+// Vakansiyani faqat ish beruvchi (yoki ish beruvchiga aylantirsa bo'ladigan bot hisobi) joylaydi
+async function canPostJobs(tgId: string) {
+  const tu = await db.telegramUser.findUnique({ where: { id: tgId }, select: { user: true } })
+  return !tu?.user || tu.user.role === 'EMPLOYER' || isBotPlaceholder(tu.user)
+}
+
 export async function startJobDraft(cfg: TelegramConfig, chatId: number, tgId: string) {
+  if (!(await canPostJobs(tgId))) return send(cfg, chatId, NOT_EMPLOYER, { remove_keyboard: true })
   const draft: JobDraft = { step: 'title' }
   await saveDraft(tgId, draft)
   await send(cfg, chatId, `📢 <b>Vakansiya joylash</b>\n\n${TOTAL} ta qisqa savol — 1 daqiqa. E'lon moderatsiyadan so'ng kanal(lar)da va saytda chiqadi.`, { remove_keyboard: true })
@@ -209,7 +223,16 @@ export async function onDraftCallback(cfg: TelegramConfig, from: TgUser, chatId:
 // Telegram foydalanuvchisini platforma hisobiga bog'laydi (yo'q bo'lsa — ish beruvchi hisobi yaratiladi)
 async function ensureAuthor(from: TgUser, d: JobDraft) {
   const tu = await db.telegramUser.findUniqueOrThrow({ where: { id: String(from.id) } })
-  if (tu.userId) return db.user.findUniqueOrThrow({ where: { id: tu.userId } })
+  if (tu.userId) {
+    const linked = await db.user.findUniqueOrThrow({ where: { id: tu.userId } })
+    if (linked.role === 'EMPLOYER') return linked
+    // ish izlovchi / xodim hisobi nomidan vakansiya yaratilmaydi (rollar aralashmasin)
+    if (!isBotPlaceholder(linked)) return null
+    return db.user.update({
+      where: { id: linked.id },
+      data: { role: 'EMPLOYER', company: linked.company || d.company, city: linked.city || d.city },
+    })
+  }
   const byPhone = d.phone ? await db.user.findUnique({ where: { phone: d.phone } }) : null
   // Raqam bo'yicha mavjud hisobga avtomatik bog'lanmaydi (raqam tasdiqlanmagan) — alohida hisob yaratiladi
   const user = await db.user.create({
@@ -229,6 +252,10 @@ async function ensureAuthor(from: TgUser, d: JobDraft) {
 async function submitDraft(cfg: TelegramConfig, chatId: number, from: TgUser, d: JobDraft) {
   if (!d.title || !d.company || !d.city || !d.category || !d.phone) return startJobDraft(cfg, chatId, String(from.id))
   const user = await ensureAuthor(from, d)
+  if (!user) {
+    await saveDraft(String(from.id), null)
+    return send(cfg, chatId, NOT_EMPLOYER)
+  }
   if (user.status === 'BLOCKED') return send(cfg, chatId, 'Hisobingiz bloklangan.')
   const recent = await db.job.count({ where: { authorId: user.id, createdAt: { gt: new Date(Date.now() - 86400_000) } } })
   if (recent >= DAILY_LIMIT) return send(cfg, chatId, `Bir kunda ${DAILY_LIMIT} tadan ortiq e'lon joylab bo'lmaydi. Ertaga urinib ko'ring.`)

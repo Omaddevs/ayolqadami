@@ -33,6 +33,10 @@ services:
       WEB_URL: ${WEB_URL:-https://${WEB_DOMAIN}}
       # yuklangan rasmlar (bannerlar) havolasi uchun API serverning ochiq manzili
       PUBLIC_URL: https://${API_DOMAIN}
+      # birinchi administrator — server ishga tushganda yaratiladi (mavjud admin paroli o'zgartirilmaydi)
+      ADMIN_PHONE: ${ADMIN_PHONE:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-}
       NODE_ENV: production
 
   web:

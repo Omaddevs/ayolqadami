@@ -35,6 +35,8 @@ export function jobOut(j: JobWithCount) {
     expires: j.expiresAt?.toISOString(),
     // seed vakansiyalarda dastlabki ko'rsatkich details.applicantsBase'da saqlanadi
     applicants: (Number(applicantsBase) || 0) + (j._count?.applications ?? 0),
+    views: j.views,
+    likes: j.likes,
     status: j.status,
     rejectReason: j.rejectReason ?? undefined,
   }

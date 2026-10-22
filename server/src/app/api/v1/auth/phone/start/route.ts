@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { APP_ROLES } from '@/lib/auth'
 import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { getSettings } from '@/lib/settings'
@@ -21,8 +22,9 @@ export const POST = api(async (req) => {
     }
   } else {
     // reset va login: hisob mavjud va faol bo'lishi kerak
-    const user = await db.user.findUnique({ where: { phone }, select: { status: true } })
-    if (!user) throw new ApiError(404, 'nouser', 'Bu raqam bilan hisob topilmadi')
+    const user = await db.user.findUnique({ where: { phone }, select: { status: true, role: true } })
+    // xodim hisobi (ADMIN/MODERATOR) bu yerda "topilmadi": paroli Telegram orqali tiklanmaydi, raqam xodimniki ekani ham oshkor bo'lmaydi
+    if (!user || !APP_ROLES.includes(user.role)) throw new ApiError(404, 'nouser', 'Bu raqam bilan hisob topilmadi')
     if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
   }
 

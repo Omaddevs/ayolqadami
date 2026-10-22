@@ -65,6 +65,8 @@
 .jd-rows div { display: flex; flex-wrap: wrap; gap: 4px; font-size: 14.5px; line-height: 1.4; }
 .jd-rows dt { color: var(--muted); }
 .jd-rows dd { font-weight: 500; }
+.jd-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.jd-stats span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; background: var(--card); font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .jd-live { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 13px; color: var(--muted); }
 .jd-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
 .jd-actions .btn { flex: 1; height: 48px; }
@@ -872,3 +874,17 @@ button.pd-ico-btn { border: 0; cursor: pointer; }
 .legal-doc li::before { content: ''; position: absolute; left: 4px; top: .65em; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
 .legal-doc a { color: var(--primary-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .aw-btn.aw-tg-login { margin: 0 0 10px; width: 100%; }
+
+/* Bildirishnomalar ro'yxati */
+.notif-list { display: grid; gap: 10px; max-width: 760px; }
+.notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 20px; background: var(--surface); color: var(--text);
+  box-shadow: 0 1px 2px rgba(20, 20, 60, .04); text-decoration: none; position: relative; }
+a.notif-item:hover { background: var(--card); }
+.notif-item.unread { box-shadow: inset 3px 0 0 var(--primary), 0 1px 2px rgba(20, 20, 60, .04); }
+.notif-item.unread::after { content: ''; position: absolute; top: 16px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.notif-ico { flex: none; width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; background: var(--primary-50); color: var(--primary-ink); }
+.notif-main { flex: 1; min-width: 0; display: grid; gap: 4px; padding-right: 12px; }
+.notif-main b { font-size: 15.5px; font-weight: 600; }
+.notif-body { font-size: 14px; line-height: 1.45; color: var(--text); opacity: .85; white-space: pre-line; overflow-wrap: anywhere; }
+.notif-main small { font-size: 12.5px; color: var(--muted); }
+.notif-go { flex: none; align-self: center; color: var(--muted); }

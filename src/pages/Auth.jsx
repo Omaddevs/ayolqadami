@@ -268,7 +268,7 @@ export default function Auth() {
       setForm((f) => ({ ...f, name: g.name || f.name, email: g.email, photo: g.photo, google: true, googleToken: g.token, password: '' }))
       go('signup')
     } catch (e) {
-      if (e.code === 'blocked') setErr(t.errBlocked)
+      if (e.code === 'blocked' || e.code === 'staff') setErr(e.code === 'staff' ? t.errStaff : t.errBlocked)
       else if (!/popup_closed|access_denied/.test(e.message)) notify(t.googleFail)
     } finally {
       setBusy(false)
@@ -287,7 +287,7 @@ export default function Auth() {
   // server javob kodlari → foydalanuvchiga tushunarli matn
   const authError = (code) => ({
     nouser: t.errNoUser, badpass: t.errBadPass, google: t.errGoogleOnly, exists: t.errExists, email_exists: t.errExists,
-    blocked: t.errBlocked, rate_limited: t.errRate, network: t.errNetwork, phone_unverified: t.errUnverified, terms: t.errTerms,
+    blocked: t.errBlocked, staff: t.errStaff, rate_limited: t.errRate, network: t.errNetwork, phone_unverified: t.errUnverified, terms: t.errTerms,
     verify_unavailable: t.errVerifyOff,
   }[code] || t.errServer)
 

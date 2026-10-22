@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, ChatCircleText, Check, Desktop, DotsThree, Globe, Heart, House, MagnifyingGlass, MapPin, MapTrifold, Moon, Plus, SealCheck, SortAscending, Sparkle, SquaresFour, Sun, UsersThree } from '@phosphor-icons/react'
+import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, ChatCircleText, Check, Clock, Desktop, DotsThree, Eye, Globe, Heart, House, MagnifyingGlass, MapPin, MapTrifold, Moon, Plus, SealCheck, SortAscending, Sparkle, SquaresFour, Sun, UsersThree } from '@phosphor-icons/react'
 import Icon from './Icons'
 import Icon3D from './Icon3D'
 import LocationSheet from './LocationSheet'
@@ -10,6 +10,7 @@ import { CATEGORIES, catName, salaryText, formatSum } from '../data/mock'
 import { LANGS, tr, tx, useT } from '../i18n'
 import { jobPath } from '../lib/seo'
 import { originOf } from '../lib/theme'
+import { compactNum, fullDateTime, postedAt, postedText } from '../lib/time'
 
 export const THEME_OPTIONS = [
   { id: 'light', label: "Yorug'", hint: 'Doim yorug\'', icon: Sun },
@@ -211,7 +212,7 @@ export function TabBar({ items, pathname }) {
 
 // Desktop sarlavhasi (≥1024px): mobil tab bar o'rniga sayt ko'rinishidagi yuqori menyu
 function SiteHeader() {
-  const { user, saved, prefs, setPrefs, setTheme, requireAuth } = useApp()
+  const { user, saved, prefs, setPrefs, setTheme, requireAuth, unreadNotifs } = useApp()
   const t = useT()
   const [locOpen, setLocOpen] = useState(false)
   const nav = useNavigate()
@@ -317,6 +318,7 @@ function SiteHeader() {
             <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>
             <Link to="/notifications" className="sh-ico" aria-label={t('Bildirishnomalar')} title={t('Bildirishnomalar')}>
               <Bell size={21} />
+              {unreadNotifs > 0 && <em className="sh-badge">{unreadNotifs > 99 ? '99+' : unreadNotifs}</em>}
             </Link>
             {!isEmp && (
               <Link to="/applications?tab=saved" className="sh-ico" aria-label={t('Saqlanganlar')} title={t('Saqlanganlar')}>
@@ -620,6 +622,26 @@ export function TopBar({ title, right, back = true }) {
   )
 }
 
+// Vakansiya ko'rsatkichlari: qachon joylangan, ko'rishlar, yoqtirishlar, arizalar
+export function JobStats({ job }) {
+  const t = useT()
+  const d = postedAt(job)
+  const fresh = d && Date.now() - d.getTime() < 24 * 3600_000
+  return (
+    <div className="job-stats">
+      <span className="job-when" title={d ? fullDateTime(d) : undefined}>
+        {fresh && <em className="job-new">{t('Yangi')}</em>}
+        <Clock size={15} weight="bold" /> {postedText(job)}
+      </span>
+      <span className="job-counts">
+        <span title={t("Ko'rishlar")}><Eye size={15} weight="bold" /> {compactNum(job.views)}</span>
+        <span title={t('Yoqtirishlar')}><Heart size={15} weight="bold" /> {compactNum(job.likes)}</span>
+        <span title={t('Arizalar')}><UsersThree size={15} weight="bold" /> {compactNum(job.applicants)}</span>
+      </span>
+    </div>
+  )
+}
+
 export function JobCard({ job, compact }) {
   const { user, saved, toggleSave, applications, apply, notify, requireAuth } = useApp()
   const nav = useNavigate()
@@ -628,8 +650,7 @@ export function JobCard({ job, compact }) {
   const showActions = !compact && user?.role !== 'employer' && !job.own
   const t = useT()
   const quickApply = () => requireAuth(() => {
-    apply(job.id, '')
-    notify(t('Arizangiz yuborildi!'))
+    notify(apply(job.id, '') ? t('Arizangiz yuborildi!') : t("Ish beruvchi hisobi bilan ariza topshirib bo'lmaydi"))
   })
 
   return (
@@ -663,7 +684,7 @@ export function JobCard({ job, compact }) {
             <span className="chip">{t('Format')}: {t(job.type)}</span>
           </div>
           {job.tags?.[0] && <span className="chip chip-green">{t(job.tags[0])}</span>}
-          <span className="job-posted">{t(job.posted)} · {t('{n} ariza', { n: job.applicants || 0 })}</span>
+          <JobStats job={job} />
         </>
       )}
 

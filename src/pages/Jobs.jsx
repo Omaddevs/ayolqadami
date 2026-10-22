@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import {
-  ArrowLeft, Buildings, CaretRight, ChatCircleText, CheckCircle, Clock, CurrencyCircleDollar, DotsThree, Export, EyeSlash, Flag, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, Phone, SealCheck, Sparkle, TelegramLogo, UsersThree,
+  ArrowLeft, Buildings, CalendarBlank, CaretRight, ChatCircleText, CheckCircle, Clock, CurrencyCircleDollar, DotsThree, Export, Eye, EyeSlash, Fire, Flag, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, Phone, SealCheck, Sparkle, TelegramLogo, UsersThree,
 } from '@phosphor-icons/react'
 import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Sheet, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
@@ -16,6 +16,7 @@ import { WORK_MODES, WORK_TIME } from '../data/resume'
 import { breadcrumbLd, findJobByRef, jobPath, jobPostingLd, siteUrl, useSeo } from '../lib/seo'
 import { api as server, apiEnabled } from '../lib/api'
 import { tr, tx, useT } from '../i18n'
+import { PERIODS, compactNum, fullDateTime, inPeriod, postedAt, postedText } from '../lib/time'
 
 const PER_PAGE = 20
 
@@ -36,6 +37,8 @@ function jobFacts(job) {
 
 const SORTS = [
   { value: 'new', label: 'Avval yangilari', icon: Clock },
+  { value: 'popular', label: "Ko'p ko'rilgan", icon: Fire },
+  { value: 'liked', label: "Ko'p yoqtirilgan", icon: Heart },
   { value: 'salary', label: "Maosh bo'yicha", icon: CurrencyCircleDollar },
   { value: 'few', label: 'Kam arizali', icon: UsersThree },
 ]
@@ -50,6 +53,14 @@ export function Jobs() {
   const cat = params.get('cat') || ''
   const [type, setType] = useState(params.get('type') || '')
   const [sort, setSort] = useState(params.get('sort') || 'new')
+  // joylangan vaqti: URL'da (?period=24h) — "Yangi ishlar" tugmasi shu bilan ochadi
+  const period = PERIODS.some((p) => p.value === params.get('period')) ? params.get('period') : ''
+  const setPeriod = (v) => {
+    const p = new URLSearchParams(params)
+    v ? p.set('period', v) : p.delete('period')
+    p.delete('page')
+    setParams(p, { replace: true })
+  }
   // sarlavhadagi qidiruv yoki filtr oynasidan kelgan qiymatlar (sahifa ochiq turganda ham) holatga tushadi
   const urlQ = params.get('q')
   const urlType = params.get('type')
@@ -84,11 +95,16 @@ export function Jobs() {
     let r = allJobs.filter((j) =>
       (!cat || j.category === cat) &&
       (!type || j.type === type) &&
+      inPeriod(j, period) &&
       (!nq || norm(`${j.title} ${j.company} ${(j.skills || []).join(' ')} ${j.city}`).includes(nq) || norm(tx(j.title)).includes(nq)))
+    const time = (j) => postedAt(j)?.getTime() || 0
+    if (sort === 'new') r = [...r].sort((a, b) => time(b) - time(a))
+    if (sort === 'popular') r = [...r].sort((a, b) => (b.views || 0) - (a.views || 0) || time(b) - time(a))
+    if (sort === 'liked') r = [...r].sort((a, b) => (b.likes || 0) - (a.likes || 0) || time(b) - time(a))
     if (sort === 'salary') r = [...r].sort((a, b) => (b.salaryTo || 0) - (a.salaryTo || 0))
     if (sort === 'few') r = [...r].sort((a, b) => (a.applicants || 0) - (b.applicants || 0))
     return r
-  }, [allJobs, q, cat, type, sort])
+  }, [allJobs, q, cat, type, period, sort])
 
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE))
   const cur = Math.min(page, pages)
@@ -118,6 +134,14 @@ export function Jobs() {
           ))}
         </div>
 
+        <div className="pill-row">
+          {PERIODS.map((p) => (
+            <button key={p.value || 'any'} className={`pill pill-sm ${period === p.value ? 'on' : ''}`} onClick={() => setPeriod(p.value)}>
+              {p.value && <Clock size={15} weight="bold" />} {t(p.label)}
+            </button>
+          ))}
+        </div>
+
         <div className="result-bar">
           <div className="result-count">
             <b>{t('{n} ta vakansiya', { n: list.length })}</b>
@@ -132,8 +156,13 @@ export function Jobs() {
             <Pagination page={cur} pages={pages} onChange={setPage} />
           </>
         ) : (
-          <Empty icon="briefcase" title={t('Hech narsa topilmadi')} text={t("Filtrlarni o'zgartirib ko'ring yoki QadamAI'dan so'rang")}
-            action={<Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
+          period ? (
+            <Empty icon="briefcase" title={t("Bu davrda yangi e'lon yo'q")} text={t("Vaqt oralig'ini kengaytirib ko'ring")}
+              action={<button type="button" className="btn btn-primary" onClick={() => setPeriod('')}>{t("Barcha e'lonlarni ko'rish")}</button>} />
+          ) : (
+            <Empty icon="briefcase" title={t('Hech narsa topilmadi')} text={t("Filtrlarni o'zgartirib ko'ring yoki QadamAI'dan so'rang")}
+              action={<Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
+          )
         )}
       </div>
     </div>
@@ -161,7 +190,7 @@ function JobMiniMap({ pos }) {
 export function JobDetail() {
   const { id: ref } = useParams()
   const nav = useNavigate()
-  const { jobsAll, allJobs, user, saved, toggleSave, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
+  const { jobsAll, allJobs, user, saved, toggleSave, viewJob, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
   const t = useT()
   // /jobs/1001-nom (raqam) yoki eski /jobs/<id>; ro'yxatda bo'lmasa — serverdan (to'g'ridan-to'g'ri havola, Google)
   const [loaded, setLoaded] = useState(null) // null — kutilmoqda, false — topilmadi
@@ -175,6 +204,8 @@ export function JobDetail() {
     server.job(ref, ctrl.signal).then((d) => setLoaded(d?.job || false)).catch((e) => { if (e.name !== 'AbortError') setLoaded(false) })
     return () => ctrl.abort()
   }, [ref, listed])
+  // ko'rish bir marta (sahifa ochilganda) yuboriladi; takroriy ochishlarni server o'zi saralaydi
+  useEffect(() => { if (id && !job?.own) viewJob(id) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   // manzil eski yoki nomi o'zgargan bo'lsa — kanonik manzilga (dublikat sahifa bo'lmasin)
   useEffect(() => {
     if (job?.number && decodeURIComponent(window.location.pathname) !== jobPath(job)) nav(jobPath(job), { replace: true })
@@ -212,8 +243,9 @@ export function JobDetail() {
   const isSaved = saved.includes(job.id)
   const seeker = user?.role !== 'employer'
   const send = () => {
-    apply(job.id, letter)
+    const ok = apply(job.id, letter)
     setOpen(false)
+    if (!ok) return notify(t("Ish beruvchi hisobi bilan ariza topshirib bo'lmaydi"))
     setLetter('')
     notify(t('Arizangiz yuborildi!'))
   }
@@ -272,6 +304,12 @@ export function JobDetail() {
             <dl className="jd-rows">
               {facts.map(([k, v]) => <div key={k}><dt>{k}:</dt><dd>{v}</dd></div>)}
             </dl>
+            <div className="jd-stats">
+              {postedAt(job) && <span><CalendarBlank size={16} weight="bold" /> {fullDateTime(postedAt(job))}</span>}
+              <span><Clock size={16} weight="bold" /> {postedText(job)}</span>
+              <span><Eye size={16} weight="bold" /> {t("{n} marta ko'rilgan", { n: compactNum(job.views) })}</span>
+              <span><Heart size={16} weight="bold" /> {t('{n} kishi yoqtirgan', { n: compactNum(job.likes) })}</span>
+            </div>
             <p className="jd-live">
               <UsersThree size={16} /> {job.applicants ? t('{n} kishi ariza topshirgan', { n: job.applicants }) : t("Birinchilardan bo'lib ariza topshiring")}
             </p>
@@ -366,7 +404,7 @@ export function JobDetail() {
             </section>
           )}
 
-          <p className="jd-posted">{t("Vakansiya {when} e'lon qilingan", { when: t(job.posted) })} · {tx(job.city)}</p>
+          <p className="jd-posted">{t("Vakansiya {when} e'lon qilingan", { when: postedAt(job) ? fullDateTime(postedAt(job)) : t(job.posted) })} · {tx(job.city)}</p>
 
           {seeker && (
             <div className="jd-foot">

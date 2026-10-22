@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { burnPasswordCheck, issueToken, verifyPassword } from '@/lib/auth'
+import { assertAppRole, burnPasswordCheck, issueToken, verifyPassword } from '@/lib/auth'
 import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { userOut } from '@/lib/serialize'
@@ -21,6 +21,7 @@ export const POST = api(async (req) => {
   if (!user.passwordHash) throw new ApiError(400, user.googleSub ? 'google' : 'badpass', 'Bu hisobga Google orqali kiring')
   if (!(await verifyPassword(password, user.passwordHash))) throw new ApiError(401, 'badpass', "Parol noto'g'ri")
   if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan. Qo\'llab-quvvatlash xizmatiga murojaat qiling')
+  assertAppRole(user)
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
   notifyLogin(user, req, 'password', ip)

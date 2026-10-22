@@ -15,7 +15,7 @@ const LABEL: Record<string, string> = { title: 'Nomi', linkUrl: 'Havola', imageU
 
 const form = z.object({
   title: z.string().trim().min(2, 'nomini kiriting').max(120),
-  linkUrl: z.string().trim().max(500).refine(isSafeLink, "havola / (sayt ichida) yoki https:// bilan boshlanishi kerak"),
+  linkUrl: z.string().trim().min(1, 'banner bosilganda ochiladigan havolani kiriting').max(500).refine(isSafeLink, "havola / (sayt ichida) yoki https:// bilan boshlanishi kerak"),
   imageUrl: z.string().trim().max(500).refine((v) => !v || isSafeImage(v), "rasm manzili / yoki https:// bilan boshlanishi kerak"),
   sort: z.coerce.number().int().min(0).max(1000),
   startsAt: z.string().max(20),

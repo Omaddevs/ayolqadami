@@ -83,6 +83,7 @@ model User {
   lastLoginAt  DateTime?
   phoneVerifiedAt DateTime? // raqam kirish boti orqali tasdiqlangan vaqt
   termsAcceptedAt DateTime? // foydalanish shartlari va maxfiylik siyosatiga rozilik
+  notifReadAt  DateTime? // bildirishnomalar oxirgi marta ko'rilgan vaqt (o'qilmaganlar soni shundan keyingilari)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -92,7 +93,9 @@ model User {
   tickets      SupportTicket[]
   invitesSent  Invite[]        @relation("InviteEmployer")
   auditLogs    AuditLog[]
+  jobLikes     JobLike[]
   telegram     TelegramUser?
+  notifications Notification[]
 
   @@index([role, createdAt])
   @@index([status])
@@ -138,7 +141,8 @@ model Job {
   rejectReason String?
   source       JobSource @default(WEB)
   authorId     String?
-  views        Int       @default(0)
+  views        Int       @default(0) // noyob ko'rishlar: bir kishi — kuniga bir marta (JobView)
+  likes        Int       @default(0) // yoqtirishlar soni (JobLike bilan bir tranzaksiyada yangilanadi)
   publishedAt  DateTime?
   expiresAt    DateTime?
   createdAt    DateTime  @default(now())
@@ -148,11 +152,41 @@ model Job {
   author       User?         @relation("JobAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   applications Application[]
   telegramPosts TelegramPost[]
+  likedBy      JobLike[]
+  viewLog      JobView[]
 
   @@index([status, publishedAt])
   @@index([category])
   @@index([city])
   @@index([authorId])
+  ad           Ad?
+}
+
+// Foydalanuvchi yoqtirgan (saqlagan) vakansiya — bir kishi bir marta
+model JobLike {
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@id([userId, jobId])
+  @@index([jobId])
+}
+
+// Ko'rishlar jurnali: viewer — foydalanuvchi id yoki IP+brauzer xeshi, day — Toshkent sanasi (YYYY-MM-DD).
+// Sahifani qayta yangilash hisobni oshirmaydi
+model JobView {
+  jobId     String
+  viewer    String
+  day       String
+  createdAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, viewer, day])
+  @@index([createdAt])
 }
 
 model Application {
@@ -362,6 +396,7 @@ model TelegramPost {
   id        String             @id @default(cuid())
   channelId String
   jobId     String?
+  adId      String? // botdan kelgan e'lon (Ad)
   text      String
   photo     String?
   messageId Int?
@@ -372,9 +407,11 @@ model TelegramPost {
 
   channel TelegramChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   job     Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  ad      Ad?             @relation(fields: [adId], references: [id], onDelete: SetNull)
 
   @@index([channelId, createdAt])
   @@index([jobId])
+  @@index([adId])
 }
 
 model TelegramBroadcast {
@@ -384,6 +421,8 @@ model TelegramBroadcast {
   buttonText String? // eski tarqatmalar: bitta tugma
   buttonUrl  String?
   buttons    String? // "Matn | havola | rang" qatorlari (rangli, bir nechta tugma)
+  bot        String          @default("main") // main — asosiy bot obunachilari, login — kirish boti foydalanuvchilari
+  notificationId String? // admin paneldagi «Bildirishnomalar» orqali yuborilgan bo'lsa
   total      Int             @default(0)
   sent       Int             @default(0)
   failed     Int             @default(0)
@@ -455,4 +494,62 @@ model Media {
   name      String   @default("")
   authorId  String?
   createdAt DateTime @default(now())
+}
+
+// ================= Botdan kelgan e'lonlar (shablon bo'yicha) =================
+
+enum AdStatus {
+  PENDING // moderatsiya kutilmoqda
+  PUBLISHED // tasdiqlangan va kanallarga joylangan
+  REJECTED
+}
+
+// @ayolqadam_bot orqali shablon (vakansiya, IT vakansiya, xizmat taklifi, ish joyi kerak, ustoz...) bo'yicha berilgan e'lon.
+// Admin panelda tekshiriladi, tahrirlanadi, tanlangan kanal/guruhlarga tugmalari bilan joylanadi.
+model Ad {
+  id           String    @id @default(cuid())
+  number       Int       @unique @default(autoincrement()) // E'lon #190
+  template     String // lib/ad-templates.ts dagi id
+  fields       Json // { key: qiymat }
+  status       AdStatus  @default(PENDING)
+  rejectReason String?
+  warnings     String[] // avtomatik tekshiruv (masalan, nomzoddan pul so'rash)
+  tgUserId     String // e'lon beruvchining Telegram ID'si — natija shu chatga yuboriladi
+  tgUsername   String?
+  authorName   String
+  authorPhone  String?
+  lang         String    @default("uz")
+  jobId        String?   @unique // vakansiya turidagi e'lon tasdiqlanganda saytda ham chiqadi
+  reviewerId   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  job   Job?           @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  posts TelegramPost[]
+
+  @@index([status, createdAt])
+  @@index([tgUserId])
+}
+
+// ================= Bildirishnomalar =================
+
+// Saytdagi bildirishnoma: userId berilsa — shaxsiy, aks holda role bo'yicha (null — barcha foydalanuvchilarga).
+// Admin paneldan yuborilganda xuddi shu matn botlar orqali ham tarqatilishi mumkin (TelegramBroadcast.notificationId)
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  body      String   @default("")
+  link      String   @default("") // /jobs (sayt ichida) yoki https://...
+  role      Role? // null — hammaga
+  userId    String?
+  site      Boolean  @default(true) // saytdagi «Bildirishnomalar» bo'limida ko'rinadi
+  siteTotal Int      @default(0) // yuborilgan paytdagi qabul qiluvchilar soni
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }

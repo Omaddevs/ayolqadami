@@ -16,9 +16,8 @@ export const GET = api<Ctx>(async (req, { params }) => {
   if (job.status !== 'ACTIVE') {
     const user = await getApiUser(req)
     if (!user || user.id !== job.authorId) throw new ApiError(404, 'not_found', 'Vakansiya topilmadi')
-  } else {
-    await db.job.update({ where: { id: job.id }, data: { views: { increment: 1 } } }).catch(() => {})
   }
+  // ko'rishlar POST /jobs/:id/view orqali (noyob, kuniga bir marta) hisoblanadi
   return json({ job: jobOut(job) })
 })
 

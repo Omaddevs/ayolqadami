@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
-  Bell, Briefcase, Building2, CalendarDays, CircleHelp, FileText, GraduationCap, History, LayoutDashboard, LogOut, MessageCircle,
-  Newspaper, Send, Settings, Users, GalleryHorizontal } from 'lucide-react'
+  Bell, BellRing, Briefcase, Building2, CalendarDays, CircleHelp, FileText, GraduationCap, History, LayoutDashboard, LogOut, MessageCircle,
+  Newspaper, Send, Settings, Users, GalleryHorizontal, Megaphone } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NavLink } from '@/components/client'
@@ -17,6 +17,7 @@ const RAIL = [
   { href: '/admin/articles', icon: Newspaper, label: 'Maqolalar' },
   { href: '/admin/events', icon: CalendarDays, label: 'Tadbirlar' },
   { href: '/admin/banners', icon: GalleryHorizontal, label: 'Bannerlar' },
+  { href: '/admin/notifications', icon: BellRing, label: 'Bildirishnomalar', adminOnly: true },
   null,
   { href: '/admin/audit', icon: History, label: 'Amallar jurnali', adminOnly: true },
   { href: '/admin/settings', icon: Settings, label: 'Sozlamalar' },
@@ -25,20 +26,22 @@ const RAIL = [
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin()
-  const [pendingJobs, openTickets, newApps] = await Promise.all([
+  const [pendingJobs, openTickets, newApps, pendingAds] = await Promise.all([
     db.job.count({ where: { status: 'PENDING' } }),
     db.supportTicket.count({ where: { status: 'OPEN' } }),
     db.application.count({ where: { status: 'NEW' } }),
+    db.ad.count({ where: { status: 'PENDING' } }),
   ])
   const NAV = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: '/admin/jobs', label: 'Vakansiyalar', icon: Briefcase, count: pendingJobs },
+    { href: '/admin/ads', label: "E'lonlar", icon: Megaphone, count: pendingAds },
     { href: '/admin/users', label: 'Foydalanuvchilar', icon: Users },
     { href: '/admin/applications', label: 'Arizalar', icon: FileText, count: newApps },
     { href: '/admin/support', label: 'Murojaatlar', icon: MessageCircle, count: openTickets },
     { href: '/admin/telegram', label: 'Telegram', icon: Send },
   ]
-  const alerts = pendingJobs + openTickets
+  const alerts = pendingJobs + openTickets + pendingAds
 
   return (
     <div className="shell">
@@ -57,7 +60,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             ))}
           </nav>
           <div className="top-right">
-            <Link className="icon-btn" href={pendingJobs ? '/admin/jobs?status=PENDING' : '/admin/support'} aria-label={`Bildirishnomalar: ${alerts}`}>
+            <Link className="icon-btn" href={pendingAds ? '/admin/ads' : pendingJobs ? '/admin/jobs?status=PENDING' : '/admin/support'} aria-label={`Bildirishnomalar: ${alerts}`}>
               <Bell size={17} />{alerts > 0 && <span className="dot" />}
             </Link>
             <div className="me">

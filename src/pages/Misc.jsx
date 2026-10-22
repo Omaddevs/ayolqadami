@@ -6,6 +6,7 @@ import Icon3D from '../components/Icon3D'
 import { Empty, JobCard, TopBar } from '../components/UI'
 import { useApp, useContent } from '../context/AppContext'
 import { LANGS, getLang, tx, useT } from '../i18n'
+import { timeAgo } from '../lib/time'
 
 const dateLocale = () => ({ uz: 'uz-UZ', 'uz-cyrl': 'uz-Cyrl-UZ', ru: 'ru-RU', en: 'en-GB' })[getLang()] || LANGS[0].html
 
@@ -125,12 +126,38 @@ export function Events() {
 }
 
 export function Notifications() {
+  const { notifications, markNotifsRead } = useApp()
   const t = useT()
+  // ochilganda (va ochiq turganda yangisi kelsa) — o'qilgan deb belgilanadi
+  useEffect(() => { markNotifsRead() }, [notifications, markNotifsRead])
   return (
     <div className="page">
       <TopBar title={t('Bildirishnomalar')} />
       <div className="page-body">
-        <Empty icon="bell" title={t("Bildirishnomalar yo'q")} text={t("Arizalaringiz holati va yangi takliflar shu yerda ko'rinadi")} />
+        {notifications.length ? (
+          <div className="notif-list">
+            {notifications.map((n) => {
+              const inner = (
+                <>
+                  <span className="notif-ico"><Bell size={20} weight="fill" /></span>
+                  <span className="notif-main">
+                    <b>{n.title}</b>
+                    {n.body && <span className="notif-body">{n.body}</span>}
+                    <small>{timeAgo(new Date(n.time))}</small>
+                  </span>
+                  {n.link && <CaretRight size={18} weight="bold" className="notif-go" />}
+                </>
+              )
+              const cls = `notif-item ${n.read ? '' : 'unread'}`
+              if (!n.link) return <div key={n.id} className={cls}>{inner}</div>
+              return n.link.startsWith('/')
+                ? <Link key={n.id} to={n.link} className={cls}>{inner}</Link>
+                : <a key={n.id} href={n.link} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+            })}
+          </div>
+        ) : (
+          <Empty icon="bell" title={t("Bildirishnomalar yo'q")} text={t("Arizalaringiz holati va yangi takliflar shu yerda ko'rinadi")} />
+        )}
       </div>
     </div>
   )
