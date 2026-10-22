@@ -28,6 +28,7 @@ export type AdTemplate = {
   roles: ('employer' | 'seeker')[] // qaysi rolga birinchi navbatda ko'rsatiladi
   tag: string // #vakansiya, #xizmat...
   job?: boolean // tasdiqlanganda saytda vakansiya sifatida ham chiqadi
+  layout?: 'card' // kartochka: "📢 ISHCHI KERAK!" sarlavhasi va har qatorda "emoji <b>Nom:</b> qiymat"
   fields: Field[]
 }
 
@@ -48,7 +49,41 @@ const q = (uz: string, ru: string) => ({ uz, ru })
 const PHONE: Field = { key: 'phone', type: 'phone', emoji: '📞', label: 'Aloqa', ask: q("Aloqa uchun telefon raqami?", 'Телефон для связи?'), example: '+998 90 123 45 67' }
 const TG: Field = { key: 'tg', type: 'tg', emoji: '✈️', label: 'Telegram', ask: q('Telegram manzil? (masalan @username)', 'Telegram для связи? (например @username)') }
 
+// Botdagi «📢 E'lon berish» rolga qarab shulardan birini darhol boshlaydi: ish beruvchi — worker_need, ish izlovchi — job_wanted
+const CONTACT: Field = { ...PHONE, emoji: '📩', label: 'Murojaat uchun', required: true, ask: q('Murojaat uchun telefon raqami?', 'Телефон для связи?') }
+const EXTRA = (ex: string): Field => ({ key: 'extra', type: 'long', emoji: '📝', label: "Qo'shimcha ma'lumot", max: 1000, ask: q("Qo'shimcha ma'lumot", 'Дополнительная информация'), example: ex })
+
 export const AD_TEMPLATES: AdTemplate[] = [
+  {
+    id: 'worker_need', emoji: '📢', name: q('Ishchi kerak', 'Нужен работник'),
+    hint: q('Xodim yoki ishchi qidirayotgan bo\'lsangiz', 'Если ищете сотрудника'),
+    headline: 'ISHCHI KERAK!', roles: ['employer'], tag: 'vakansiya', job: true, layout: 'card',
+    fields: [
+      { key: 'title', type: 'text', emoji: '💼', label: 'Ish turi / Lavozim', title: true, required: true, max: 120, ask: q('Ish turi yoki lavozim?', 'Вид работы или должность?'), example: 'Sotuvchi' },
+      { key: 'company', type: 'text', emoji: '🏢', label: 'Ish joyi', required: true, max: 120, ask: q('Ish joyi (kompaniya, do\'kon, tashkilot)?', 'Место работы (компания, магазин, организация)?'), example: '"Baraka" supermarketi' },
+      { key: 'city', type: 'city', emoji: '📍', label: 'Manzil', required: true, max: 160, ask: q("Manzil? Shaharni tanlang yoki to'liq manzilni yozing", 'Адрес? Выберите город или напишите адрес'), example: 'Toshkent, Chilonzor tumani' },
+      { key: 'schedule', type: 'text', emoji: '🕐', label: 'Ish vaqti', required: true, max: 120, ask: q('Ish vaqti?', 'Время работы?'), example: '09:00–18:00, 6/1' },
+      { key: 'salary', type: 'text', emoji: '💰', label: 'Maosh', required: true, max: 80, quick: NEGOTIABLE, ask: q('Maosh qancha?', 'Какая зарплата?'), example: "4 000 000 so'm" },
+      { key: 'requirements', type: 'long', emoji: '📋', label: 'Talablar', required: true, max: 1000, ask: q('Talablar?', 'Требования?'), example: '20–35 yosh, tajriba shart emas' },
+      EXTRA('Tushlik va yo\'l haqi beriladi'),
+      CONTACT,
+    ],
+  },
+  {
+    id: 'job_wanted', emoji: '🔎', name: q('Ish izlayman', 'Ищу работу'),
+    hint: q("O'zingiz haqingizda qisqa e'lon — ish beruvchilar siz bilan bog'lanadi", 'Короткое объявление о себе — работодатели свяжутся с вами'),
+    headline: 'ISH IZLAYMAN!', roles: ['seeker'], tag: 'rezyume', layout: 'card',
+    fields: [
+      { key: 'name', type: 'text', emoji: '👩', label: 'Ism / Yosh', required: true, max: 80, ask: q('Ismingiz va yoshingiz?', 'Ваше имя и возраст?'), example: 'Malika, 24 yosh' },
+      { key: 'title', type: 'text', emoji: '💼', label: 'Kasb / Mutaxassislik', title: true, required: true, max: 120, ask: q('Kasbingiz yoki mutaxassisligingiz?', 'Ваша профессия или специальность?'), example: 'Hisobchi' },
+      { key: 'city', type: 'city', emoji: '📍', label: 'Yashash manzili', required: true, max: 160, ask: q('Yashash manzilingiz?', 'Где вы живёте?'), example: 'Toshkent, Yunusobod tumani' },
+      { key: 'schedule', type: 'text', emoji: '🕐', label: 'Ish vaqti', required: true, max: 120, ask: q('Qaysi vaqtda ishlay olasiz?', 'В какое время можете работать?'), example: "To'liq kun yoki 09:00–14:00" },
+      { key: 'salary', type: 'text', emoji: '💰', label: 'Kutilayotgan maosh', required: true, max: 80, quick: NEGOTIABLE, ask: q('Kutilayotgan maosh?', 'Ожидаемая зарплата?'), example: "5 000 000 so'm" },
+      { key: 'skills', type: 'long', emoji: '🎓', label: "Tajriba va ko'nikmalar", required: true, max: 1000, ask: q("Tajribangiz va ko'nikmalaringiz?", 'Ваш опыт и навыки?'), example: '3 yil hisobchi, 1C, Excel' },
+      EXTRA('Masofaviy ishlashga ham tayyorman'),
+      CONTACT,
+    ],
+  },
   {
     id: 'vacancy', emoji: '💼', name: q('Xodim kerak (vakansiya)', 'Нужен сотрудник (вакансия)'),
     hint: q("Har qanday soha: ofis, savdo, ta'lim, tibbiyot, xizmat ko'rsatish…", 'Любая сфера: офис, продажи, образование, медицина…'),
@@ -228,6 +263,7 @@ export function adTitle(tpl: AdTemplate, fields: AdFields) {
 
 // Kanalga yuboriladigan HTML: sarlavha, qisqa maydonlar, ro'yxatlar, aloqa, havola, heshteglar
 export function renderAdPost(tpl: AdTemplate, fields: AdFields, opts: { number?: number; link?: string; footer?: string } = {}) {
+  if (tpl.layout === 'card') return renderCard(tpl, fields, opts)
   const head = `${tpl.emoji} <b>${esc(tpl.headline)}: ${esc(adTitle(tpl, fields))}</b>`
   const short: string[] = []
   const long: string[] = []
@@ -241,6 +277,19 @@ export function renderAdPost(tpl: AdTemplate, fields: AdFields, opts: { number?:
   }
   const tags = [hashtag(tpl.tag), fields.category && hashtag(catName(fields.category)), fields.city && hashtag(fields.city.split(/[,\s]/)[0])].filter(Boolean)
   const blocks = [head, short.join('\n'), ...long, contact.join('\n'), opts.link ? `🔗 Batafsil: ${esc(opts.link)}` : '', tags.join(' '), opts.footer || '']
+  return blocks.filter(Boolean).join('\n\n')
+}
+
+// Kartochka: sarlavha, har maydon "emoji <b>Nom:</b> qiymat" (ko'p qatorli javob — keyingi qatordan), oxirida murojaat
+function renderCard(tpl: AdTemplate, fields: AdFields, opts: { link?: string; footer?: string }) {
+  const line = (f: Field) => {
+    const v = esc(valueLabel(tpl, f.key, fields[f.key]))
+    return `${f.emoji} <b>${esc(f.label)}:</b>${v.includes('\n') ? '\n' : ' '}${v}`
+  }
+  const body = tpl.fields.filter((f) => fields[f.key] && f.key !== 'phone' && f.key !== 'tg').map(line)
+  const contact = tpl.fields.filter((f) => fields[f.key] && (f.key === 'phone' || f.key === 'tg')).map(line)
+  const tags = [hashtag(tpl.tag), fields.city && hashtag(fields.city.split(/[,\s]/)[0])].filter(Boolean)
+  const blocks = [`${tpl.emoji} <b>${esc(tpl.headline)}</b>`, body.join('\n'), contact.join('\n'), opts.link ? `🔗 Batafsil: ${esc(opts.link)}` : '', tags.join(' '), opts.footer || '']
   return blocks.filter(Boolean).join('\n\n')
 }
 
@@ -274,7 +323,7 @@ export function adToJob(tpl: AdTemplate, f: AdFields) {
 // Botga yuboriladigan shakl (savollar, variantlar). Kategoriya va shaharlar ham shu yerdan
 export function templatesForBot() {
   return {
-    templates: AD_TEMPLATES.map(({ id, emoji, name, hint, headline, roles, fields }) => ({ id, emoji, name, hint, headline, roles, fields })),
+    templates: AD_TEMPLATES.map(({ id, emoji, name, hint, headline, roles, layout, fields }) => ({ id, emoji, name, hint, headline, roles, layout: layout || null, fields })),
     categories: CATEGORIES.map((c) => ({ v: c.id, uz: c.name, ru: c.name })),
     cities: CITIES,
   }

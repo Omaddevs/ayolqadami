@@ -8,7 +8,8 @@ test('har bir shablonda sarlavha, aloqa maydonlari va yagona kalitlar bor', () =
     const keys = t.fields.map((f) => f.key)
     assert.equal(new Set(keys).size, keys.length, `${t.id}: takroriy kalit`)
     assert.ok(t.fields.some((f) => f.title), `${t.id}: sarlavha maydoni yo'q`)
-    assert.ok(keys.includes('phone') && keys.includes('tg'), `${t.id}: aloqa maydonlari yo'q`)
+    // kartochka shablonlarida aloqa — bitta «Murojaat uchun» (telefon) maydoni
+    assert.ok(keys.includes('phone') && (t.layout === 'card' || keys.includes('tg')), `${t.id}: aloqa maydonlari yo'q`)
     for (const f of t.fields) assert.ok(f.ask.uz && f.ask.ru, `${t.id}.${f.key}: savol matni yo'q`)
   }
   const bot = templatesForBot()
@@ -106,4 +107,22 @@ test("HTML ekranlanadi — e'lon matni orqali teg kiritib bo'lmaydi", () => {
   const post = renderAdPost(tpl, fields)
   assert.doesNotMatch(post, /<script>|<b>Ali/)
   assert.match(post, /&lt;script&gt;/)
+})
+
+test("kartochka (ISHCHI KERAK!): rol bo'yicha shablon, post ko'rinishi va saytdagi vakansiya", () => {
+  const tpl = templateById('worker_need')!
+  assert.deepEqual(tpl.roles, ['employer'])
+  assert.deepEqual(templateById('job_wanted')!.roles, ['seeker'])
+  const { fields, errors } = cleanFields(tpl, {
+    title: 'Sotuvchi', company: 'Baraka', city: 'Toshkent, Chilonzor', schedule: '09:00–18:00', salary: "4 000 000 so'm",
+    requirements: '20–35 yosh\nTajriba shart emas', phone: '901234567',
+  })
+  assert.deepEqual(errors, {})
+  const post = renderAdPost(tpl, fields, { footer: 'kanal' })
+  assert.ok(post.startsWith('📢 <b>ISHCHI KERAK!</b>\n\n💼 <b>Ish turi / Lavozim:</b> Sotuvchi\n🏢 <b>Ish joyi:</b> Baraka'))
+  assert.match(post, /📋 <b>Talablar:<\/b>\n20–35 yosh\nTajriba shart emas/)
+  assert.match(post, /📩 <b>Murojaat uchun:<\/b> \+998 90 123 45 67/)
+  assert.doesNotMatch(post, /Qo'shimcha/) // to'ldirilmagan ixtiyoriy maydon chiqmaydi
+  assert.equal(adToJob(tpl, fields).title, 'Sotuvchi')
+  assert.ok(cleanFields(tpl, { ...fields, phone: '' }).errors.phone)
 })
