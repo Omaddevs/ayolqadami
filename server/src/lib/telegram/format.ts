@@ -60,9 +60,40 @@ export function jobPostHtml(job: Job, cfg: Pick<TelegramConfig, 'jobFooter'> & P
 
 export const DEFAULT_CHANNEL_BUTTONS = [
   "📢 E'lon joylash / Разместить вакансию | {post} | blue",
-  "🗂 Kanallar to'plami / Подборка каналов |  | red",
+  '📂 Ish kanallari / Каналы с вакансиями |  | red',
   '💼 Website AyolQadami | {site} | green',
 ].join('\n')
+
+// --- «📂 Ish kanallari» — Telegram chat papkasi (t.me/addlist/...): bosilsa barcha kanallarga bir bosishda qo'shiladi ---
+export const FOLDER_LINK_RE = /^https:\/\/t\.me\/addlist\/[\w-]{6,}$/
+export const FOLDER_BUTTON_TEXT = '📂 Ish kanallari / Каналы с вакансиями'
+// eski «🗂 Kanallar to'plami» qatori ham shu tugma hisoblanadi
+const isFolderRow = (text: string, url: string) => /t\.me\/addlist\//.test(url) || /📂|🗂|kanallar|каналы/i.test(text)
+
+export function folderLinkOf(lines: string) {
+  for (const raw of lines.split(/\r?\n/)) {
+    const [text = '', url = ''] = raw.split('|').map((s) => s.trim())
+    if (text && isFolderRow(text, url)) return url
+  }
+  return ''
+}
+
+// Papka havolasini "Matn | havola | rang" qatorlariga yozadi: mavjud papka tugmasi yangilanadi, bo'lmasa — qo'shiladi.
+// Bo'sh havola — tugma havolasiz qoladi (kanalda ko'rinmaydi)
+export function withFolderLink(lines: string, url: string) {
+  const rows = lines.split(/\r?\n/).filter((l) => l.trim())
+  const i = rows.findIndex((raw) => {
+    const [text = '', u = ''] = raw.split('|').map((s) => s.trim())
+    return text && isFolderRow(text, u)
+  })
+  if (i >= 0) {
+    const color = rows[i].split('|')[2]?.trim() || 'red'
+    rows[i] = `${FOLDER_BUTTON_TEXT} | ${url} | ${color}`
+  } else if (url) {
+    rows.push(`${FOLDER_BUTTON_TEXT} | ${url} | red`)
+  }
+  return rows.join('\n')
+}
 
 const STYLES: Record<string, 'primary' | 'danger' | 'success'> = {
   blue: 'primary', "ko'k": 'primary', kok: 'primary', primary: 'primary',

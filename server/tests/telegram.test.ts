@@ -77,3 +77,17 @@ test('token formati va niqoblash', () => {
   assert.ok(!isTokenFormat('123:abc'))
   assert.equal(maskToken('123456789:AAHfakeTokenForTestingPurposes1234567'), '123456789:AA…567')
 })
+
+test("«📂 Ish kanallari» papka havolasi: eski qator yangilanadi, yo'q bo'lsa qo'shiladi, bo'sh — yashirinadi", async () => {
+  const { folderLinkOf, withFolderLink, buttonsKeyboard, FOLDER_LINK_RE } = await import('../src/lib/telegram/format')
+  const link = 'https://t.me/addlist/AbCdEf123'
+  const old = "📢 E'lon joylash | {post} | blue\n🗂 Kanallar to'plami / Подборка каналов |  | red"
+  const next = withFolderLink(old, link)
+  assert.equal(folderLinkOf(next), link)
+  assert.equal(next.split('\n').length, 2)
+  const kb = buttonsKeyboard(next, { webAppUrl: '', botUsername: 'b' })!
+  assert.equal(kb.inline_keyboard[1][0].url, link)
+  assert.match(withFolderLink('A | https://a.uz', link), /📂 Ish kanallari .*addlist/)
+  assert.equal(buttonsKeyboard(withFolderLink(next, ''), { webAppUrl: '', botUsername: 'b' })!.inline_keyboard.length, 1)
+  assert.ok(FOLDER_LINK_RE.test(link) && !FOLDER_LINK_RE.test('https://t.me/kanal'))
+})
