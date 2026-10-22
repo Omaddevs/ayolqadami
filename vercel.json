@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/admin", "destination": "https://api.ayolqadami.uz/admin", "permanent": false },
+    { "source": "/admin/:path*", "destination": "https://api.ayolqadami.uz/admin/:path*", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/robots.txt", "destination": "/api/robots" },

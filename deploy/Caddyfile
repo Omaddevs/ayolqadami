@@ -22,6 +22,10 @@ www.{$WEB_DOMAIN} {
 		-Server
 	}
 
+	# Admin panel API domenida (Next.js): ayolqadami.uz/admin → api.ayolqadami.uz/admin (aks holda sayt 404 ko'rsatadi)
+	@admin path /admin /admin/*
+	redir @admin https://{$API_DOMAIN}{uri} 302
+
 	# Dinamik sitemap (faol vakansiyalar, kompaniyalar, maqolalar) — serverdan
 	handle /sitemap.xml {
 		reverse_proxy server:3000
