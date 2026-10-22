@@ -4,7 +4,7 @@ import { db } from '../db'
 import { TelegramError, tg, tgRetry, type TgChat, type TgChatMember, type TgUser } from './api'
 import { getTelegramConfig, type TelegramConfig } from './config'
 import { loginBotToken } from '../login-bot'
-import { customKeyboard, jobKeyboard, jobPostHtml, jobShareUrl, sanitizeTelegramHtml } from './format'
+import { colorizeKeyboard, customKeyboard, jobKeyboard, jobPostHtml, jobShareUrl, sanitizeTelegramHtml } from './format'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const errText = (e: unknown) => (e instanceof TelegramError ? `${e.code}: ${e.description}` : (e as Error)?.message || String(e))
@@ -52,7 +52,8 @@ export async function inspectChannel(token: string, chatRef: string) {
 // previewUrl — matn ostida shu havolaning katta rasmli kartochkasi chiqadi
 type SendInput = { text: string; photo?: string | null; replyMarkup?: unknown; previewUrl?: string }
 
-export async function sendToChat(token: string, chatId: string, { text, photo, replyMarkup, previewUrl }: SendInput) {
+export async function sendToChat(token: string, chatId: string, { text, photo, replyMarkup: markup, previewUrl }: SendInput) {
+  const replyMarkup = colorizeKeyboard(markup)
   if (photo) {
     // rasm izohi 1024 belgigacha — uzun matn rasmdan keyin alohida xabar emas, qisqartiriladi
     const caption = text.length > 1024 ? text.slice(0, 1020) + '…' : text

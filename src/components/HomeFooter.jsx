@@ -94,11 +94,11 @@ export default function HomeFooter() {
         <span className="hf-float f4"><Icon3D name="sparkle" size={38} /></span>
 
         <div className="hf-cta-in">
-          <span className="hf-chip"><img src="/ayolqadami-mark.png" alt="" /> {t('Ayollar uchun yaratilgan')}</span>
+          <span className="hf-chip"><img src="/ayolqadami-mark.webp" alt="" loading="lazy" decoding="async" /> {t('Ayollar uchun yaratilgan')}</span>
           <h2>{t('Karyerangizni yangi bosqichga')} <br />{t('olib chiqing')} <span className="hf-logo-tile"><i /></span> {t('AyolQadami bilan')}</h2>
           <p>{t("AyolQadami — ayollar uchun ish topish, rezyume yaratish va kasbiy o'sish platformasi: mos vakansiyalar, QadamAI tavsiyalari va ishonchli ish beruvchilar bir joyda.")}</p>
           <Link to={isEmp ? '/post-job' : '/profile/edit'} className="hf-cta-btn">
-            <img src="/roles/seeker.png" alt="" />
+            <img src="/roles/seeker.webp" alt="" loading="lazy" decoding="async" />
             {isEmp ? t('Vakansiya joylash') : t('Rezyume joylash')}
           </Link>
         </div>
@@ -107,7 +107,7 @@ export default function HomeFooter() {
       {/* Ikki panelli footer: chapda brend kartasi, o'ngda havolalar + obuna */}
       <div className="hf-foot">
         <div className="hf-bcard">
-          <Link to="/" className="hf-brand"><img src="/ayolqadami-mark.png" alt="" /> AyolQadami</Link>
+          <Link to="/" className="hf-brand"><img src="/ayolqadami-mark.webp" alt="" loading="lazy" decoding="async" /> AyolQadami</Link>
           <p>{t('Ayollar uchun ish va karyera,')} <span>{t('QadamAI yordamida.')}</span></p>
           <div className="hf-touch">
             <b>{t("Biz bilan bog'laning!")}</b>

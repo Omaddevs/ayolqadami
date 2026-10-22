@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Rasmni berilgan nisbatda qirqish oynasi: sudrab joylashtiriladi, slayder yoki g'ildirak bilan kattalashtiriladi.
-// Natija out × (out / ratio) o'lchamli JPEG fayl sifatida qaytadi.
+// Natija out × (out / ratio) o'lchamli WebP (bo'lmasa JPEG) fayl sifatida qaytadi.
 type Props = { src: string; name: string; ratio: number; out: number; maxBytes: number; onDone: (f: File) => void; onCancel: () => void }
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
@@ -74,13 +74,16 @@ export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel
     ctx.imageSmoothingQuality = 'high'
     const sw = w / k, sh = h / k
     ctx.drawImage(img, cc.x * nw - sw / 2, cc.y * nh - sh / 2, sw, sh, 0, 0, out, oh)
-    // hajm chegarasidan oshsa — sifatni pasaytirib qayta urinadi
-    const encode = (q: number) => canvas.toBlob((b) => {
-      if (b && b.size > maxBytes && q > 0.5) return encode(q - 0.1)
+    // WebP (JPEG'dan 2-3 baravar yengil); brauzer WebP yarata olmasa (eski Safari PNG qaytaradi) — JPEG.
+    // Sayt tez ochilishi uchun ~350 KB dan oshsa sifat pasaytiriladi
+    const target = Math.min(maxBytes, 350 * 1024)
+    const encode = (type: 'image/webp' | 'image/jpeg', q: number) => canvas.toBlob((b) => {
+      if (b && type === 'image/webp' && b.type !== 'image/webp') return encode('image/jpeg', 0.85)
+      if (b && b.size > target && q > 0.55) return encode(type, q - 0.1)
       setBusy(false)
-      if (b) onDone(new File([b], name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }))
-    }, 'image/jpeg', q)
-    encode(0.9)
+      if (b) onDone(new File([b], name.replace(/\.[^.]+$/, '') + (type === 'image/webp' ? '.webp' : '.jpg'), { type }))
+    }, type, q)
+    encode('image/webp', 0.85)
   }
 
   return (

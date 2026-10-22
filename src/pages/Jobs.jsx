@@ -432,7 +432,7 @@ export function JobDetail() {
                 <span>{t('QadamAI rezyumengizni vakansiya bilan solishtiradi')}</span>
                 <em>{t('Tekshirish')} <Sparkle size={14} weight="fill" /></em>
               </div>
-              <img src="/qadam-ai.png" alt="" draggable="false" />
+              <img src="/qadam-ai.webp" alt="" loading="lazy" decoding="async" draggable="false" />
             </Link>
           )}
 

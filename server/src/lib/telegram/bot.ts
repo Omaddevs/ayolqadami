@@ -3,14 +3,14 @@ import { db } from '../db'
 import { salaryText } from '../format'
 import { TelegramError, tg, type TgMessage, type TgUpdate, type TgUser } from './api'
 import { getTelegramConfig, type TelegramConfig } from './config'
-import { esc, jobUrl } from './format'
+import { colorizeKeyboard, esc, jobUrl } from './format'
 import { cancelJobDraft, onDraftCallback, onDraftMessage, startJobDraft, type JobDraft } from './post-flow'
 
 const SUPPORT_GREETING_FALLBACK = 'Murojaatingiz qabul qilindi. Operatorlarimiz tez orada javob berishadi.'
 
 async function reply(cfg: TelegramConfig, chatId: number | string, text: string, extra: Record<string, unknown> = {}) {
   try {
-    await tg(cfg.token, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, ...extra })
+    await tg(cfg.token, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, ...extra, reply_markup: colorizeKeyboard(extra.reply_markup) })
   } catch (e) {
     if (e instanceof TelegramError && e.isForbidden) await db.telegramUser.updateMany({ where: { id: String(chatId) }, data: { blocked: true } })
     else console.error('[telegram] reply', e)

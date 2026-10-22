@@ -59,7 +59,7 @@ function BannerCarousel() {
         onPointerDown={() => { paused.current = true }} onPointerUp={() => { paused.current = false }}
         onPointerLeave={() => { paused.current = false }}>
         {BANNERS.map((b, i) => {
-          const img = <img src={b.img} alt={b.title} draggable="false" loading={i ? 'lazy' : 'eager'} />
+          const img = <img src={b.img} alt={b.title} draggable="false" loading={i ? 'lazy' : 'eager'} decoding="async" fetchpriority={i ? undefined : 'high'} />
           const cls = `hb-slide ${i === cur ? 'on' : ''}`
           // tashqi havola — yangi oynada; sayt ichidagi — Link; havolasiz — oddiy rasm
           return b.external ? <a key={b.id} href={b.to} target="_blank" rel="noopener noreferrer" className={cls} onClick={() => click(b)}>{img}</a>
@@ -123,7 +123,7 @@ function QuickMenu({ children }) {
 }
 
 // Desktop bosh sahifasi: sarlavha, bo'lim tanlovi va soha kartalari (mobil hero o'rniga)
-// rasmlar: public/categories/<id>.png (public/hero/hero-imageN.png dan kesib olingan)
+// rasmlar: public/categories/<id>.webp (public/hero/hero-imageN.png dan kesib olingan)
 // kartaga sig'ishi uchun qisqa nomlar
 const DK_NAMES = { food: 'Restoran mehmonxona' }
 const DK_CATS = ['office', 'edu', 'med', 'sales', 'beauty', 'it', 'home', 'remote', 'production', 'food', 'marketing', 'other']
@@ -160,7 +160,7 @@ function DesktopIntro({ isEmp }) {
             {row.map((c) => (
               <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="dk-cat">
                 <b>{t(DK_NAMES[c.id] || c.name)}</b>
-                <img src={`/categories/${c.id}.png`} alt="" className="dk-cat-img" loading="lazy" draggable="false" />
+                <img src={`/categories/${c.id}.webp`} alt="" className="dk-cat-img" loading="lazy" decoding="async" draggable="false" />
               </Link>
             ))}
             {r === 1 && (
@@ -220,16 +220,16 @@ export default function Home() {
 
   const tiles = isEmp
     ? [
-        { to: '/applications', label: t("E'lonlarim"), icon: 'folder', img: '/arizalar.png', badge: posted.length || null },
+        { to: '/applications', label: t("E'lonlarim"), icon: 'folder', img: '/arizalar.webp', badge: posted.length || null },
         { to: '/candidates', label: t('Nomzod-\nlar'), icon: 'users' },
-        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
-        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.png' },
+        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.webp', wide: true, soon: true },
+        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.webp' },
       ]
     : [
-        { to: '/applications', label: t('Ariza-\nlarim'), icon: 'folder', img: '/arizalar.png', badge: applications.length || null },
-        { to: '/jobs?period=3d&sort=new', label: t('Yangi\nishlar'), icon: 'briefcase', img: '/yangi-ishlar.png' },
-        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.png', wide: true, soon: true },
-        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.png' },
+        { to: '/applications', label: t('Ariza-\nlarim'), icon: 'folder', img: '/arizalar.webp', badge: applications.length || null },
+        { to: '/jobs?period=3d&sort=new', label: t('Yangi\nishlar'), icon: 'briefcase', img: '/yangi-ishlar.webp' },
+        { to: '/courses', label: t("O'quv\nkurslar"), icon: 'cap', img: '/kurslar-cap.webp', wide: true, soon: true },
+        { to: '/events', label: t('Tadbirlar'), icon: 'calendar', img: '/tadbirlar.webp' },
       ]
 
   // tezkor kartalar: desktopda sahifada, mobilda sarlavhadagi menyu ichida
@@ -239,19 +239,19 @@ export default function Home() {
         <Link to="/post-job" className="fcard fcard-big">
           <b>{t('Vakansiya joylash')}</b>
           <span>{t("E'lon bering, arizalar oling")}</span>
-          <img src="/vacancy-plus.png" alt="" className="fcard-art plus-art" draggable="false" />
+          <img src="/vacancy-plus.webp" alt="" decoding="async" className="fcard-art plus-art" draggable="false" />
         </Link>
       ) : (
         <Link to="/profile/edit" className="fcard fcard-big">
           <b>{t('Rezyume yaratish')}</b>
           <span>{t("Profilingizni to'ldiring")}</span>
-          <img src="/rezyume.png" alt="" className="fcard-art resume-art" />
+          <img src="/rezyume.webp" alt="" decoding="async" className="fcard-art resume-art" />
         </Link>
       )}
       <Link to="/qadam-ai" className="fcard fcard-ai">
         <b>QadamAI</b>
         <span className="ai-sub">{t('HR yordamchi')}</span>
-        <img src="/qadam-ai.png" alt="" className="fcard-art ai-art" />
+        <img src="/qadam-ai.webp" alt="" decoding="async" className="fcard-art ai-art" />
       </Link>
       {isEmp ? (
         <Link to="/candidates" className="fcard">
@@ -262,7 +262,7 @@ export default function Home() {
         <div className="fcard is-soon" aria-disabled="true">
           <em className="tile-soon">{t('Soon')}</em>
           <b>{t('Kurslar')}</b>
-          <img src="/kurslar.png" alt="" className="fcard-art books-art" />
+          <img src="/kurslar.webp" alt="" decoding="async" className="fcard-art books-art" />
         </div>
       )}
     </div>
@@ -280,7 +280,7 @@ export default function Home() {
         <div className="hero-inner">
           <div className="hero-top">
             <Link to="/" className="hero-user hero-brand" aria-label="AyolQadami">
-              <img src="/ayolqadami-mark.png" alt="" width="34" height="34" />
+              <img src="/ayolqadami-mark.webp" alt="" width="34" height="34" />
               <span>AyolQadami</span>
             </Link>
             <div className="hero-actions">
@@ -298,7 +298,7 @@ export default function Home() {
               const inner = (
                 <>
                   {tile.img
-                    ? <img src={tile.img} alt="" className={`tile-ico tile-img${tile.wide ? ' wide' : ''}`} />
+                    ? <img src={tile.img} alt="" decoding="async" className={`tile-ico tile-img${tile.wide ? ' wide' : ''}`} />
                     : <GlassIcon name={tile.icon} size={64} className="tile-ico" />}
                   <span>{tile.label}</span>
                   {tile.soon ? <em className="tile-soon">{t('Soon')}</em> : tile.badge && <em className="badge">{tile.badge}</em>}

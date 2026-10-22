@@ -72,6 +72,19 @@ const STYLES: Record<string, 'primary' | 'danger' | 'success'> = {
 
 export type TgButton = { text: string; url: string; style?: 'primary' | 'danger' | 'success' }
 
+// Barcha inline tugmalar rangli: rangi berilmagan tugmaga matniga qarab rang beriladi
+// (bekor qilish, o'chirish — qizil; tasdiqlash, joylash, saqlash — yashil; qolgani — ko'k). ayolqadam-bot/app/button_colors.py bilan bir xil
+const DANGER_RE = /❌|🗑|🚫|⛔|bekor|o['ʻʼ‘’`]?chir|rad\b|rad et|yopish|yashir|chiqish|отмен|удал|отклон|закры|скры|выйти/i
+const SUCCESS_RE = /✅|✔|💾|📤|tasdiq|joyla|saqla|yubor|ariza|qabul|^ha\b|подтверд|опублик|размест|сохран|отправ|отклик|принят|^да\b/i
+export const styleFor = (text: string): NonNullable<TgButton['style']> =>
+  DANGER_RE.test(text) ? 'danger' : SUCCESS_RE.test(text) ? 'success' : 'primary'
+
+export function colorizeKeyboard<T>(markup: T): T {
+  const rows = (markup as { inline_keyboard?: { text: string; style?: string }[][] } | undefined)?.inline_keyboard
+  if (!Array.isArray(rows)) return markup
+  return { ...markup, inline_keyboard: rows.map((row) => row.map((b) => (b.style ? b : { ...b, style: styleFor(b.text) }))) }
+}
+
 export function parseChannelButtons(src: string, vars: Record<string, string>): TgButton[] {
   const out: TgButton[] = []
   for (const raw of src.split(/\r?\n/)) {
@@ -97,7 +110,7 @@ export function buttonsKeyboard(src: string, cfg: Pick<TelegramConfig, 'webAppUr
     bot: botLink(cfg),
     post: botLink(cfg, 'post') || (site ? `${site}/post-job` : ''),
   })
-  return buttons.length ? { inline_keyboard: buttons.map((b) => [b]) } : undefined
+  return buttons.length ? colorizeKeyboard({ inline_keyboard: buttons.map((b) => [b]) }) : undefined
 }
 
 export const jobKeyboard = (job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername' | 'channelButtons'>) =>

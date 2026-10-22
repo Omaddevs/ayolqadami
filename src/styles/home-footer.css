@@ -33,7 +33,7 @@
   background: linear-gradient(160deg, #fff, #E2E1FF); box-shadow: 0 8px 20px rgba(30, 20, 120, .35), inset 0 -2px 0 rgba(91, 87, 240, .15); }
 /* logo fayli oq — mask orqali loyiha rangiga bo'yaladi */
 .hf-logo-tile i { width: 66%; height: 66%; background: linear-gradient(160deg, #6E6BF4, #4F46E5);
-  -webkit-mask: url('/ayolqadami-mark.png') center / contain no-repeat; mask: url('/ayolqadami-mark.png') center / contain no-repeat; }
+  -webkit-mask: url('/ayolqadami-mark.webp') center / contain no-repeat; mask: url('/ayolqadami-mark.webp') center / contain no-repeat; }
 .hf-cta p { margin-top: 16px; max-width: 520px; font-size: 14px; line-height: 1.5; opacity: .9; }
 .hf-cta-btn { display: inline-flex; align-items: center; gap: 12px; margin-top: 26px; height: 54px; padding: 0 22px 0 6px; border-radius: 16px;
   background: linear-gradient(180deg, #2B2B38, #121218); color: #fff; font-size: 18px; font-weight: 500; letter-spacing: -.01em;

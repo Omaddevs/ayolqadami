@@ -32,6 +32,12 @@ www.{$WEB_DOMAIN} {
 		# Vite fayl nomlarida xesh bor — abadiy keshlanadi; index.html har doim yangilanadi
 		@assets path /assets/*
 		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# public/ dagi rasmlar (nomida xesh yo'q): 7 kun keshda, keyin fonda yangilanadi
+		@images {
+			path *.webp *.png *.jpg *.jpeg *.svg *.ico
+			not path /assets/*
+		}
+		header @images Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
 		@html path / /index.html
 		header @html Cache-Control "no-cache"
 

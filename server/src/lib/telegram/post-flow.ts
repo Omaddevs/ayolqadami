@@ -7,7 +7,7 @@ import { CATEGORIES, CITIES, catName } from '../catalog'
 import { formatUzPhone, normalizeUzPhone } from '../phone'
 import { tg, type TgMessage, type TgUser } from './api'
 import type { TelegramConfig } from './config'
-import { esc, jobPostHtml } from './format'
+import { colorizeKeyboard, esc, jobPostHtml } from './format'
 import { autoPostJob } from './service'
 
 type Step = 'title' | 'company' | 'city' | 'district' | 'category' | 'salary' | 'phone' | 'description' | 'confirm'
@@ -48,7 +48,7 @@ export function parseSalary(input: string): { from: number; to: number } | null 
 }
 
 async function send(cfg: TelegramConfig, chatId: number, text: string, replyMarkup?: unknown) {
-  await tg(cfg.token, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, reply_markup: replyMarkup })
+  await tg(cfg.token, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, reply_markup: colorizeKeyboard(replyMarkup) })
 }
 
 const saveDraft = (tgId: string, draft: JobDraft | null) =>

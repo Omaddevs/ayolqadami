@@ -118,7 +118,7 @@ export function CandidateDetail() {
       <TopBar title={tr("Rezyume")} />
       <div className="page-body">
         <div className="cv-hero">
-          <img className="cv-hero-art" src="/ayolqadami-mark.png" alt="" aria-hidden="true" />
+          <img className="cv-hero-art" src="/ayolqadami-mark.webp" alt="" aria-hidden="true" />
           <span className="cv-ava">
             <Avatar name={c.name} color={c.color} size={88} radius={28} />
             {status?.id === 'active' && <i className="cv-online" aria-label={tr("Faol")} />}

@@ -31,7 +31,7 @@ function ErrorScreen({ code, children, className = '' }) {
       </div>
 
       <Link to="/" className="nf-brand">
-        <img src="/ayolqadami-mark.png" alt="" width="30" height="30" />
+        <img src="/ayolqadami-mark.webp" alt="" width="30" height="30" />
         <span>AyolQadami</span>
       </Link>
 

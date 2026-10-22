@@ -523,7 +523,7 @@ const ICONS = {
 
 // SVG o'rniga tayyor rasm ishlatiladigan ikonkalar (public/ ichida)
 const IMG_ICONS = {
-  gradcap: '/kurslar-cap.png',
+  gradcap: '/kurslar-cap.webp',
 }
 
 export const ICON_NAMES = [...Object.keys(ICONS), ...Object.keys(IMG_ICONS)]
@@ -531,7 +531,7 @@ export const ICON_NAMES = [...Object.keys(ICONS), ...Object.keys(IMG_ICONS)]
 export default function Icon3D({ name, size = 64, className = '', style }) {
   const u = 'i' + useId().replace(/[^a-zA-Z0-9]/g, '')
   if (IMG_ICONS[name]) {
-    return <img src={IMG_ICONS[name]} alt="" aria-hidden="true" className={`icon3d icon3d-img ${className}`}
+    return <img src={IMG_ICONS[name]} alt="" aria-hidden="true" className={`icon3d icon3d-img ${className}`} decoding="async"
       style={{ width: size, height: size, ...style }} draggable="false" />
   }
   const render = ICONS[name] || ICONS.sparkle

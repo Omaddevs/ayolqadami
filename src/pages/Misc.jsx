@@ -103,7 +103,7 @@ export function Events() {
             return (
               <div key={e.id} className="ar-card ev-card">
                 <div className={`ar-cover ev-cover ${e.img ? 'has-img' : ''}`} style={{ '--c1': e.cover[0], '--c2': e.cover[1] }}>
-                  {e.img ? <img src={e.img} alt="" draggable="false" /> : <Icon3D name="calendar" size={110} />}
+                  {e.img ? <img src={e.img} alt="" loading="lazy" decoding="async" draggable="false" /> : <Icon3D name="calendar" size={110} />}
                   {e.tag && <span className="ar-tag">{t(e.tag)}</span>}
                   <span className="ev-date"><CalendarBlank size={15} weight="bold" /> {t(e.date)}</span>
                 </div>

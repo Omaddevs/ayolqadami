@@ -6,7 +6,7 @@ import { useApp } from '../context/AppContext'
 import { CATEGORIES } from '../data/mock'
 import { useT } from '../i18n'
 
-// "Barcha kategoriyalar" sahifasi: 3D ikonka (Icon3D) va (bo'lsa) public/categories/<id>.png rasmi
+// "Barcha kategoriyalar" sahifasi: 3D ikonka (Icon3D) va (bo'lsa) public/categories/<id>.webp rasmi
 const IDS = ['office', 'edu', 'med', 'sales', 'beauty', 'it', 'home', 'remote', 'production', 'food', 'marketing', 'finance', 'law', 'logistics', 'other']
 const NO_IMG = ['finance', 'law', 'logistics']
 const norm = (s) => String(s || '').toLowerCase().replace(/[‘’`ʻʼ]/g, "'")
@@ -47,7 +47,7 @@ export default function Categories() {
                 <span className="cats-txt"><b>{t(c.name)}</b><small>{t("{n} ta e'lon", { n: c.count })}</small></span>
                 {NO_IMG.includes(c.id)
                   ? <ArrowRight size={20} className="cats-arrow" />
-                  : <img src={`/categories/${c.id}.png`} alt="" className="cats-img" loading="lazy" draggable="false" />}
+                  : <img src={`/categories/${c.id}.webp`} alt="" className="cats-img" loading="lazy" decoding="async" draggable="false" />}
               </Link>
             ))}
           </div>

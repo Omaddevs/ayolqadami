@@ -255,7 +255,7 @@ function SiteHeader() {
       <div className="sh-top">
         <div className="sh-wrap">
           <Link to="/" className="sh-brand">
-            <img src="/ayolqadami-mark.png" alt="" width="32" height="32" />
+            <img src="/ayolqadami-mark.webp" alt="" width="32" height="32" />
             <span>AyolQadami</span>
           </Link>
           <div className="sh-tools">

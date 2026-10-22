@@ -374,7 +374,7 @@ export default function Auth() {
   const sideLast = sideWords.pop()
   const sideHead = sideWords.join(' ')
   // desktopda forma tepasida turadigan brend (mobilda yashirin)
-  const dkBrand = <div className="aw-dk-brand" aria-hidden="true"><span><img src="/ayolqadami-mark.png" alt="" /></span> AyolQadami</div>
+  const dkBrand = <div className="aw-dk-brand" aria-hidden="true"><span><img src="/ayolqadami-mark.webp" alt="" /></span> AyolQadami</div>
 
   const googleBtn = (
     <button type="button" className="aw-btn dark aw-google" onClick={google} disabled={busy}>
@@ -395,8 +395,7 @@ export default function Auth() {
           <p>{t.sideFeats.join(' · ')}</p>
           <div className="aw-side-people">
             <picture>
-              <source srcSet="/auth/people.webp" type="image/webp" />
-              <img src="/auth/people.png" alt="" draggable="false" />
+              <img src="/auth/people.webp" alt="" draggable="false" />
             </picture>
           </div>
         </aside>
@@ -408,7 +407,7 @@ export default function Auth() {
             </div>
             <div className="aw-deco" aria-hidden="true" />
             <div className="aw-hero">
-              <img className="aw-logo" src="/logo.png" alt="" />
+              <img className="aw-logo" src="/logo.webp" alt="" />
               {dkBrand}
               <h1>{t.welcomeTitle[0]}<br />{t.welcomeTitle[1]}</h1>
               <p>{t.welcomeText[0]}<br />{t.welcomeText[1]}</p>
@@ -524,8 +523,8 @@ export default function Auth() {
                   <p className="aw-sub">{t.roleSub}</p>
                   <div className="aw-roles">
                     {[
-                      { id: 'seeker', img: '/roles/seeker.png', title: t.seeker, text: t.seekerText },
-                      { id: 'employer', img: '/roles/employer.png', title: t.employer, text: t.employerText },
+                      { id: 'seeker', img: '/roles/seeker.webp', title: t.seeker, text: t.seekerText },
+                      { id: 'employer', img: '/roles/employer.webp', title: t.employer, text: t.employerText },
                     ].map((r) => (
                       <button key={r.id} type="button" className={`aw-role ${form.role === r.id ? 'on' : ''}`}
                         aria-pressed={form.role === r.id} onClick={() => set('role', r.id)}>
