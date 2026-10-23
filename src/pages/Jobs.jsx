@@ -7,16 +7,17 @@ import Icon3D from '../components/Icon3D'
 import {
   ArrowLeft, Buildings, CalendarBlank, CaretRight, ChatCircleText, CheckCircle, Clock, CurrencyCircleDollar, DotsThree, Export, Eye, EyeSlash, Fire, Flag, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, Phone, SealCheck, Sparkle, TelegramLogo, UsersThree,
 } from '@phosphor-icons/react'
-import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Sheet, TopBar } from '../components/UI'
+import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Select, Sheet, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES, JOB_TYPES, catName, salaryText } from '../data/mock'
+import { CATEGORIES, CITIES, JOB_TYPES, catName, salaryText } from '../data/mock'
+import { EXP_STEPS, SALARY_STEPS, activeCount, filterJobs, readFilters } from '../lib/jobFilters'
 import { placeJobs } from '../data/geo'
 import { companySlug } from '../data/companies'
 import { WORK_MODES, WORK_TIME } from '../data/resume'
 import { breadcrumbLd, findJobByRef, jobPath, jobPostingLd, siteUrl, useSeo } from '../lib/seo'
 import { api as server, apiEnabled } from '../lib/api'
 import { tr, tx, useT } from '../i18n'
-import { PERIODS, compactNum, fullDateTime, inPeriod, postedAt, postedText } from '../lib/time'
+import { PERIODS, compactNum, fullDateTime, postedAt, postedText } from '../lib/time'
 
 const PER_PAGE = 20
 
@@ -43,38 +44,30 @@ const SORTS = [
   { value: 'few', label: 'Kam arizali', icon: UsersThree },
 ]
 
-const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
+
 
 export function Jobs() {
   const { allJobs } = useApp()
   const t = useT()
   const [params, setParams] = useSearchParams()
-  const [q, setQ] = useState(params.get('q') || '')
-  const cat = params.get('cat') || ''
-  const [type, setType] = useState(params.get('type') || '')
-  const [sort, setSort] = useState(params.get('sort') || 'new')
-  // joylangan vaqti: URL'da (?period=24h) — "Yangi ishlar" tugmasi shu bilan ochadi
-  const period = PERIODS.some((p) => p.value === params.get('period')) ? params.get('period') : ''
-  const setPeriod = (v) => {
+  // barcha filtrlar URL'da (?q=&cat=&city=&type=&min=&exp=&period=&sort=) — bosh sahifadagi qidiruv shu manzilni ochadi
+  const f = readFilters(params)
+  const { q, cat, city, type, min, exp, period, sort } = f
+  // filtr o'zgarsa — birinchi sahifaga qaytamiz
+  const setF = (k, v) => {
     const p = new URLSearchParams(params)
-    v ? p.set('period', v) : p.delete('period')
+    v && !(k === 'sort' && v === 'new') ? p.set(k, v) : p.delete(k)
     p.delete('page')
     setParams(p, { replace: true })
   }
-  // sarlavhadagi qidiruv yoki filtr oynasidan kelgan qiymatlar (sahifa ochiq turganda ham) holatga tushadi
-  const urlQ = params.get('q')
-  const urlType = params.get('type')
-  const urlSort = params.get('sort')
-  useEffect(() => { if (urlQ !== null) setQ(urlQ) }, [urlQ])
-  useEffect(() => { if (urlType !== null) setType(urlType) }, [urlType])
-  useEffect(() => { if (urlSort !== null) setSort(urlSort) }, [urlSort])
-
-  const setCat = (id) => {
-    const p = new URLSearchParams(params)
-    id ? p.set('cat', id) : p.delete('cat')
-    p.delete('page')
-    setParams(p, { replace: true })
-  }
+  const setPeriod = (v) => setF('period', v)
+  const setCat = (id) => setF('cat', id)
+  const setQ = (v) => setF('q', v)
+  const setType = (v) => setF('type', v)
+  const setSort = (v) => setF('sort', v)
+  const active = activeCount(f)
+  const clearAll = () => setParams(q ? { q } : {}, { replace: true })
+  const cityOpts = useMemo(() => [{ value: '', label: t("O'zbekiston bo'ylab") }, ...CITIES.map((c) => ({ value: c, label: c }))], [t])
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
   const setPage = (n) => {
     const p = new URLSearchParams(params)
@@ -82,29 +75,9 @@ export function Jobs() {
     setParams(p)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-  // qidiruv yoki filtr o'zgarsa — birinchi sahifaga qaytamiz
-  const resetPage = () => {
-    if (!params.get('page')) return
-    const p = new URLSearchParams(params)
-    p.delete('page')
-    setParams(p, { replace: true })
-  }
 
-  const list = useMemo(() => {
-    const nq = norm(q.trim())
-    let r = allJobs.filter((j) =>
-      (!cat || j.category === cat) &&
-      (!type || j.type === type) &&
-      inPeriod(j, period) &&
-      (!nq || norm(`${j.title} ${j.company} ${(j.skills || []).join(' ')} ${j.city}`).includes(nq) || norm(tx(j.title)).includes(nq)))
-    const time = (j) => postedAt(j)?.getTime() || 0
-    if (sort === 'new') r = [...r].sort((a, b) => time(b) - time(a))
-    if (sort === 'popular') r = [...r].sort((a, b) => (b.views || 0) - (a.views || 0) || time(b) - time(a))
-    if (sort === 'liked') r = [...r].sort((a, b) => (b.likes || 0) - (a.likes || 0) || time(b) - time(a))
-    if (sort === 'salary') r = [...r].sort((a, b) => (b.salaryTo || 0) - (a.salaryTo || 0))
-    if (sort === 'few') r = [...r].sort((a, b) => (a.applicants || 0) - (b.applicants || 0))
-    return r
-  }, [allJobs, q, cat, type, period, sort])
+  const list = useMemo(() => filterJobs(allJobs, { q, cat, city, type, min, exp, period, sort }, postedAt),
+    [allJobs, q, cat, city, type, min, exp, period, sort])
 
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE))
   const cur = Math.min(page, pages)
@@ -116,8 +89,8 @@ export function Jobs() {
       <div className="page-body">
         <div className="search search-solid">
           <Icon name="search" size={22} />
-          <input value={q} onChange={(e) => { setQ(e.target.value); resetPage() }} placeholder={t("Kasb, kompaniya yoki ko'nikma")} />
-          {q && <button className="icon-btn sm" onClick={() => { setQ(''); resetPage() }} aria-label={t('Tozalash')}><Icon name="x" size={18} /></button>}
+          <input value={q} onChange={(e) => { setQ(e.target.value) }} placeholder={t("Kasb, kompaniya yoki ko'nikma")} />
+          {q && <button className="icon-btn sm" onClick={() => { setQ('') }} aria-label={t('Tozalash')}><Icon name="x" size={18} /></button>}
         </div>
 
         <div className="pill-row">
@@ -130,7 +103,7 @@ export function Jobs() {
         </div>
         <div className="pill-row">
           {['', ...JOB_TYPES].map((jt) => (
-            <button key={jt || 'all'} className={`pill pill-sm ${type === jt ? 'on' : ''}`} onClick={() => { setType(jt); resetPage() }}>{t(jt || 'Har qanday format')}</button>
+            <button key={jt || 'all'} className={`pill pill-sm ${type === jt ? 'on' : ''}`} onClick={() => { setType(jt) }}>{t(jt || 'Har qanday format')}</button>
           ))}
         </div>
 
@@ -141,13 +114,30 @@ export function Jobs() {
             </button>
           ))}
         </div>
+        <div className="pill-row">
+          {SALARY_STEPS.map((s) => (
+            <button key={s.value || 'any'} className={`pill pill-sm ${min === s.value ? 'on' : ''}`} onClick={() => setF('min', s.value)}>
+              {s.value && <CurrencyCircleDollar size={15} weight="bold" />} {t(s.label)}
+            </button>
+          ))}
+        </div>
+        <div className="pill-row">
+          {EXP_STEPS.map((s) => (
+            <button key={s.value || 'any'} className={`pill pill-sm ${exp === s.value ? 'on' : ''}`} onClick={() => setF('exp', s.value)}>{t(s.label)}</button>
+          ))}
+        </div>
+        <div className="jobs-city">
+          <MapPin size={18} />
+          <Select value={city} options={cityOpts} onChange={(v) => setF('city', v)} />
+          {active > 0 && <button type="button" className="jobs-clear" onClick={clearAll}>{t('Filtrlarni tozalash')} ({active})</button>}
+        </div>
 
         <div className="result-bar">
           <div className="result-count">
             <b>{t('{n} ta vakansiya', { n: list.length })}</b>
             {pages > 1 && <span>{t("{range} ko'rsatilmoqda", { range: `${(cur - 1) * PER_PAGE + 1}–${(cur - 1) * PER_PAGE + shown.length}` })}</span>}
           </div>
-          <Dropdown value={sort} options={SORTS.map((o) => ({ ...o, label: t(o.label) }))} label={t('Saralash')} onChange={(v) => { setSort(v); resetPage() }} />
+          <Dropdown value={sort} options={SORTS.map((o) => ({ ...o, label: t(o.label) }))} label={t('Saralash')} onChange={(v) => { setSort(v) }} />
         </div>
 
         {list.length ? (
@@ -161,7 +151,9 @@ export function Jobs() {
               action={<button type="button" className="btn btn-primary" onClick={() => setPeriod('')}>{t("Barcha e'lonlarni ko'rish")}</button>} />
           ) : (
             <Empty icon="briefcase" title={t('Hech narsa topilmadi')} text={t("Filtrlarni o'zgartirib ko'ring yoki QadamAI'dan so'rang")}
-              action={<Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
+              action={active > 0
+                ? <button type="button" className="btn btn-primary" onClick={clearAll}>{t('Filtrlarni tozalash')}</button>
+                : <Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
           )
         )}
       </div>

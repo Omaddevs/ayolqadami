@@ -485,6 +485,20 @@ model Banner {
   @@index([active, sort])
 }
 
+// Bosh sahifadagi hamkorlar lentasi (logotiplar). 5 tagacha — qotib turadi, ko'proq bo'lsa — aylanadi
+model Partner {
+  id        String   @id @default(cuid())
+  name      String // alt matn va admin uchun nom
+  imageUrl  String // /media/<id> (yuklangan) yoki https://... yoki saytdagi /partners/x.png
+  linkUrl   String   @default("") // bo'sh — bosilmaydi; /companies/... yoki https://...
+  active    Boolean  @default(true)
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, sort])
+}
+
 // Admin yuklagan rasmlar (bazada — alohida disk/volume kerak emas, pg_dump zaxirasiga ham kiradi)
 model Media {
   id        String   @id @default(cuid())

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
   Bell, BellRing, Briefcase, Building2, CalendarDays, CircleHelp, FileText, GraduationCap, History, LayoutDashboard, LogOut, MessageCircle,
-  Newspaper, Send, Settings, Users, GalleryHorizontal, Megaphone } from 'lucide-react'
+  Newspaper, Send, Settings, Users, GalleryHorizontal, Handshake, Megaphone } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NavLink } from '@/components/client'
@@ -17,6 +17,7 @@ const RAIL = [
   { href: '/admin/articles', icon: Newspaper, label: 'Maqolalar' },
   { href: '/admin/events', icon: CalendarDays, label: 'Tadbirlar' },
   { href: '/admin/banners', icon: GalleryHorizontal, label: 'Bannerlar' },
+  { href: '/admin/partners', icon: Handshake, label: 'Hamkorlar' },
   { href: '/admin/notifications', icon: BellRing, label: 'Bildirishnomalar', adminOnly: true },
   null,
   { href: '/admin/audit', icon: History, label: 'Amallar jurnali', adminOnly: true },

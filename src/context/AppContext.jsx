@@ -5,6 +5,7 @@ import { api as server, apiEnabled, getToken, setToken } from '../lib/api'
 import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
+import { DEMO_JOBS_ENABLED, buildDemoJobs } from '../data/demoJobs'
 
 const KEY = 'ayolkaryera_v1'
 // Oflayn rejim (VITE_API_URL yo'q): yaratilgan hisoblar telefon raqami bo'yicha brauzerda saqlanadi, "Kirish" shu yerdan tiklaydi
@@ -28,14 +29,15 @@ function hashPw(str) {
 }
 const Ctx = createContext(null)
 
-// Kurslar, maqolalar, tadbirlar va bannerlar — admin paneldan (API) keladi
-const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [] }
+// Kurslar, maqolalar, tadbirlar, bannerlar va hamkorlar — admin paneldan (API) keladi
+const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [], partners: [] }
 const listOr = (v, fallback) => (Array.isArray(v) ? v : fallback)
 const normalizeContent = (d) => ({
   courses: listOr(d?.courses, []),
   articles: listOr(d?.articles, []),
   events: listOr(d?.events, []),
   banners: listOr(d?.banners, []),
+  partners: listOr(d?.partners, []),
 })
 
 const initial = {
@@ -70,12 +72,26 @@ function load() {
   }
 }
 
+const isDemo = (id) => String(id).startsWith('demo')
+
 export function AppProvider({ children }) {
   const [state, setState] = useState(load)
   const [toast, setToast] = useState(null)
   // Mehmon rejimi: kirish talab qilinadigan amalda ro'yxatdan o'tish oynasi ochiladi,
   // muvaffaqiyatli o'tgach kutib turgan amal bajariladi
   const [authOpen, setAuthOpen] = useState(false)
+  // Sarlavhadagi «Ish izlovchi | Ish beruvchi» almashtirgichi: faqat sahifa ko'rinishini o'zgartiradi,
+  // hisob roli (ariza, e'lon joylash huquqi) o'zgarmaydi. Kirish/chiqishda hisob roliga qaytadi.
+  const [audience, setAudience] = useState(null)
+  // faqat rol haqiqatan o'zgarganda (kirish/chiqish) tiklanadi. Birinchi ochilishda emas: aks holda /ish-beruvchilar
+  // o'rnatgan ko'rinish shu effekt bilan bekor bo'ladi (ichki komponent effekti ota effektidan oldin ishlaydi)
+  const prevRole = useRef(state.user?.role)
+  useEffect(() => {
+    if (prevRole.current === state.user?.role) return
+    prevRole.current = state.user?.role
+    setAudience(null)
+  }, [state.user?.role])
+  const viewRole = audience || state.user?.role || 'seeker'
   // kirish oynasi qaysi bo'limdan ochilsin: welcome | login | signup | code (bot havolasi: /?auth=signup)
   const [authMode, setAuthMode] = useState('welcome')
   const pending = useRef(null)
@@ -119,7 +135,7 @@ export function AppProvider({ children }) {
       // false — ariza yuborilmadi (chaqiruvchi "yuborildi" deb xabar bermasin)
       apply: (jobId, letter) => {
         if (userRef.current?.role !== 'seeker') return false
-        if (apiEnabled) server.apply(jobId, letter)
+        if (apiEnabled && !isDemo(jobId)) server.apply(jobId, letter)
         trackEvent('apply', { job_id: jobId })
         set((s) => ({
           applications: [{ jobId, letter, date: new Date().toISOString(), status: "Ko'rib chiqilmoqda" }, ...s.applications.filter((a) => a.jobId !== jobId)],
@@ -168,7 +184,7 @@ export function AppProvider({ children }) {
   }, [api])
 
   const requireAuth = useCallback((fn) => {
-    if (userRef.current) { fn?.(); return true }
+    if (userRef.current) { fn?.(userRef.current); return true }
     pending.current = fn || null
     setAuthOpen(true)
     return false
@@ -191,7 +207,7 @@ export function AppProvider({ children }) {
     const fn = pending.current
     pending.current = null
     setAuthOpen(false)
-    if (fn) setTimeout(fn, 0)
+    if (fn) setTimeout(() => fn(user), 0)
   }, [api])
   // Serverdan kelgan sessiya: token saqlanadi, foydalanuvchi holati serverdagisi bilan almashtiriladi
   const acceptSession = useCallback(({ token, user }) => {
@@ -353,17 +369,19 @@ export function AppProvider({ children }) {
     setState((s) => ({ ...s, saved: on ? [...s.saved.filter((x) => x !== id), id] : s.saved.filter((x) => x !== id) }))
     setJobStat(id, (j) => ({ likes: Math.max(0, (j.likes || 0) + (on ? 1 : -1)) }))
     if (on) trackEvent('job_like', { job_id: id })
-    if (apiEnabled) server.like(id, on).then((d) => { if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes }) })
+    if (apiEnabled && !isDemo(id)) server.like(id, on).then((d) => { if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes }) })
   }, [setJobStat])
   // Vakansiya sahifasi ochilganda: server noyob ko'rishni hisoblaydi va joriy sonni qaytaradi
   const viewJob = useCallback((id) => {
-    if (!apiEnabled || !id) return
+    if (!apiEnabled || !id || isDemo(id)) return
     server.view(id).then((d) => { if (typeof d?.views === 'number') setJobStat(id, { views: d.views }) })
   }, [setJobStat])
 
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
   const jobsAll = useMemo(() => {
-    const list = [...state.posted, ...botJobs, ...(serverJobs || [])]
+    const real = [...state.posted, ...botJobs, ...(serverJobs || [])]
+    // vaqtinchalik: haqiqiy e'lonlar bo'lmasa demo vakansiyalar (src/data/demoJobs.js)
+    const list = real.length || !DEMO_JOBS_ENABLED ? real : buildDemoJobs()
     const seen = new Set()
     return list.filter((j) => !seen.has(j.id) && seen.add(j.id)) // o'z vakansiyasi umumiy ro'yxatda ham bor
   }, [state.posted, botJobs, serverJobs])
@@ -372,7 +390,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, toggleSave, viewJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
+  const value = { ...state, ...api, viewRole, setViewRole: setAudience, toggleSave, viewJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

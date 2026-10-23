@@ -12,10 +12,10 @@ const NO_IMG = ['finance', 'law', 'logistics']
 const norm = (s) => String(s || '').toLowerCase().replace(/[‘’`ʻʼ]/g, "'")
 
 export default function Categories() {
-  const { user, allJobs } = useApp()
+  const { viewRole, allJobs } = useApp()
   const t = useT()
   const [q, setQ] = useState('')
-  const listPath = user?.role === 'employer' ? '/candidates' : '/jobs'
+  const listPath = viewRole === 'employer' ? '/candidates' : '/jobs'
 
   const cats = useMemo(() => IDS.map((id) => CATEGORIES.find((c) => c.id === id)).filter(Boolean)
     .map((c) => ({ ...c, count: allJobs.filter((j) => j.category === c.id).length })), [allJobs])

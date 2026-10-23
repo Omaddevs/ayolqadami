@@ -7,6 +7,7 @@ export type SeoUrl = { path: string; lastmod?: string; changefreq?: 'hourly' | '
 // Qidiruv tizimlari uchun sahifalar ro'yxati: asosiy bo'limlar + faol vakansiyalar, maqolalar, kurslar, kompaniyalar
 const STATIC: SeoUrl[] = [
   { path: '/', changefreq: 'daily', priority: 1 },
+  { path: '/ish-beruvchilar', changefreq: 'weekly', priority: 0.9 },
   { path: '/jobs', changefreq: 'hourly', priority: 0.9 },
   { path: '/companies', changefreq: 'daily', priority: 0.7 },
   { path: '/courses', changefreq: 'weekly', priority: 0.7 },

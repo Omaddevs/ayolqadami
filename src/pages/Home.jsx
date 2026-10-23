@@ -4,17 +4,21 @@ import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
-import { CompanyLogo, Empty, JobCard, SectionHead, Sheet, ThemeToggle } from '../components/UI'
+import QaIcon from '../components/QaIcon'
+import '../styles/qadam-ai.css'
+import { Empty, JobCard, SectionHead, Select, Sheet, ThemeToggle } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
 import HomeFooter from '../components/HomeFooter'
 import ArticlesRail from '../components/ArticlesRail'
 import { useApp, useContent } from '../context/AppContext'
-import { ArrowRight, Bell, CaretRight, Fire, Heart, MagnifyingGlass, SlidersHorizontal, SquaresFour, X } from '@phosphor-icons/react'
+import { Bell, CaretRight, Fire, Heart, MagnifyingGlass, MapPin, SignIn, SlidersHorizontal, Sparkle, Star, X } from '@phosphor-icons/react'
 import CandidateCard from '../components/CandidateCard'
-import { CANDIDATES, CATEGORIES, JOB_TYPES, catShort } from '../data/mock'
-import { buildCompanies, companySlug } from '../data/companies'
+import { CANDIDATES, CATEGORIES, CITIES, JOB_TYPES } from '../data/mock'
+import { buildCompanies } from '../data/companies'
 import { api as server, apiEnabled } from '../lib/api'
 import { trackEvent } from '../lib/analytics'
+import { EMPTY, EXP_STEPS, SALARY_STEPS, activeCount, filtersToSearch, matchJob } from '../lib/jobFilters'
+import { PERIODS } from '../lib/time'
 import { useT } from '../i18n'
 
 // Bosh sahifa bannerlari — admin panel → Bannerlar (rasm, havola, ko'rsatish davri, yoqish/o'chirish)
@@ -122,91 +126,445 @@ function QuickMenu({ children }) {
   )
 }
 
-// Desktop bosh sahifasi: sarlavha, bo'lim tanlovi va soha kartalari (mobil hero o'rniga)
-// rasmlar: public/categories/<id>.webp (public/hero/hero-imageN.png dan kesib olingan)
-// kartaga sig'ishi uchun qisqa nomlar
-const DK_NAMES = { food: 'Restoran mehmonxona' }
-const DK_CATS = ['office', 'edu', 'med', 'sales', 'beauty', 'it', 'home', 'remote', 'production', 'food', 'marketing', 'other']
+// Hamkorlar lentasi — admin panel → Hamkorlar. Yo'q bo'lsa — ko'rinmaydi, 5 tagacha — qotib turadi,
+// ko'proq bo'lsa — uzluksiz aylanadi (ro'yxat ekrandan keng bo'lishi uchun takrorlanadi, ikkinchi nusxa — siljish uchun)
+function PartnersStrip() {
+  const partners = useContent().partners || []
+  if (!partners.length) return null
+  const moving = partners.length > 5
+  const item = (p, i, hidden) => {
+    const img = <img src={p.img} alt={p.name} title={p.name} loading="lazy" draggable={false} />
+    const key = `${p.id}-${i}`
+    const props = { className: 'dk-hb-partner', tabIndex: hidden ? -1 : undefined }
+    if (!p.to) return <span key={key} {...props}>{img}</span>
+    return p.external
+      ? <a key={key} {...props} href={p.to} target="_blank" rel="noopener noreferrer">{img}</a>
+      : <Link key={key} {...props} to={p.to}>{img}</Link>
+  }
+  if (!moving) return <div className="dk-hb-logos dk-hb-logos--static">{partners.map((p, i) => item(p, i))}</div>
+  const set = Array.from({ length: Math.ceil(12 / partners.length) }, () => partners).flat()
+  return (
+    <div className="dk-hb-logos">
+      <div className="dk-hb-track" style={{ animationDuration: `${set.length * 3.5}s` }}>
+        {[0, 1].map((k) => (
+          <div key={k} className="dk-hb-set" aria-hidden={k === 1 || undefined}>
+            {set.map((p, i) => item(p, i, k === 1))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
-function DesktopIntro({ isEmp }) {
-  const { allJobs, user } = useApp()
+// QadamAI maketidagi namunaviy nomzodlar (faqat ko'rinish uchun — haqiqiy ma'lumot emas)
+const EMP_DEMO = [
+  { n: 'Dilnoza R.', r: 'Buxgalter', y: 3, m: 96, h: 262 },
+  { n: 'Madina K.', r: 'Bosh buxgalter', y: 5, m: 91, h: 18 },
+  { n: 'Shahnoza T.', r: 'Hisobchi', y: 2, m: 84, h: 330 },
+]
+// tarjima qilingan gapdagi **…** qismlari qalin chiqadi (so'z tartibi tilga qarab o'zgaradi)
+const boldMarks = (s) => s.split('**').map((x, i) => (i % 2 ? <b key={i}>{x}</b> : x))
+
+const EMP_SUB = "Vakansiyangizni **bepul** joylang — **QadamAI** nomzodlarni ko'nikma, tajriba va shahar bo'yicha saralab, eng mos kadrlarni **bir necha daqiqada** taklif qiladi"
+
+// Desktop bosh sahifasi — ish beruvchi rejimi: oq fonli katta sarlavha, ikki tugma,
+// ostida QadamAI ishlashini ko'rsatuvchi brauzer maketi va atrofida suzib turuvchi ikonalar
+function EmployerIntro() {
+  const { allJobs, user, requireAuth } = useApp()
   const t = useT()
-  const [tab, setTab] = useState('cats')
-  const listPath = isEmp ? '/candidates' : '/jobs'
-  const companies = useMemo(() => buildCompanies(allJobs, user)
-    .sort((a, b) => b.jobs.length - a.jobs.length).slice(0, 12), [allJobs, user])
-  const cats = DK_CATS.map((id) => CATEGORIES.find((c) => c.id === id)).filter(Boolean)
+  const nav = useNavigate()
+  const companies = buildCompanies(allJobs).length
+  const postJob = () => nav('/post-job')
 
   return (
-    <section className="dk-intro">
-      <div className="dk-intro-head">
-        <div>
-          <h1>{isEmp ? t("Nomzodlar O'zbekistonda") : t("Ish e'lonlari O'zbekistonda")}</h1>
-          <p>{isEmp ? t('Jamoangiz uchun eng yaxshi mutaxassislar') : t('Ayollar uchun eng yaxshi imkoniyatlar')}</p>
+    <section className="dk-intro dk-emp">
+      <div className="dk-emp-head">
+        <div className="dk-emp-proof">
+          <span className="dk-emp-faces" aria-hidden="true">
+            {['#F4B3C2', '#B9B6FF', '#FFD39A'].map((bg, i) => <i key={bg} style={{ background: bg }}>{['D', 'M', 'S'][i]}</i>)}
+          </span>
+          <span>
+            <span className="dk-emp-stars" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={10} weight="fill" />)}</span>
+            {companies > 0 ? t('{n}+ kompaniya ishonadi').replace('{n}', companies) : t('Ish beruvchilar ishonadi')}
+          </span>
         </div>
-        <div className="dk-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === 'cats'} className={tab === 'cats' ? 'on' : ''} onClick={() => setTab('cats')}>{t("Ish yo'nalishlari")}</button>
-          {/* vaqtincha yopiq — qaytarish uchun: <button ... onClick={() => setTab('companies')}>Kompaniyalar</button> */}
-          <span className="dk-tab-soon" aria-disabled="true">{t('Kompaniyalar')} <em>{t('Soon')}</em></span>
-          <span className="dk-tab-soon" aria-disabled="true">{t('Kurslar')} <em>{t('Soon')}</em></span>
+
+        <h1>
+          {t('AyolQadami va Qadam AI HR bilan')}
+          <em>{t('mos kadr topish oson')}</em>
+        </h1>
+        <p>{boldMarks(t(EMP_SUB))}</p>
+
+        <div className="dk-emp-ctas">
+          <button type="button" className="dk-emp-btn dk-emp-btn--main" onClick={postJob}>
+            {t('Bepul vakansiya joylash')} <CaretRight size={16} weight="bold" />
+          </button>
+          {user ? (
+            <Link to="/qadam-ai" className="dk-emp-btn dk-emp-btn--ghost"><Sparkle size={18} weight="fill" /> {t('QadamAI bilan izlash')}</Link>
+          ) : (
+            <button type="button" className="dk-emp-btn dk-emp-btn--ghost" onClick={() => requireAuth()}><SignIn size={18} /> {t('Kirish')}</button>
+          )}
         </div>
       </div>
 
-      {tab === 'cats' ? (
-        // rasmdagidek: yuqori qatorda 6 ta, pastki qatorda 6 ta + "Barcha kategoriyalar"
-        <div className="dk-grid">
-        {[cats.slice(0, 6), cats.slice(6)].map((row, r) => (
-          <div key={r} className="dk-row">
-            {row.map((c) => (
-              <Link key={c.id} to={`${listPath}?cat=${c.id}`} className="dk-cat">
-                <b>{t(DK_NAMES[c.id] || c.name)}</b>
-                <img src={`/categories/${c.id}.webp`} alt="" className="dk-cat-img" loading="lazy" decoding="async" draggable="false" />
-              </Link>
-            ))}
-            {r === 1 && (
-              <Link to="/categories" className="dk-cat dk-cat-all">
-                <SquaresFour size={30} weight="fill" />
-                <b>{t('Barcha kategoriyalar')} <ArrowRight size={16} weight="bold" /></b>
-              </Link>
-            )}
+      <div className="dk-emp-stage">
+        <svg className="dk-emp-wires" viewBox="0 0 1200 420" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M70 90 C 150 90, 120 230, 230 230" />
+          <path d="M110 330 C 170 330, 160 300, 230 300" />
+          <path d="M1130 80 C 1050 80, 1080 200, 970 200" />
+          <path d="M1090 320 C 1030 320, 1040 280, 970 280" />
+        </svg>
+        <Link to="/post-job" className="dk-emp-float f1" aria-label={t('Vakansiya joylash')}><GlassIcon name="briefcase" tone="brand" size={46} /></Link>
+        <a href="https://t.me/ayolqadam_bot" target="_blank" rel="noopener noreferrer" className="dk-emp-float f2" aria-label="Telegram bot"><GlassIcon name="plane" tone="brand" size={42} /></a>
+        <Link to="/candidates" className="dk-emp-float f3" aria-label={t('Nomzodlar')}><GlassIcon name="users" tone="brand" size={46} /></Link>
+        <Link to="/profile/edit" className="dk-emp-float f4" aria-label={t('Rezyume')}><GlassIcon name="resume" tone="brand" size={42} /></Link>
+
+        <div className="dk-emp-win" aria-hidden="true">
+          <div className="dk-emp-bar">
+            <span className="dots"><i /><i /><i /></span>
+            <span className="url">ayolqadami.uz/qadam-ai</span>
+            <span className="dots dots--r"><i /><i /></span>
           </div>
-        ))}
+          {/* QadamHR AI sahifasining kichraytirilgan nusxasi: lavanda ramka, chapda suhbatlar, o'ngda oq chat paneli */}
+          <div className="dk-qa">
+            <aside className="dk-qa-side">
+              <div className="dk-qa-brand">
+                <span className="dk-qa-logo"><QaIcon name="ai-magic" size={13} /></span>
+                <b>QadamHR <span>AI</span></b>
+                <QaIcon name="sidebar-left" size={15} />
+              </div>
+              <span className="dk-qa-new"><QaIcon name="add-01" size={13} strokeWidth={2} /> {t('Yangi suhbat')}</span>
+              <span className="dk-qa-search"><QaIcon name="search-01" size={12} /> {t('Suhbatlardan qidirish')} <kbd>Ctrl K</kbd></span>
+              <nav className="dk-qa-nav">
+                <span><QaIcon name="user-group" size={14} /> {t('Nomzodlar')}</span>
+                <span><QaIcon name="add-square" size={14} /> {t('Vakansiya joylash')}</span>
+                <span><QaIcon name="building-03" size={14} /> {t('Kompaniyalar')}</span>
+              </nav>
+              <small>{t('Bugun')}</small>
+              <span className="dk-qa-hist on">{t('Toshkentda 2+ yil tajribali buxgalter')}</span>
+              <span className="dk-qa-hist">{t('Masofaviy SMM menejer')}</span>
+            </aside>
+            <div className="dk-qa-main">
+              <div className="dk-qa-top">
+                <span className="dk-qa-model"><span className="dk-qa-logo dk-qa-logo--sm"><QaIcon name="ai-magic" size={9} /></span> QadamHR AI <em>· {t('Nomzod izlash')}</em></span>
+                <span className="dk-qa-cta">{t('Vakansiya joylash')}</span>
+              </div>
+              <div className="dk-qa-thread">
+                <div className="dk-qa-me">{t("Toshkentda 2+ yil tajribali buxgalter kerak, 1C bilishi shart")}</div>
+                <div className="dk-qa-ai">
+                  <span className="qa-orb qa-orb--sm" aria-hidden="true"><i /></span>
+                  <div>
+                    <b className="dk-qa-name">QadamHR AI</b>
+                    <div className="dk-qa-crit"><span>{t('Aniqlangan mezonlar:')}</span><em>1C</em><em>2+ {t('yil')}</em><em>{t('Toshkent')}</em></div>
+                    <p>{t('3 ta mos nomzod topdim. Eng mosi —')} <b>Dilnoza R.</b></p>
+                    <div className="dk-qa-res">
+                      {EMP_DEMO.slice(0, 2).map((c) => (
+                        <div key={c.n}>
+                          <i style={{ background: `hsl(${c.h} 80% 88%)`, color: `hsl(${c.h} 45% 35%)` }}>{c.n[0]}</i>
+                          <span><b>{c.n}</b><small>{t(c.r)} · {c.y} {t('yil')}</small></span>
+                          <em style={{ '--v': c.m }}>{c.m}%</em>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="dk-qa-box">
+                <span className="dk-qa-ph">{t('Talablarni yozing…')}</span>
+                <span className="dk-qa-pill"><QaIcon name="ai-magic" size={12} /> {t('Chuqur tahlil')}</span>
+                <span className="dk-qa-send"><QaIcon name="arrow-up-02" size={13} strokeWidth={2} /></span>
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="dk-cats dk-cos">
-          {companies.map((c) => (
-            <Link key={c.name} to={`/companies/${companySlug(c.name)}`} className="dk-co">
-              <CompanyLogo name={c.name} color={c.color} size={52} />
-              <b>{c.name}</b>
-              <span>{t('{n} ta vakansiya', { n: c.jobs.length })} · {catShort(c.categories[0])}</span>
-            </Link>
-          ))}
-          <Link to="/companies" className="dk-cat dk-cat-all">
-            <SquaresFour size={30} weight="fill" />
-            <b>{t('Barcha kompaniyalar')} <ArrowRight size={16} weight="bold" /></b>
-          </Link>
-        </div>
-      )}
+      </div>
+
+      <PartnersStrip />
     </section>
   )
 }
 
-export default function Home() {
-  const { user, allJobs, applications, posted, saved, unreadNotifs } = useApp()
+// Ish beruvchi bosh sahifasi (desktop), maket ostida: 1) «Nega AyolQadami?» — katta sarlavha va 2×2 raqamli kartalar,
+// 2) imkoniyatlar — bento to'r: ko'rish/ariza grafigi, e'lon tekshiruvi, yangi ariza bildirishnomasi, e'lonni tarqatish.
+// Raqamlar sayt ma'lumotidan (kompaniya, faol vakansiya, shahar); grafik, rasm va postlar — namunaviy ko'rinish
+const WHY_HEAD = "QadamAI HR **sun'iy intellekt** yordamida mos xodimni **topish, saralash** va yollashni bir joyda jamlaydi"
+const BARS = [58, 46, 78, 44, 38, 62]
+// Ovozsiz, takrorlanuvchi fon video: ekranda ko'ringanda o'ynaydi, chiqib ketsa to'xtaydi (protsessor/batareya tejaladi).
+// muted ref orqali ham beriladi — React atributni HTML'ga yozmaydi, usiz ba'zi brauzerlar avto-o'ynatishni bloklaydi.
+// «Harakatni kamaytirish» yoqilgan bo'lsa — faqat poster ko'rinadi
+function LoopVideo({ src, poster }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    v.muted = true
+    v.defaultMuted = true
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause() }, { threshold: 0.2 })
+    io.observe(v)
+    return () => io.disconnect()
+  }, [])
+  return <video ref={ref} src={src} poster={poster} muted loop playsInline preload="metadata" disablePictureInPicture aria-hidden="true" tabIndex={-1} />
+}
+
+function EmployerWhy() {
+  const { allJobs } = useApp()
+  const t = useT()
+  const companies = buildCompanies(allJobs).length
+  const cities = new Set(allJobs.map((j) => j.city).filter(Boolean)).size
+  const stats = [
+    { v: `${companies}+`, l: 'Kompaniya bizga ishonadi', tone: 'brand' },
+    { v: allJobs.length, l: 'Faol vakansiya', tone: 'plain' },
+    { v: cities, l: 'Shahar va viloyat', tone: 'brand' },
+    { v: t("0 so'm"), l: 'Vakansiya joylash narxi', tone: 'plain' },
+  ]
+  return (
+    <section className="dk-why" aria-labelledby="dk-why-h">
+      <div className="dk-why-top">
+        <div className="dk-why-lead">
+          <span className="dk-why-tag">{t('Nega AyolQadami?')}</span>
+          <h2 id="dk-why-h">{t(WHY_HEAD).split('**').map((x, i) => (i % 2 ? <em key={i}>{x}</em> : x))}</h2>
+        </div>
+        <div className="dk-why-stats">
+          {stats.map((s) => (
+            <div key={s.l} className={`dk-why-stat is-${s.tone}`}>
+              <b>{s.v}</b>
+              <span>{t(s.l)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* imkoniyatlar: 3 ustunli bento — grafik, tekshiruv, (baland) yangi ariza, (keng) e'lon tarqatish */}
+      <div className="dk-why-panel">
+        <div className="dk-why-panel-head">
+          <h2>{t('Nomzod izlash va saralash')}<br />{t('endi qiyin emas')}</h2>
+          <p>{t("Ish beruvchilar uchun yaratilgan platforma: vakansiyani joylang — QadamAI nomzodlarni saralaydi, e'loningiz esa sayt va Telegram kanallarga o'zi tarqaladi")}</p>
+        </div>
+        <div className="dk-bn">
+          <article className="dk-bn-card dk-bn--chart">
+            <div className="dk-bn-chart" aria-hidden="true">
+              <span className="dk-bn-tip"><b>1 240 {t("ko'rish")}</b><small>{t('Arizalar')}: 86</small></span>
+              {BARS.map((h, i) => <i key={i} style={{ '--h': `${h}%`, animationDelay: `${i * 70}ms` }} />)}
+            </div>
+            <div className="dk-bn-cap"><h3>{t("Ko'rishlar va arizalar")}</h3><p>{t("Har bir vakansiya necha marta ko'rilgani va nechta ariza kelganini kuzatib borasiz")}</p></div>
+          </article>
+
+          <article className="dk-bn-card dk-bn--check">
+            <div className="dk-bn-glow" aria-hidden="true">
+              <QaIcon name="security-check" size={64} strokeWidth={1.4} />
+              <i /><i /><i />
+            </div>
+            <div className="dk-bn-cap"><h3>{t("Har bir e'lon tekshiriladi")}</h3><p>{t("E'lonlar moderatsiyadan o'tadi — nomzodlar ishonchli ish beruvchini ko'radi")}</p></div>
+          </article>
+
+          <article className="dk-bn-card dk-bn--apply">
+            <div className="dk-bn-photo" aria-hidden="true">
+              <LoopVideo src="/media/new-application.mp4" poster="/media/new-application.webp" />
+              <span className="dk-bn-badge dk-bn-badge--l"><span className="dk-bn-heart"><QaIcon name="heart-solid" size={17} /></span><small>96%</small></span>
+              <span className="dk-bn-badge dk-bn-badge--r"><span><QaIcon name="user-multiple-02" size={17} /></span><small>12</small></span>
+              <span className="dk-bn-new"><QaIcon name="checkmark-circle-02" size={22} strokeWidth={2} />{t('Yangi ariza keldi')}</span>
+            </div>
+            <div className="dk-bn-cap"><h3>{t('Arizalar haqida darhol xabar')}</h3><p>{t("Nomzod ariza yuborishi bilan sayt va Telegram bot orqali bildirishnoma olasiz")}</p></div>
+          </article>
+
+          <article className="dk-bn-card dk-bn--spread">
+            <div className="dk-bn-cap"><h3>{t("Bir e'lon — hamma joyda")}</h3><p>{t("Vakansiyangiz saytda, @ayolqadam_bot va AyolQadam ish kanallarida bir vaqtda e'lon qilinadi")}</p></div>
+            <div className="dk-bn-flow" aria-hidden="true">
+              <div className="dk-bn-posts">
+                {[['Buxgalter', 262], ['SMM menejer', 18], ['Operator', 330], ["O'qituvchi", 200]].map(([n, h]) => (
+                  <span key={n} style={{ '--h': h }}><i>{n[0]}</i><b>{t(n)}</b><em /></span>
+                ))}
+              </div>
+              <span className="dk-bn-line" />
+              <span className="dk-bn-pill p1"><QaIcon name="link-04" size={14} strokeWidth={1.8} /> {t('Ariza yuborish')}</span>
+              <span className="dk-bn-tg t1"><QaIcon name="telegram-solid" size={30} /></span>
+              <span className="dk-bn-tg t2"><QaIcon name="telegram-solid" size={24} /></span>
+              <span className="dk-bn-pill p2"><QaIcon name="link-04" size={14} strokeWidth={1.8} /> {t('Batafsil')}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Desktop bosh sahifasi (mobil hero o'rniga). Ish izlovchi: fon rasmli katta karta — sarlavha, qidiruv, statistika,
+// tezkor tugmalar va pastda hamkorlar lentasi. Fon rasmi: public/hero-bg.webp (bo'lmasa — brend gradienti)
+function DesktopIntro({ isEmp }) {
+  if (isEmp) return <EmployerIntro />
+  return <SeekerIntro />
+}
+
+function SeekerIntro() {
+  const { allJobs } = useApp()
+  const t = useT()
+  const nav = useNavigate()
+  // qidiruv + kengaytirilgan filtrlar: natija /jobs?... manziliga o'tadi (u yerda ham tahrirlanadi)
+  const [f, setFState] = useState(EMPTY)
+  const setF = (k, v) => setFState((s) => ({ ...s, [k]: v }))
+  const { q, city } = f
+  const setQ = (v) => setF('q', v)
+  const setCity = (v) => setF('city', v)
+  const [panel, setPanel] = useState(false)
+  const formRef = useRef(null)
+  const cityOpts = useMemo(() => [{ value: '', label: t("O'zbekiston bo'ylab") }, ...CITIES.map((c) => ({ value: c, label: c }))], [t])
+  const count = useMemo(() => allJobs.filter((j) => matchJob(j, f)).length, [allJobs, f])
+  const active = activeCount(f) - (city ? 1 : 0) // shahar alohida maydonda ko'rinib turadi
+
+  useEffect(() => {
+    if (!panel) return
+    // Select ro'yxati portal orqali body'da ochiladi — unga bosish panelni yopmasin
+    const onDown = (e) => { if (!formRef.current?.contains(e.target) && !e.target.closest('.sel-menu')) setPanel(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setPanel(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [panel])
+
+  const submit = (e) => {
+    e?.preventDefault()
+    setPanel(false)
+    nav(`/jobs${filtersToSearch(f)}`)
+  }
+  const pills = (key, opts) => (
+    <div className="dk-hf-pills">
+      {opts.map((o) => (
+        <button key={o.value || 'any'} type="button" className={f[key] === o.value ? 'on' : ''} aria-pressed={f[key] === o.value} onClick={() => setF(key, o.value)}>
+          {o.icon && <Icon3D name={o.icon} size={20} />}{t(o.label)}
+        </button>
+      ))}
+    </div>
+  )
+
+  const stats = [
+    { icon: 'briefcase', value: allJobs.length, label: t('Vakansiyalar'), to: '/jobs' },
+    { icon: 'building', value: buildCompanies(allJobs).length, label: t('Kompaniyalar'), to: '/companies' },
+    { icon: 'grid', value: CATEGORIES.length, label: t("Ish yo'nalishlari"), to: '/categories' },
+  ]
+
+  return (
+    <section className="dk-intro dk-hb">
+      <div className="dk-hb-top">
+        <div className="dk-hb-main">
+          <h1>{t('Ayollar va ish beruvchilar uchun')}<br />{t('ishonchli raqamli platforma!')}</h1>
+          <form ref={formRef} className="dk-hb-search" onSubmit={submit} role="search">
+            <label className="dk-hb-q">
+              <MagnifyingGlass size={19} />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Kasb, lavozim nomi')} aria-label={t('Kasb, lavozim nomi')} />
+              {q && <button type="button" className="dk-hb-x" aria-label={t('Tozalash')} onClick={() => setQ('')}><X size={15} weight="bold" /></button>}
+            </label>
+            <div className="dk-hb-city">
+              <MapPin size={19} />
+              <Select value={city} options={cityOpts} onChange={setCity} />
+            </div>
+            <button type="button" className={`dk-hb-fbtn${panel ? ' open' : ''}`} aria-expanded={panel} aria-controls="dk-hf" onClick={() => setPanel((v) => !v)}>
+              <SlidersHorizontal size={19} /> {t('Filtrlar')}
+              {active > 0 && <em>{active}</em>}
+            </button>
+            <button type="submit" className="dk-hb-go">{t('Qidirish')}</button>
+
+            {panel && (
+              <div id="dk-hf" className="dk-hf" role="dialog" aria-label={t('Filtrlar')}>
+                <div className="dk-hf-grid">
+                  <section className="dk-hf-wide">
+                    <h3>{t("Yo'nalish")}</h3>
+                    {pills('cat', [{ value: '', label: 'Barchasi' }, ...CATEGORIES.map((c) => ({ value: c.id, label: c.short, icon: c.icon }))])}
+                  </section>
+                  <section>
+                    <h3>{t('Maosh (oyiga)')}</h3>
+                    {pills('min', SALARY_STEPS)}
+                  </section>
+                  <section>
+                    <h3>{t('Ish formati')}</h3>
+                    {pills('type', [{ value: '', label: 'Har qanday format' }, ...JOB_TYPES.map((v) => ({ value: v, label: v }))])}
+                  </section>
+                  <section>
+                    <h3>{t('Ish tajribasi')}</h3>
+                    {pills('exp', EXP_STEPS)}
+                  </section>
+                  <section>
+                    <h3>{t('Joylangan vaqti')}</h3>
+                    {pills('period', PERIODS)}
+                  </section>
+                  <section>
+                    <h3>{t('Saralash')}</h3>
+                    {pills('sort', [{ value: 'new', label: 'Avval yangilari' }, { value: 'salary', label: "Maosh bo'yicha" }, { value: 'popular', label: "Ko'p ko'rilgan" }, { value: 'few', label: 'Kam arizali' }])}
+                  </section>
+                </div>
+                <div className="dk-hf-foot">
+                  <button type="button" className="dk-hf-reset" onClick={() => setFState((s) => ({ ...EMPTY, q: s.q }))}>{t('Tozalash')}</button>
+                  <button type="button" className="dk-hf-show" disabled={!count} onClick={submit}>
+                    {count ? t('{n} ta vakansiyani ko\'rsatish', { n: count }) : t('Mos vakansiya yo\'q')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+        </div>
+      </div>
+
+      <div className="dk-hb-line" />
+
+      <div className="dk-hb-bottom">
+        <div>
+          <div className="dk-hb-stats">
+            {stats.map(({ icon, value, label, to }) => (
+              <Link key={label} to={to} className="dk-hb-stat">
+                <GlassIcon name={icon} size={48} className="dk-hb-gico" />
+                <span><b>{value.toLocaleString('ru-RU')}</b><small>{label}</small></span>
+              </Link>
+            ))}
+          </div>
+          <div className="dk-hb-apps">
+            <a href="https://t.me/ayolqadam_bot" target="_blank" rel="noopener noreferrer" className="dk-hb-app">
+              <GlassIcon name="plane" size={34} className="dk-hb-gico" />
+              <span><small>{t('Telegram bot')}</small>@ayolqadam_bot</span>
+            </a>
+            <a href="https://t.me/addlist/URvgf3qbEus5ZDcy" target="_blank" rel="noopener noreferrer" className="dk-hb-app">
+              <GlassIcon name="folder" size={34} className="dk-hb-gico" />
+              <span><small>{t('Telegram papka')}</small>{t('Ish kanallari')}</span>
+            </a>
+          </div>
+        </div>
+        <div className="dk-hb-ctas">
+          <Link to="/profile/edit" className="dk-hb-cta"><GlassIcon name="resume" tone="brand" size={32} className="dk-hb-gico" /> {t('Rezyume joylash')}</Link>
+          <Link to="/post-job" className="dk-hb-cta"><GlassIcon name="briefcase" tone="brand" size={32} className="dk-hb-gico" /> {t('Vakansiya joylash')}</Link>
+        </div>
+      </div>
+
+      <PartnersStrip />
+    </section>
+  )
+}
+
+// Bosh sahifa ikki manzilda: / — ish izlovchilar, /ish-beruvchilar — ish beruvchilar (audience="employer").
+// Manzil ko'rinishni belgilaydi: Google har birini alohida sahifa sifatida indekslaydi
+export default function Home({ audience }) {
+  const { user, viewRole, setViewRole, allJobs, applications, posted, saved, unreadNotifs } = useApp()
   const t = useT()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
-  const isEmp = user?.role === 'employer'
+  const isEmp = audience ? audience === 'employer' : viewRole === 'employer'
   const closeSearch = useCallback(() => setOpen(false), [])
   const nav = useNavigate()
+  // /ish-beruvchilar ochilsa — sayt ish beruvchi ko'rinishiga o'tadi; / da ish beruvchi ko'rinishi tanlangan bo'lsa — o'z manziliga
+  useEffect(() => {
+    if (audience) { if (viewRole !== audience) setViewRole(audience) }
+    else if (viewRole === 'employer') nav('/ish-beruvchilar', { replace: true })
+  }, [audience]) // eslint-disable-line react-hooks/exhaustive-deps
   const [filterOpen, setFilterOpen] = useState(false)
   const [fCat, setFCat] = useState('')
   const [fType, setFType] = useState('')
   const [fSort, setFSort] = useState('new')
+  const [fMin, setFMin] = useState('')
+  const [fExp, setFExp] = useState('')
   const applyFilters = () => {
     const p = new URLSearchParams()
     if (fCat) p.set('cat', fCat)
     if (!isEmp && fType) p.set('type', fType)
+    if (!isEmp && fMin) p.set('min', fMin)
+    if (!isEmp && fExp) p.set('exp', fExp)
     if (!isEmp && fSort !== 'new') p.set('sort', fSort)
     const qs = p.toString()
     setFilterOpen(false)
@@ -276,6 +634,7 @@ export default function Home() {
   return (
     <div className="home">
       <DesktopIntro isEmp={isEmp} />
+      {isEmp && <EmployerWhy />}
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-top">
@@ -331,8 +690,6 @@ export default function Home() {
           )}
         </div>
 
-
-        <div className="home-feat">{features}</div>
 
         <BannerCarousel />
 
@@ -395,6 +752,18 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            <span className="search-panel-title">{t('Maosh (oyiga)')}</span>
+            <div className="pill-row wrap">
+              {SALARY_STEPS.map((s) => (
+                <button key={s.value || 'any'} type="button" className={`pill pill-sm ${fMin === s.value ? 'on' : ''}`} onClick={() => setFMin(s.value)}>{t(s.label)}</button>
+              ))}
+            </div>
+            <span className="search-panel-title">{t('Ish tajribasi')}</span>
+            <div className="pill-row wrap">
+              {EXP_STEPS.map((s) => (
+                <button key={s.value || 'any'} type="button" className={`pill pill-sm ${fExp === s.value ? 'on' : ''}`} onClick={() => setFExp(s.value)}>{t(s.label)}</button>
+              ))}
+            </div>
             <span className="search-panel-title">{t('Saralash')}</span>
             <div className="pill-row wrap">
               {[['new', 'Avval yangilari'], ['salary', "Maosh bo'yicha"], ['few', 'Kam arizali']].map(([v, l]) => (
@@ -404,7 +773,7 @@ export default function Home() {
           </>
         )}
         <div className="filter-actions">
-          <button type="button" className="btn btn-soft btn-lg" onClick={() => { setFCat(''); setFType(''); setFSort('new') }}>{t('Tozalash')}</button>
+          <button type="button" className="btn btn-soft btn-lg" onClick={() => { setFCat(''); setFType(''); setFSort('new'); setFMin(''); setFExp('') }}>{t('Tozalash')}</button>
           <button type="button" className="btn btn-primary btn-lg" onClick={applyFilters}>{t("Natijalarni ko'rish")}</button>
         </div>
       </Sheet>

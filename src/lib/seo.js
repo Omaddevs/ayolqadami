@@ -91,6 +91,8 @@ export function useSeo(opts, deps = []) {
 const PRIVATE = { noindex: true }
 export const ROUTE_SEO = [
   ['/', { full: HOME_TITLE, description: DEFAULT_DESC }],
+  // Ish beruvchilar bosh sahifasi — alohida manzil, Google'da «xodim topish», «vakansiya joylash» so'rovlari uchun
+  ['/ish-beruvchilar', { full: "Ish beruvchilar uchun — bepul vakansiya joylash va xodim topish | AyolQadami", description: "Vakansiyangizni bepul joylang: QadamAI HR nomzodlarni ko'nikma, tajriba va shahar bo'yicha saralab, eng mos xodimlarni bir necha daqiqada taklif qiladi." }],
   ['/jobs', { title: 'Vakansiyalar — ayollar uchun ish', description: "Ayollar uchun eng so'nggi vakansiyalar: to'liq va yarim stavka, masofaviy va gibrid ish. Maosh, shahar va soha bo'yicha saralang, bir bosishda ariza yuboring." }],
   ['/map', { title: "Xaritada ish qidirish", description: "Uyingizga yaqin vakansiyalarni xaritada toping: shahar va tuman bo'yicha ish e'lonlari." }],
   ['/companies', { title: 'Kompaniyalar va ish beruvchilar', description: "Ayollarga qulay sharoit yaratgan kompaniyalar, ularning ochiq vakansiyalari va ish sharoitlari." }],

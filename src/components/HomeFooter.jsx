@@ -45,7 +45,7 @@ function FaqItem({ q, a, open, onToggle }) {
 }
 
 export default function HomeFooter() {
-  const { user, notify } = useApp()
+  const { viewRole, notify } = useApp()
   const content = useContent()
   // bo'sh bo'limlarga havola ko'rsatilmaydi
   const hidden = new Set([!content.articles.length && '/articles', !content.events.length && '/events'].filter(Boolean))
@@ -58,7 +58,7 @@ export default function HomeFooter() {
     setEmail('')
     notify(t("Obuna bo'ldingiz! Yangiliklarni emailingizga yuboramiz"))
   }
-  const isEmp = user?.role === 'employer'
+  const isEmp = viewRole === 'employer'
 
   return (
     <footer className="hf">

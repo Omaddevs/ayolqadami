@@ -211,13 +211,39 @@ export function TabBar({ items, pathname }) {
 }
 
 // Desktop sarlavhasi (≥1024px): mobil tab bar o'rniga sayt ko'rinishidagi yuqori menyu
+// Sarlavhadagi auditoriya almashtirgichi: ish izlovchi / ish beruvchi ko'rinishi
+function RoleSwitch() {
+  const { viewRole, setViewRole } = useApp()
+  const t = useT()
+  const nav = useNavigate()
+  const { pathname } = useLocation()
+  const pick = (role) => {
+    if (role === viewRole) return
+    setViewRole(role)
+    const emp = role === 'employer'
+    // har ko'rinishning o'z manzili bor: bosh sahifa, ro'yxat va QadamAI rejimi mos manzilga o'tadi
+    if (pathname === '/' || pathname === '/ish-beruvchilar') nav(emp ? '/ish-beruvchilar' : '/')
+    else if (pathname === '/jobs' || pathname === '/candidates') nav(emp ? '/candidates' : '/jobs')
+    else if (pathname === '/qadam-ai') nav(`/qadam-ai?mode=${emp ? 'hr' : 'job'}`, { replace: true })
+  }
+  return (
+    <div className="sh-role" role="radiogroup" aria-label={t('Hisob turi')}>
+      {[['seeker', 'Ish izlovchi'], ['employer', 'Ish beruvchi']].map(([id, label]) => (
+        <button key={id} type="button" role="radio" aria-checked={viewRole === id} className={viewRole === id ? 'on' : ''} onClick={() => pick(id)}>
+          {t(label)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function SiteHeader() {
-  const { user, saved, prefs, setPrefs, setTheme, requireAuth, unreadNotifs } = useApp()
+  const { user, viewRole, saved, prefs, setPrefs, setTheme, requireAuth, unreadNotifs } = useApp()
   const t = useT()
   const [locOpen, setLocOpen] = useState(false)
   const nav = useNavigate()
   const { pathname } = useLocation()
-  const isEmp = user?.role === 'employer'
+  const isEmp = viewRole === 'employer'
   const [q, setQ] = useState('')
   const [catsOpen, setCatsOpen] = useState(false)
   const catsRef = useRef(null)
@@ -254,10 +280,13 @@ function SiteHeader() {
     <header className="site-header">
       <div className="sh-top">
         <div className="sh-wrap">
-          <Link to="/" className="sh-brand">
-            <img src="/ayolqadami-mark.webp" alt="" width="32" height="32" />
-            <span>AyolQadami</span>
-          </Link>
+          <div className="sh-left">
+            <Link to={isEmp ? '/ish-beruvchilar' : '/'} className="sh-brand">
+              <img src="/ayolqadami-mark.webp" alt="" width="32" height="32" />
+              <span>AyolQadami</span>
+            </Link>
+            <RoleSwitch />
+          </div>
           <div className="sh-tools">
             <button type="button" className="sh-region" onClick={() => requireAuth(() => setLocOpen(true))}>
               <MapPin size={18} /> {user?.city ? tx(user.city) : t('Barcha hududlar')} <CaretDown size={13} weight="bold" />

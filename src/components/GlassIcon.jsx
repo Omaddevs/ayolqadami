@@ -5,17 +5,21 @@ import { useId } from 'react'
  * Har bir ikonka: oq-lavanda shaffof yuz + chuqurlik qatlami + oq yaltiroq qirra (rim) + yumshoq soya.
  */
 
-function Defs({ u }) {
+// tone="brand" — och fon (masalan, lavanda tugma) uchun: yuz loyiha binafsha rangida, soyasiz
+const TONES = {
+  glass: { f: [['#FFFFFF', '.96'], ['#EFEEFF', '.8'], ['#C4C2FF', '.52']], d: [['#E2E0FF', '.78'], ['#9894F2', '.72']] },
+  brand: { f: [['#8F8BFF', '1'], ['#6C68F4', '1'], ['#5B57F0', '1']], d: [['#4B47D6', '1'], ['#2E2A8C', '1']] },
+}
+
+function Defs({ u, tone }) {
+  const { f, d } = TONES[tone] || TONES.glass
   return (
     <defs>
       <linearGradient id={`${u}f`} x1=".1" y1="0" x2=".9" y2="1">
-        <stop offset="0" stopColor="#FFFFFF" stopOpacity=".96" />
-        <stop offset=".5" stopColor="#EFEEFF" stopOpacity=".8" />
-        <stop offset="1" stopColor="#C4C2FF" stopOpacity=".52" />
+        {f.map(([c, o], i) => <stop key={i} offset={i / (f.length - 1)} stopColor={c} stopOpacity={o} />)}
       </linearGradient>
       <linearGradient id={`${u}d`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#E2E0FF" stopOpacity=".78" />
-        <stop offset="1" stopColor="#9894F2" stopOpacity=".72" />
+        {d.map(([c, o], i) => <stop key={i} offset={i / (d.length - 1)} stopColor={c} stopOpacity={o} />)}
       </linearGradient>
       <linearGradient id={`${u}r`} x1="0" y1="0" x2=".7" y2="1">
         <stop offset="0" stopColor="#FFFFFF" />
@@ -37,7 +41,7 @@ function Defs({ u }) {
 }
 
 const Shadow = ({ u, cx = 62, cy = 105, rx = 34, ry = 5 }) => (
-  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#2B2190" opacity=".28" filter={`url(#${u}b)`} />
+  <ellipse className="gi-shadow" cx={cx} cy={cy} rx={rx} ry={ry} fill="#2B2190" opacity=".28" filter={`url(#${u}b)`} />
 )
 const Gloss = ({ u, cx, cy, rx, ry, r = 0 }) => (
   <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#fff" opacity=".85" filter={`url(#${u}b1)`} transform={`rotate(${r} ${cx} ${cy})`} />
@@ -70,6 +74,23 @@ const ICONS = {
       <path d="M14 56c14 8 29 11 43 11s29-3 43-11" fill="none" stroke="#fff" strokeOpacity=".85" strokeWidth="1.4" />
       <rect x="48" y="60" width="18" height="14" rx="5" fill={`url(#${u}i)`} stroke="#fff" strokeOpacity=".9" strokeWidth="1.4" />
       <Gloss u={u} cx={36} cy={42} rx={14} ry={3} />
+    </>
+  ),
+
+  resume: (u) => (
+    <>
+      <Shadow u={u} rx={30} />
+      <rect x="32" y="20" width="72" height="86" rx="14" fill={`url(#${u}d)`} />
+      <rect x="24" y="14" width="72" height="86" rx="14" fill={`url(#${u}f)`} {...rim(u)} />
+      <circle cx="46" cy="38" r="10" fill={`url(#${u}i)`} stroke="#fff" strokeOpacity=".9" strokeWidth="1.4" />
+      <rect x="62" y="32" width="24" height="4" rx="2" fill="#A6A3F6" fillOpacity=".7" />
+      <rect x="62" y="41" width="16" height="4" rx="2" fill="#A6A3F6" fillOpacity=".45" />
+      <path d="M24 58h72" stroke="#fff" strokeOpacity=".85" strokeWidth="1.4" />
+      <path d="M24 60h72" stroke="#8C88EE" strokeOpacity=".3" strokeWidth="1.4" />
+      {[68, 78, 88].map((y, i) => (
+        <rect key={y} x="36" y={y} width={[48, 40, 30][i]} height="4" rx="2" fill="#A6A3F6" fillOpacity={i ? '.4' : '.6'} />
+      ))}
+      <Gloss u={u} cx={42} cy={20} rx={12} ry={2.4} />
     </>
   ),
 
@@ -133,14 +154,59 @@ const ICONS = {
       <Gloss u={u} cx={34} cy={76} rx={9} ry={2.4} r={-40} />
     </>
   ),
+
+  building: (u) => (
+    <>
+      <Shadow u={u} rx={40} />
+      <rect x="70" y="47" width="38" height="57" rx="9" fill={`url(#${u}d)`} />
+      <rect x="64" y="42" width="38" height="57" rx="9" fill={`url(#${u}f)`} {...rim(u)} />
+      {[54, 68, 82].map((y) => <rect key={y} x="80" y={y} width="12" height="7" rx="3" fill={`url(#${u}i)`} />)}
+      <rect x="26" y="22" width="48" height="82" rx="11" fill={`url(#${u}d)`} />
+      <rect x="20" y="17" width="48" height="82" rx="11" fill={`url(#${u}f)`} {...rim(u)} />
+      {[30, 44, 58].map((y) =>
+        [30, 47].map((x) => (
+          <rect key={`${x}${y}`} x={x} y={y} width="11" height="8" rx="3" fill={x === 47 && y === 44 ? '#fff' : `url(#${u}i)`} />
+        ))
+      )}
+      <rect x="36" y="76" width="16" height="23" rx="5" fill="#fff" fillOpacity=".9" />
+      <Gloss u={u} cx={34} cy={24} rx={9} ry={2.4} />
+    </>
+  ),
+
+  grid: (u) => (
+    <>
+      <Shadow u={u} />
+      {[[16, 16], [64, 16], [16, 64], [64, 64]].map(([x, y]) => (
+        <rect key={`d${x}${y}`} x={x + 5} y={y + 5} width="40" height="40" rx="12" fill={`url(#${u}d)`} />
+      ))}
+      {[[16, 16], [64, 16], [16, 64], [64, 64]].map(([x, y]) => (
+        <rect key={`f${x}${y}`} x={x} y={y} width="40" height="40" rx="12" fill={x === 64 && y === 16 ? '#fff' : `url(#${u}f)`}
+          fillOpacity={x === 64 && y === 16 ? '.92' : undefined} {...rim(u)} />
+      ))}
+      <Gloss u={u} cx={30} cy={23} rx={8} ry={2.4} />
+      <Gloss u={u} cx={30} cy={71} rx={8} ry={2.4} />
+    </>
+  ),
+
+  plane: (u) => (
+    <>
+      <Shadow u={u} cx={58} rx={36} />
+      <path d="M17 62 109 25 89 101 63 83z" fill={`url(#${u}d)`} />
+      <path d="M12 57 104 20 84 96 58 78z" fill={`url(#${u}f)`} strokeLinejoin="round" {...rim(u)} />
+      <path d="M58 78 104 20 46 72z" fill={`url(#${u}i)`} />
+      <path d="M46 72 50 98 58 78z" fill={`url(#${u}d)`} stroke="#fff" strokeOpacity=".8" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M46 72 104 20" stroke="#fff" strokeOpacity=".9" strokeWidth="1.4" strokeLinecap="round" />
+      <Gloss u={u} cx={40} cy={50} rx={14} ry={2.6} r={-22} />
+    </>
+  ),
 }
 
-export default function GlassIcon({ name, size = 64, className = '', style }) {
+export default function GlassIcon({ name, size = 64, tone = 'glass', className = '', style }) {
   const u = 'g' + useId().replace(/[^a-zA-Z0-9]/g, '')
   const render = ICONS[name] || ICONS.briefcase
   return (
-    <svg className={`glass-ico ${className}`} style={style} width={size} height={size} viewBox="0 0 120 120" aria-hidden="true">
-      <Defs u={u} />
+    <svg className={`glass-ico glass-ico--${tone} ${className}`} style={style} width={size} height={size} viewBox="0 0 120 120" aria-hidden="true">
+      <Defs u={u} tone={tone} />
       {render(u)}
     </svg>
   )

@@ -3,7 +3,7 @@ export const PRIVATE = ['/profile', '/applications', '/settings', '/notification
 
 export const STATIC_URLS = [
   // server javob bermaganda: faqat doim mavjud bo'limlar (kurs/maqola/tadbir — server ro'yxatida, bor bo'lsa)
-  ['/', 'daily', 1], ['/jobs', 'hourly', 0.9], ['/companies', 'daily', 0.7],
+  ['/', 'daily', 1], ['/ish-beruvchilar', 'weekly', 0.9], ['/jobs', 'hourly', 0.9], ['/companies', 'daily', 0.7],
   ['/categories', 'weekly', 0.6], ['/map', 'daily', 0.5], ['/qadam-ai', 'monthly', 0.5],
   ['/support', 'monthly', 0.3], ['/privacy', 'monthly', 0.2], ['/terms', 'monthly', 0.2],
 ].map(([path, changefreq, priority]) => ({ path, changefreq, priority }))

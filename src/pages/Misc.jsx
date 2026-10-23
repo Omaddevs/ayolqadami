@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Bell, BookOpen, CalendarBlank, CaretRight, MapPin, Gear, Lifebuoy, WarningCircle, Buildings } from '@phosphor-icons/react'
+import { Bell, BookOpen, CalendarBlank, CaretRight, MapPin, Gear, Lifebuoy, WarningCircle, Buildings, FileText, GraduationCap, PlusCircle, Sparkle } from '@phosphor-icons/react'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import { Empty, JobCard, TopBar } from '../components/UI'
@@ -203,16 +203,18 @@ function MoreDesktop({ sections }) {
         {sections.map((s) => (
           <section key={s.title} className="more-dk-sec">
             <h2>{s.title}</h2>
-            {s.items.map(({ label, desc, icon: Ico, to, onClick, rotate, tone }) => {
+            {s.items.map(({ label, desc, icon: Ico, to, onClick, rotate, tone, soon }) => {
               const inner = (
                 <>
                   <span className="more-dk-ico"><Ico size={24} weight="bold" style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined} /></span>
-                  <span className="more-dk-go"><CaretRight size={16} weight="bold" /></span>
+                  {soon ? <em className="more-dk-soon">{t('Soon')}</em> : <span className="more-dk-go"><CaretRight size={16} weight="bold" /></span>}
                   <b>{label}</b>
                   <span className="more-dk-desc">{desc}</span>
                 </>
               )
-              const props = { className: 'more-dk-card', style: { '--tone': tone } }
+              const props = { className: `more-dk-card${soon ? ' is-soon' : ''}`, style: { '--tone': tone } }
+              // tez orada ochiladigan bo'lim bosilmaydi
+              if (soon) return <div key={label} aria-disabled="true" {...props}>{inner}</div>
               return to
                 ? <Link key={label} to={to} {...props}>{inner}</Link>
                 : <button key={label} type="button" onClick={onClick} {...props}>{inner}</button>
@@ -226,16 +228,22 @@ function MoreDesktop({ sections }) {
 }
 
 export function More() {
-  const { notify } = useApp()
+  const { notify, viewRole } = useApp()
+  const isEmp = viewRole === 'employer'
   const { articles } = useContent()
   const t = useT()
   const sections = [
     { title: t('Hisob'), items: [
       { label: t('Sozlamalar'), desc: t('Profil, til, mavzu va maxfiylik sozlamalari'), icon: Gear, to: '/settings', tone: '#5B57F0' },
       { label: t('Bildirishnomalar'), desc: t('Arizalar, takliflar va yangi vakansiyalar haqida xabarlar'), icon: Bell, to: '/notifications', rotate: 28, tone: '#F59E0B' },
+      isEmp
+        ? { label: t('Vakansiya joylash'), desc: t("E'lon bering, arizalar oling"), icon: PlusCircle, to: '/post-job', tone: '#5B57F0', dk: true }
+        : { label: t('Rezyume yaratish'), desc: t("Profilingizni to'ldiring va ish beruvchilarga ko'rining"), icon: FileText, to: '/profile/edit', tone: '#5B57F0', dk: true },
     ] },
     { title: t('Kashf eting'), items: [
       { label: t('Kompaniyalar'), desc: t('Ish beruvchilar, ularning vakansiyalari va sharhlari'), icon: Buildings, to: '/companies', tone: '#0EA5E9' },
+      { label: 'QadamAI', desc: t('HR yordamchi: rezyume, suhbat va vakansiya tanlashda maslahat'), icon: Sparkle, to: '/qadam-ai', tone: '#7C3AED', dk: true },
+      { label: t('Kurslar'), desc: t("Kasb o'rganish va malaka oshirish uchun o'quv kurslari"), icon: GraduationCap, tone: '#14B8A6', soon: true, dk: true },
       ...(articles.length ? [{ label: t('Maqolalar'), desc: t("Karyera, rezyume va suhbat bo'yicha foydali maslahatlar"), icon: BookOpen, to: '/articles', tone: '#10B981' }] : []),
     ] },
     { title: t('Yordam'), items: [
@@ -247,7 +255,8 @@ export function More() {
     <div className="page more more-home">
       <TopBar title={t("Qo'shimcha")} />
       <div className="page-body">
-        <div className="more-mobile"><MoreList groups={sections.map((s) => s.items)} /></div>
+        {/* dk: true bandlar faqat desktopda — mobilda ular bosh sahifa menyusida bor */}
+        <div className="more-mobile"><MoreList groups={sections.map((s) => s.items.filter((i) => !i.dk))} /></div>
         <MoreDesktop sections={sections} />
       </div>
     </div>

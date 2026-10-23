@@ -456,6 +456,11 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .banner-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .banner-file { display: flex; gap: 8px; align-items: center; }
 .banner-file .input { flex: 1; min-width: 0; }
+.partner-thumb { width: 84px; height: 40px; border-radius: 8px; object-fit: contain; padding: 4px 8px; background: #23252b; flex-shrink: 0; }
+/* oldindan ko'rish — saytdagi qorong'i lenta fonida, logotip haqiqiy balandlikda */
+.partner-preview { height: 96px; max-width: 560px; border-radius: 14px; background: linear-gradient(135deg, #2A2C32, #3A3D44); display: grid; place-items: center; margin-bottom: 8px; color: rgba(255, 255, 255, .6); font-size: 13px; }
+.partner-preview img { height: 48px; max-width: 80%; object-fit: contain; display: block; }
+.banner-file .partner-ratio { flex: 0 0 150px; }
 
 /* Rasm qirqish oynasi */
 .crop-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(17, 19, 24, .55); backdrop-filter: blur(4px); animation: crop-in .2s ease both; }

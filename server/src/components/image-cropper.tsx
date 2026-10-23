@@ -3,11 +3,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Rasmni berilgan nisbatda qirqish oynasi: sudrab joylashtiriladi, slayder yoki g'ildirak bilan kattalashtiriladi.
 // Natija out × (out / ratio) o'lchamli WebP (bo'lmasa JPEG) fayl sifatida qaytadi.
-type Props = { src: string; name: string; ratio: number; out: number; maxBytes: number; onDone: (f: File) => void; onCancel: () => void }
+// transparent — PNG shaffofligi saqlanadi (logotiplar uchun; JPEG'ga o'tsa baribir oq fon)
+type Props = {
+  src: string; name: string; ratio: number; out: number; maxBytes: number; onDone: (f: File) => void; onCancel: () => void
+  title?: string; transparent?: boolean
+}
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 
-export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel }: Props) {
+export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel, title = 'Bannerni qirqish', transparent = false }: Props) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [img, setImg] = useState<HTMLImageElement | null>(null)
   const [w, setW] = useState(0)
@@ -70,7 +74,7 @@ export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel
     canvas.height = oh
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#fff' // shaffof PNG — oq fon (JPEG'da qora bo'lib qolmasin)
-    ctx.fillRect(0, 0, out, oh)
+    if (!transparent) ctx.fillRect(0, 0, out, oh)
     ctx.imageSmoothingQuality = 'high'
     const sw = w / k, sh = h / k
     ctx.drawImage(img, cc.x * nw - sw / 2, cc.y * nh - sh / 2, sw, sh, 0, 0, out, oh)
@@ -78,7 +82,10 @@ export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel
     // Sayt tez ochilishi uchun ~350 KB dan oshsa sifat pasaytiriladi
     const target = Math.min(maxBytes, 350 * 1024)
     const encode = (type: 'image/webp' | 'image/jpeg', q: number) => canvas.toBlob((b) => {
-      if (b && type === 'image/webp' && b.type !== 'image/webp') return encode('image/jpeg', 0.85)
+      if (b && type === 'image/webp' && b.type !== 'image/webp') {
+        if (transparent) { ctx.globalCompositeOperation = 'destination-over'; ctx.fillRect(0, 0, out, oh) }
+        return encode('image/jpeg', 0.85)
+      }
       if (b && b.size > target && q > 0.55) return encode(type, q - 0.1)
       setBusy(false)
       if (b) onDone(new File([b], name.replace(/\.[^.]+$/, '') + (type === 'image/webp' ? '.webp' : '.jpg'), { type }))
@@ -90,7 +97,7 @@ export function ImageCropper({ src, name, ratio, out, maxBytes, onDone, onCancel
     <div className="crop-backdrop" onClick={onCancel}>
       <div className="crop-modal" role="dialog" aria-modal="true" aria-label="Rasmni qirqish" onClick={(e) => e.stopPropagation()}>
         <div className="crop-head">
-          <b>Bannerni qirqish</b>
+          <b>{title}</b>
           <small>Rasmni sudrab joylashtiring, kattalashtirish uchun slayderdan foydalaning</small>
         </div>
         <div ref={frameRef} className="crop-frame" style={{ aspectRatio: String(ratio) }}

@@ -336,8 +336,6 @@ h1, h2, h3 { letter-spacing: -.01em; }
 
 /* ============ Tezkor menyu (mobil sarlavha) ============ */
 /* mobilda kartalar sahifada emas, menyu ichida; desktopda sarlavha yashirin — kartalar sahifada qoladi */
-.home-feat { display: none; }
-@media (min-width: 1024px) { .home-feat { display: block; } }
 
 /* uch chiziq: har xil uzunlikda, ustiga kelganda tekislanadi */
 .qm-burger { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; padding: 0 10px; }
