@@ -5,6 +5,8 @@ import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
 import QaIcon from '../components/QaIcon'
+import LatestJobs from '../components/LatestJobs'
+import SeekerBento from '../components/SeekerBento'
 import '../styles/qadam-ai.css'
 import { Empty, JobCard, SectionHead, Select, Sheet, ThemeToggle } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
@@ -716,8 +718,14 @@ export default function Home({ audience }) {
           <Empty icon="briefcase" title={t("Hozircha vakansiyalar yo'q")} text={t("Yangi e'lonlar joylanishi bilan shu yerda ko'rinadi")} />
         ) : (
           <>
-            <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />
-            <div className="list-grid">{uniqueRec.map((j) => <JobCard key={j.id} job={j} />)}</div>
+            {/* avval tezkor tugmalar va «Ish topish endi oson» bentosi, keyin «So'nggi ish imkoniyatlari», ostida — «Siz uchun vakansiyalar» */}
+            <SeekerBento />
+            <LatestJobs jobs={allJobs} />
+            {/* «Siz uchun vakansiyalar» — faqat mobil/planshetda; desktop landingda yashiriladi (fixes.css: .home-rec) */}
+            <div className="home-rec">
+              <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />
+              <div className="list-grid">{uniqueRec.map((j) => <JobCard key={j.id} job={j} />)}</div>
+            </div>
             <Link to="/jobs" className="btn btn-soft btn-lg btn-block all-jobs-btn">
               {t("Barcha e'lonlar")} <span className="all-jobs-count">{allJobs.length}</span>
               <Icon name="right" size={18} />

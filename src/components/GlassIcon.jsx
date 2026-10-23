@@ -199,6 +199,18 @@ const ICONS = {
       <Gloss u={u} cx={40} cy={50} rx={14} ry={2.6} r={-22} />
     </>
   ),
+
+  pin: (u) => (
+    <>
+      <Shadow u={u} cy={106} rx={22} ry={4} />
+      <ellipse cx="60" cy="103" rx="18" ry="4" fill={`url(#${u}i)`} />
+      <path d="M66 18c20 0 36 15 36 35 0 25-36 52-36 52S30 78 30 53c0-20 16-35 36-35z" fill={`url(#${u}d)`} />
+      <path d="M60 12c20 0 36 15 36 35 0 25-36 52-36 52S24 72 24 47c0-20 16-35 36-35z" fill={`url(#${u}f)`} {...rim(u)} />
+      <circle cx="60" cy="46" r="14" fill={`url(#${u}i)`} stroke="#fff" strokeOpacity=".9" strokeWidth="1.4" />
+      <circle cx="60" cy="46" r="14" fill="none" stroke="#8C88EE" strokeOpacity=".35" strokeWidth="1.4" transform="translate(-1.5 -1.5)" />
+      <Gloss u={u} cx={42} cy={26} rx={10} ry={2.6} r={-34} />
+    </>
+  ),
 }
 
 export default function GlassIcon({ name, size = 64, tone = 'glass', className = '', style }) {
