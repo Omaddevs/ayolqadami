@@ -8,6 +8,7 @@ import { AUTH_LANGS, AUTH_TEXT } from '../data/authText'
 import { PHONE_PREFIX, checkUzPhone, formatUzPhone } from '../lib/phone'
 import { googleEnabled, googleSignIn, preloadGoogle } from '../lib/google'
 import { api as server, apiEnabled } from '../lib/api'
+import { clearAuthDraft, loadAuthDraft, saveAuthDraft } from '../lib/authDraft'
 
 const STEPS = 4
 const ROW = 46 // shahar g'ildiragidagi qator balandligi (px)
@@ -146,13 +147,18 @@ const openTelegram = (url) => {
 
 const RESEND_S = 30
 
-// Telefon raqamini kirish boti (Telegram) orqali tasdiqlash. onVerified(phoneToken | null) — null: serverda tasdiqlash o'chiq
-function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
-  const [session, setSession] = useState(null)
+// Avvalgi tasdiqlash sessiyasi shu raqam va maqsad uchun hali amal qilyaptimi (Telegram'dan qaytilganda — o'sha kod ishlaydi)
+const liveSession = (s, phone, purpose) => (s && s.phone === phone && s.purpose === purpose && Date.parse(s.expiresAt) > Date.now() ? s : null)
+
+// Telefon raqamini kirish boti (Telegram) orqali tasdiqlash. onVerified(phoneToken | null) — null: serverda tasdiqlash o'chiq.
+// session/onSession — sessiya ota komponentda (va qoralamada) saqlanadi: qayta ochilganda yangi kod so'ralmaydi
+function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified, onError }) {
+  const [session, setSession] = useState(() => liveSession(saved, phone, purpose))
   const [code, setCode] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [wait, setWait] = useState(0)
+  const tried = useRef('') // shu kod bilan avtomatik tasdiqlash bir marta
   const codeErr = (c) => ({
     code_invalid: t.errCodeInvalid, code_expired: t.errCodeExpired, code_attempts: t.errCodeAttempts, code_not_sent: t.errCodeNotSent,
     verify_unavailable: t.errVerifyOff, rate_limited: t.errRate, network: t.errNetwork, validation: t.errCodeInvalid,
@@ -163,7 +169,9 @@ function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
     try {
       const r = await server.phoneStart(phone, purpose)
       if (r.skip) return onVerified(null)
-      setSession(r)
+      const s = { ...r, phone, purpose }
+      setSession(s)
+      onSession?.(s)
       setWait(RESEND_S)
     } catch (e) {
       // raqam band / topilmadi / bloklangan — oldingi qadamda ko'rsatiladi
@@ -173,19 +181,20 @@ function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
       setBusy(false)
     }
   }
-  useEffect(() => { start() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!session) start() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (wait <= 0) return
     const id = setTimeout(() => setWait((w) => w - 1), 1000)
     return () => clearTimeout(id)
   }, [wait])
 
-  const submit = async (e) => {
-    e.preventDefault()
-    if (!session || code.length !== 6) return
+  const verify = async () => {
+    if (!session || code.length !== 6 || busy) return
+    tried.current = code
     setErr(''); setBusy(true)
     try {
       const { phoneToken } = await server.phoneVerify(session.id, code)
+      onSession?.(null)
       onVerified(phoneToken)
     } catch (ex) {
       setErr(codeErr(ex.code))
@@ -194,6 +203,9 @@ function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
       setBusy(false)
     }
   }
+  const submit = (e) => { e.preventDefault(); verify() }
+  // 6 ta raqam terilganda yoki botdan nusxalab qo'yilganda — tugmani kutmasdan tekshiramiz
+  useEffect(() => { if (code.length === 6 && tried.current !== code) verify() }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <form className="aw-verify" onSubmit={submit} noValidate>
@@ -204,7 +216,7 @@ function PhoneVerify({ phone, purpose, t, onVerified, onError }) {
         <TelegramLogo size={20} weight="fill" /> {t.openBot}
       </button>
       <label className="aw-field"><span>{t.codeLabel}</span>
-        <input className="aw-code" value={code} onChange={(e) => { setErr(''); setCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
+        <input className="aw-code" value={code} onChange={(e) => { setErr(''); tried.current = ''; setCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
           inputMode="numeric" autoComplete="one-time-code" placeholder={t.codePh} maxLength={6} />
       </label>
       {err && <div className="aw-err" role="alert">{err}</div>}
@@ -222,13 +234,17 @@ export default function Auth() {
   const closeToHome = () => { closeAuth(); navigate('/') }
   const lang = AUTH_TEXT[prefs.lang] ? prefs.lang : 'uz'
   const t = AUTH_TEXT[lang]
-  // bot havolasidan kelganda (?auth=...) — kerakli bo'lim; kod bilan kirish server bo'lmasa ishlamaydi
-  const [mode, setMode] = useState(authMode === 'code' && !apiEnabled ? 'login' : authMode || 'welcome') // 'welcome' | 'login' | 'signup' | 'reset' | 'code'
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ role: null, name: '', phone: PHONE_PREFIX, password: '', company: '', city: 'Toshkent', categories: [], otherCategory: '', email: '', photo: '', google: false, googleToken: '', phoneToken: '', verifiedPhone: '', terms: false })
-  const [verifying, setVerifying] = useState(false) // ro'yxatdan o'tishda raqam tasdiqlanmoqda
-  const [resetStage, setResetStage] = useState('phone') // 'phone' | 'verify' | 'password'
-  const [codeStage, setCodeStage] = useState('phone') // kod bilan kirish: 'phone' | 'verify'
+  // Telegram'dan qaytganda sahifa qayta yuklangan bo'lsa — tugallanmagan tasdiqlash shu yerdan davom etadi
+  const [draft] = useState(() => { const d = apiEnabled && loadAuthDraft(); return d && d.mode === authMode ? d : null })
+  // bot havolasidan kelganda (?auth=...) — kerakli bo'lim; kod bilan kirish va parolni tiklash server bo'lmasa ishlamaydi
+  const [mode, setMode] = useState(['code', 'reset'].includes(authMode) && !apiEnabled ? 'login' : authMode || 'welcome') // 'welcome' | 'login' | 'signup' | 'reset' | 'code'
+  // parol qoralamada saqlanmaydi: ro'yxatdan o'tish davom etsa — parol so'raladigan 2-qadamdan oldinga o'tmaymiz
+  const [step, setStep] = useState(Math.min(draft?.step || 1, 2))
+  const [form, setForm] = useState({ role: null, name: '', phone: PHONE_PREFIX, password: '', password2: '', company: '', city: 'Toshkent', categories: [], otherCategory: '', email: '', photo: '', google: false, googleToken: '', phoneToken: '', verifiedPhone: '', terms: false, ...draft?.form })
+  const [verifying, setVerifying] = useState(draft?.verifying || false) // ro'yxatdan o'tishda raqam tasdiqlanmoqda
+  const [resetStage, setResetStage] = useState(draft?.resetStage || 'phone') // 'phone' | 'verify' | 'password'
+  const [codeStage, setCodeStage] = useState(draft?.codeStage || 'phone') // kod bilan kirish: 'phone' | 'verify'
+  const [vsession, setVsession] = useState(draft?.vsession || null) // kirish botidagi tasdiqlash sessiyasi (id, botUrl, ...)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k, v) => { setErr(''); setForm((f) => ({ ...f, [k]: v })) }
@@ -243,6 +259,15 @@ export default function Auth() {
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
   }, [closeAuth])
+
+  // Raqam tasdiqlanayotgan / tasdiqlangan bosqichlar qoralamaga yoziladi (parol va Google tokeni — yo'q).
+  // Google bilan ro'yxatdan o'tish qoralamasiz: uning tokeni qayta yuklanishdan keyin baribir kerak bo'ladi
+  useEffect(() => {
+    const active = (mode === 'signup' && (verifying || form.verifiedPhone)) || (mode === 'reset' && resetStage !== 'phone') || (mode === 'code' && codeStage === 'verify')
+    if (!apiEnabled || !active || form.google) return clearAuthDraft()
+    const { password, password2, googleToken, ...rest } = form // eslint-disable-line no-unused-vars
+    saveAuthDraft({ mode, step, verifying, resetStage, codeStage, vsession, form: rest })
+  }, [mode, step, verifying, resetStage, codeStage, vsession, form])
 
   const langPicker = <LangPicker value={lang} onChange={(id) => setPrefs({ lang: id })} label={t.lang} />
   const go = (m) => { setErr(''); setMode(m); setStep(1); setVerifying(false); setResetStage('phone'); setCodeStage('phone') }
@@ -303,6 +328,7 @@ export default function Auth() {
       if (apiEnabled && form.verifiedPhone !== form.phone) return setVerifying(true)
     }
     if (step === STEPS && !form.terms) return setErr(t.errTerms)
+    if (step === STEPS && !form.google && !pwOk) { setStep(2); return setErr(t.errPass) }
     if (!canNext) return
     if (step < STEPS) return setStep(step + 1)
     const { password, otherCategory, googleToken, phoneToken, verifiedPhone, terms, ...data } = form
@@ -322,7 +348,8 @@ export default function Auth() {
   const onSignupVerified = (token) => {
     setForm((f) => ({ ...f, phoneToken: token || '', verifiedPhone: f.phone }))
     setVerifying(false)
-    setStep(3)
+    // sahifa qayta yuklangan bo'lsa parol yo'q (qoralamada saqlanmaydi) — avval uni so'raymiz
+    setStep(form.google || pwOk ? 3 : 2)
   }
   // tasdiqlashni boshlashda raqam band bo'lib chiqsa — 2-qadamga xato bilan qaytamiz
   const onVerifyError = (code) => { setVerifying(false); setErr(authError(code)) }
@@ -336,6 +363,7 @@ export default function Auth() {
   const resetSave = async (e) => {
     e.preventDefault()
     if (!pwOk) return setErr(t.errPass)
+    if (form.password !== form.password2) return setErr(t.errPassMatch)
     setBusy(true)
     const r = await resetPassword(form.phone, form.phoneToken, form.password)
     setBusy(false)
@@ -435,7 +463,7 @@ export default function Auth() {
               {err && <div className="aw-err" role="alert">{err}</div>}
             </div>
             <button className="aw-btn" type="submit" disabled={busy || phoneState !== 'ok' || !form.password}>{t.signIn}</button>
-            {apiEnabled && <p className="aw-foot aw-forgot"><button type="button" onClick={() => { set('password', ''); go('reset') }}>{t.forgot}</button></p>}
+            {apiEnabled && <p className="aw-foot aw-forgot"><button type="button" onClick={() => { setForm((f) => ({ ...f, password: '', password2: '' })); go('reset') }}>{t.forgot}</button></p>}
             <div className="aw-or"><span>{t.or}</span></div>
             {apiEnabled && (
               <button type="button" className="aw-btn aw-tg aw-tg-login" onClick={() => go('code')} disabled={busy}>
@@ -461,7 +489,7 @@ export default function Auth() {
                   <button className="aw-btn aw-mt" type="submit" disabled={phoneState !== 'ok'}>{t.cont}</button>
                 </form>
               ) : (
-                <PhoneVerify phone={form.phone} purpose="login" t={t} onVerified={onCodeVerified}
+                <PhoneVerify phone={form.phone} purpose="login" t={t} session={vsession} onSession={setVsession} onVerified={onCodeVerified}
                   onError={(code) => { setCodeStage('phone'); setErr(authError(code)) }} />
               )}
             </div>
@@ -483,7 +511,7 @@ export default function Auth() {
                 </form>
               )}
               {resetStage === 'verify' && (
-                <PhoneVerify phone={form.phone} purpose="reset" t={t}
+                <PhoneVerify phone={form.phone} purpose="reset" t={t} session={vsession} onSession={setVsession}
                   onVerified={(token) => { setForm((f) => ({ ...f, phoneToken: token || '' })); setErr(''); setResetStage('password') }}
                   onError={(code) => { setResetStage('phone'); setErr(authError(code)) }} />
               )}
@@ -493,9 +521,10 @@ export default function Auth() {
                   <p className="aw-sub">{t.resetPwSub}</p>
                   <div className="aw-fields">
                     <PasswordField label={t.newPassword} value={form.password} onChange={(v) => set('password', v)} placeholder={t.newPasswordPh} autoComplete="new-password" t={t} />
+                    <PasswordField label={t.repeatPassword} value={form.password2} onChange={(v) => set('password2', v)} placeholder={t.repeatPasswordPh} autoComplete="new-password" t={t} />
                   </div>
                   {err && <div className="aw-err" role="alert">{err}</div>}
-                  <button className="aw-btn aw-mt" type="submit" disabled={busy || !pwOk}>{t.resetBtn}</button>
+                  <button className="aw-btn aw-mt" type="submit" disabled={busy || !pwOk || !form.password2}>{t.resetBtn}</button>
                 </form>
               )}
             </div>
@@ -507,7 +536,7 @@ export default function Auth() {
             <Head step={2} onBack={back} right={langPicker} backLabel={t.back} />
             <div className="aw-body">
               {dkBrand}
-              <PhoneVerify phone={form.phone} purpose="register" t={t} onVerified={onSignupVerified} onError={onVerifyError} />
+              <PhoneVerify phone={form.phone} purpose="register" t={t} session={vsession} onSession={setVsession} onVerified={onSignupVerified} onError={onVerifyError} />
             </div>
           </div>
         )}

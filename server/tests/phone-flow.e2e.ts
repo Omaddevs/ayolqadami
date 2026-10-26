@@ -118,6 +118,9 @@ test("to'liq oqim: bot havolasi → kontakt → kod → ro'yxatdan o'tish → pa
   assert.equal(rs.json.sent, true)
   const resetCode = codeFrom(sent.slice(before).find((s) => s.method === 'sendMessage')!.body.text)!
   assert.equal(sent.slice(before).find((s) => s.method === 'sendMessage')!.body.chat_id, String(ME))
+  // «Saytga o'tish» tugmasi parolni tiklash bo'limini ochadi
+  const siteBtn = sent.slice(before).find((s) => s.method === 'sendMessage')!.body.reply_markup.inline_keyboard.flat().find((b: any) => b.url)
+  if (siteBtn) assert.match(siteBtn.url, /\/\?auth=reset$/)
   const v2 = await post('../src/app/api/v1/auth/phone/verify/route', { id: rs.json.id, code: resetCode })
   const reset = await post('../src/app/api/v1/auth/reset/route', { phone: DISPLAY, phoneToken: v2.json.phoneToken, password: 'newpass12' })
   assert.equal(reset.status, 200)

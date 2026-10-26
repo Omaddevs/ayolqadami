@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { flushSync } from 'react-dom'
 import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
 import { api as server, apiEnabled, getToken, setToken } from '../lib/api'
+import { clearAuthDraft, loadAuthDraft } from '../lib/authDraft'
 import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
@@ -189,19 +190,23 @@ export function AppProvider({ children }) {
     setAuthOpen(true)
     return false
   }, [])
-  const closeAuth = useCallback(() => { pending.current = null; setAuthOpen(false); setAuthMode('welcome') }, [])
-  // Kirish botidagi «Saytga o'tish» / «Ro'yxatdan o'tish» havolalari: ?auth=login|signup|code
+  const closeAuth = useCallback(() => { pending.current = null; clearAuthDraft(); setAuthOpen(false); setAuthMode('welcome') }, [])
+  // Kirish botidagi «Saytga o'tish» / «Ro'yxatdan o'tish» havolalari: ?auth=login|signup|code|reset.
+  // Havolasiz, lekin tugallanmagan tasdiqlash bo'lsa (Telegram'dan qaytganda sahifa qayta yuklangan) — oyna o'sha joyidan ochiladi
   useEffect(() => {
     const url = new URL(window.location.href)
-    const mode = url.searchParams.get('auth')
-    if (!['login', 'signup', 'code'].includes(mode)) return
-    url.searchParams.delete('auth')
-    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
-    if (userRef.current) return
+    const param = url.searchParams.get('auth')
+    if (param) {
+      url.searchParams.delete('auth')
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
+    }
+    const mode = ['login', 'signup', 'code', 'reset'].includes(param) ? param : loadAuthDraft()?.mode
+    if (!mode || userRef.current) return
     setAuthMode(mode)
     setAuthOpen(true)
   }, [])
   const finishAuth = useCallback((user) => {
+    clearAuthDraft()
     api.register(user)
     userRef.current = user // kutib turgan amal (masalan, ariza) yangi foydalanuvchi roli bilan tekshirilsin — qayta chizilishni kutmasdan
     const fn = pending.current

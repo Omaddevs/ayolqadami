@@ -49,7 +49,7 @@ const uz = {
   errVerifyOff: "Tasdiqlash xizmati vaqtincha ishlamayapti. Keyinroq urinib ko'ring", errUnverified: 'Telefon raqamingizni qaytadan tasdiqlang',
   codeLogin: 'Telegram kodi bilan kirish', codeLoginTitle: 'Kod bilan kirish', codeLoginSub: "Raqamingizni kiriting — kirish kodini Telegram'dagi botimiz yuboradi",
   forgot: 'Parolni unutdingizmi?', resetTitle: 'Parolni tiklash', resetSub: "Hisobingiz ochilgan raqamni kiriting — kodni Telegram orqali yuboramiz",
-  resetPwTitle: 'Yangi parol', resetPwSub: "Raqam tasdiqlandi. Yangi parol o'ylab toping", resetBtn: 'Parolni saqlash', cont: 'Davom etish',
+  resetPwTitle: 'Yangi parol', resetPwSub: "Raqam tasdiqlandi. Yangi parol o'ylab toping", resetBtn: 'Parolni saqlash', repeatPassword: 'Parolni takrorlang', repeatPasswordPh: 'Yangi parolni qayta kiriting', errPassMatch: 'Parollar bir xil emas', cont: 'Davom etish',
   terms: ['Men ', 'Foydalanish shartlari', ' va ', 'Maxfiylik siyosati', 'ga roziman'], errTerms: 'Davom etish uchun shartlarga rozilik bering',
 }
 
@@ -96,7 +96,7 @@ const cyrl = {
   errVerifyOff: 'Тасдиқлаш хизмати вақтинча ишламаяпти. Кейинроқ уриниб кўринг', errUnverified: 'Телефон рақамингизни қайтадан тасдиқланг',
   codeLogin: 'Telegram коди билан кириш', codeLoginTitle: 'Код билан кириш', codeLoginSub: 'Рақамингизни киритинг — кириш кодини Telegram’даги ботимиз юборади',
   forgot: 'Паролни унутдингизми?', resetTitle: 'Паролни тиклаш', resetSub: 'Ҳисобингиз очилган рақамни киритинг — кодни Telegram орқали юборамиз',
-  resetPwTitle: 'Янги парол', resetPwSub: 'Рақам тасдиқланди. Янги парол ўйлаб топинг', resetBtn: 'Паролни сақлаш', cont: 'Давом этиш',
+  resetPwTitle: 'Янги парол', resetPwSub: 'Рақам тасдиқланди. Янги парол ўйлаб топинг', resetBtn: 'Паролни сақлаш', repeatPassword: 'Паролни такрорланг', repeatPasswordPh: 'Янги паролни қайта киритинг', errPassMatch: 'Пароллар бир хил эмас', cont: 'Давом этиш',
   terms: ['Мен ', 'Фойдаланиш шартлари', ' ва ', 'Махфийлик сиёсати', 'га розиман'], errTerms: 'Давом этиш учун шартларга розилик беринг',
 }
 
@@ -143,7 +143,7 @@ const ru = {
   errVerifyOff: 'Сервис подтверждения временно недоступен. Попробуйте позже', errUnverified: 'Подтвердите номер телефона ещё раз',
   codeLogin: 'Войти по коду из Telegram', codeLoginTitle: 'Вход по коду', codeLoginSub: 'Введите номер — код для входа пришлёт наш бот в Telegram',
   forgot: 'Забыли пароль?', resetTitle: 'Восстановление пароля', resetSub: 'Введите номер, на который открыт аккаунт — код придёт в Telegram',
-  resetPwTitle: 'Новый пароль', resetPwSub: 'Номер подтверждён. Придумайте новый пароль', resetBtn: 'Сохранить пароль', cont: 'Продолжить',
+  resetPwTitle: 'Новый пароль', resetPwSub: 'Номер подтверждён. Придумайте новый пароль', resetBtn: 'Сохранить пароль', repeatPassword: 'Повторите пароль', repeatPasswordPh: 'Введите новый пароль ещё раз', errPassMatch: 'Пароли не совпадают', cont: 'Продолжить',
   terms: ['Я принимаю ', 'Условия использования', ' и ', 'Политику конфиденциальности', ''], errTerms: 'Чтобы продолжить, примите условия',
 }
 
@@ -190,7 +190,7 @@ const en = {
   errVerifyOff: 'Verification is temporarily unavailable. Please try later', errUnverified: 'Please verify your phone number again',
   codeLogin: 'Sign in with a Telegram code', codeLoginTitle: 'Sign in with a code', codeLoginSub: 'Enter your number — our Telegram bot will send you a sign-in code',
   forgot: 'Forgot password?', resetTitle: 'Reset password', resetSub: "Enter your account's phone number — we'll send a code via Telegram",
-  resetPwTitle: 'New password', resetPwSub: 'Number verified. Create a new password', resetBtn: 'Save password', cont: 'Continue',
+  resetPwTitle: 'New password', resetPwSub: 'Number verified. Create a new password', resetBtn: 'Save password', repeatPassword: 'Repeat password', repeatPasswordPh: 'Enter the new password again', errPassMatch: 'Passwords do not match', cont: 'Continue',
   terms: ['I agree to the ', 'Terms of Use', ' and ', 'Privacy Policy', ''], errTerms: 'Please accept the terms to continue',
 }
 

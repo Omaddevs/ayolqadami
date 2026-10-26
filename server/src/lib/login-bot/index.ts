@@ -195,10 +195,13 @@ const contactKeyboard = (t: Texts) => ({
 })
 const urlButton = (text: string, path = '') => (siteUrl() ? [{ text, url: siteUrl() + path }] : [])
 
+// «Saytga o'tish» — kod kiritiladigan bo'limni ochadi (sayt shu brauzerda boshlangan tasdiqlashni qoralamadan davom ettiradi)
+const SITE_SECTION: Record<string, string> = { login: 'code', register: 'signup', reset: 'reset' }
+
 const codeKeyboard = (t: Texts, vid: string, code: string, purpose: string) => ({
   inline_keyboard: [
     [{ text: t.copy, copy_text: { text: code } }, { text: t.newCode, callback_data: `lc:new:${vid}` }],
-    ...(siteUrl() ? [urlButton(t.toSite, purpose === 'login' ? '/?auth=login' : '')] : []),
+    ...(siteUrl() ? [urlButton(t.toSite, `/?auth=${SITE_SECTION[purpose] || 'login'}`)] : []),
   ],
 })
 
