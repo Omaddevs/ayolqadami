@@ -16,10 +16,14 @@ export class UploadError extends Error {}
 
 export async function saveImage(file: File, authorId: string) {
   if (file.size > MAX_IMAGE_BYTES) throw new UploadError('Rasm hajmi 3 MB dan oshmasin')
-  const buf = new Uint8Array(await file.arrayBuffer())
+  return saveImageBytes(new Uint8Array(await file.arrayBuffer()), file.name, authorId)
+}
+
+export async function saveImageBytes(buf: Uint8Array, name: string, authorId: string | null) {
+  if (buf.length > MAX_IMAGE_BYTES) throw new UploadError('Rasm hajmi 3 MB dan oshmasin')
   const mime = detectImage(buf)
   if (!mime) throw new UploadError('Faqat PNG, JPEG yoki WebP rasm yuklash mumkin')
-  const m = await db.media.create({ data: { mime, size: buf.length, data: Buffer.from(buf), name: file.name.slice(0, 120), authorId } })
+  const m = await db.media.create({ data: { mime, size: buf.length, data: Buffer.from(buf), name: name.slice(0, 120), authorId } })
   return `/media/${m.id}`
 }
 
