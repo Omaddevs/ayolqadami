@@ -540,21 +540,69 @@ function SeekerIntro() {
   )
 }
 
+// Kirgan foydalanuvchi dashboardi (desktop): salomlashish, hisob roliga qarab raqamli kartalar va asosiy tugmalar
+function DashHead({ isEmp }) {
+  const { user, allJobs, applications, saved, posted } = useApp()
+  const t = useT()
+  const first = (user.name || '').split(' ')[0]
+  const received = posted.reduce((n, j) => n + (Number(j.applicants) || 0), 0)
+  const stats = isEmp
+    ? [
+        { icon: 'folder', value: posted.length, label: t('Mening vakansiyalarim'), to: '/applications' },
+        { icon: 'resume', value: received, label: t('Kelgan arizalar'), to: '/applications' },
+        { icon: 'users', value: CANDIDATES.length, label: t('Nomzodlar'), to: '/candidates' },
+      ]
+    : [
+        { icon: 'folder', value: applications.length, label: t('Arizalarim'), to: '/applications' },
+        { icon: 'resume', value: saved.length, label: t('Saqlanganlar'), to: '/applications?tab=saved' },
+        { icon: 'briefcase', value: allJobs.length, label: t('Vakansiyalar'), to: '/jobs' },
+      ]
+  return (
+    <section className="dash-head">
+      <div className="dash-hi">
+        <h1>{first ? t('Salom, {name}!', { name: first }) : t('Xush kelibsiz!')}</h1>
+        <p>{isEmp ? t("Vakansiyalaringiz va sizga mos nomzodlar shu yerda") : t("Sizga mos vakansiyalar va arizalaringiz shu yerda")}</p>
+      </div>
+      <div className="dash-stats">
+        {stats.map(({ icon, value, label, to }) => (
+          <Link key={label} to={to} className="dash-stat">
+            <GlassIcon name={icon} size={44} />
+            <span><b>{value.toLocaleString('ru-RU')}</b><small>{label}</small></span>
+          </Link>
+        ))}
+        <div className="dash-ctas">
+          {isEmp
+            ? <Link to="/post-job" className="btn btn-primary">{t('Vakansiya joylash')}</Link>
+            : <Link to="/profile/edit" className="btn btn-primary">{t('Rezyumeni tahrirlash')}</Link>}
+          <Link to="/qadam-ai" className="btn btn-soft"><Sparkle size={18} weight="fill" /> QadamAI</Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // Bosh sahifa ikki manzilda: / — ish izlovchilar, /ish-beruvchilar — ish beruvchilar (audience="employer").
-// Manzil ko'rinishni belgilaydi: Google har birini alohida sahifa sifatida indekslaydi
+// Manzil ko'rinishni belgilaydi: Google har birini alohida sahifa sifatida indekslaydi.
+// Kirgan foydalanuvchiga landing o'rniga dashboard chiqadi — e'lonlar hisob roliga qarab
 export default function Home({ audience }) {
   const { user, viewRole, setViewRole, allJobs, applications, posted, saved, unreadNotifs } = useApp()
   const t = useT()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
-  const isEmp = audience ? audience === 'employer' : viewRole === 'employer'
+  const dash = !!user
+  const isEmp = dash ? user.role === 'employer' : audience ? audience === 'employer' : viewRole === 'employer'
   const closeSearch = useCallback(() => setOpen(false), [])
   const nav = useNavigate()
-  // /ish-beruvchilar ochilsa — sayt ish beruvchi ko'rinishiga o'tadi; / da ish beruvchi ko'rinishi tanlangan bo'lsa — o'z manziliga
+  // /ish-beruvchilar ochilsa — sayt ish beruvchi ko'rinishiga o'tadi; / da ish beruvchi ko'rinishi tanlangan bo'lsa — o'z manziliga.
+  // Kirgan foydalanuvchi esa doim o'z roli bosh sahifasida (sarlavha ham shu rolda)
   useEffect(() => {
-    if (audience) { if (viewRole !== audience) setViewRole(audience) }
+    if (user) {
+      const home = user.role === 'employer' ? 'employer' : undefined
+      if (viewRole !== user.role) setViewRole(user.role)
+      if (audience !== home) nav(home ? '/ish-beruvchilar' : '/', { replace: true })
+    } else if (audience) { if (viewRole !== audience) setViewRole(audience) }
     else if (viewRole === 'employer') nav('/ish-beruvchilar', { replace: true })
-  }, [audience]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [audience, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
   const [filterOpen, setFilterOpen] = useState(false)
   const [fCat, setFCat] = useState('')
   const [fType, setFType] = useState('')
@@ -635,8 +683,8 @@ export default function Home({ audience }) {
 
   return (
     <div className="home">
-      <DesktopIntro isEmp={isEmp} />
-      {isEmp && <EmployerWhy />}
+      {dash ? <DashHead isEmp={isEmp} /> : <DesktopIntro isEmp={isEmp} />}
+      {!dash && isEmp && <EmployerWhy />}
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-top">
@@ -696,6 +744,18 @@ export default function Home({ audience }) {
         <BannerCarousel />
 
 
+        {dash && isEmp && (
+          <div className="dash-list">
+            <SectionHead title={t('Mening vakansiyalarim')} to="/applications" />
+            {posted.length ? (
+              <div className="list-grid">{posted.slice(0, 6).map((j) => <JobCard key={j.id} job={j} compact />)}</div>
+            ) : (
+              <Empty icon="folder" title={t('Hali vakansiya joylamadingiz')} text={t("Birinchi e'loningizni joylang — QadamAI darhol mos nomzodlarni tavsiya qiladi")}
+                action={<Link to="/post-job" className="btn btn-primary">{t('Vakansiya joylash')}</Link>} />
+            )}
+          </div>
+        )}
+
         {isEmp ? (
           CANDIDATES.length > 0 && (
             <section className="rec-box">
@@ -719,10 +779,10 @@ export default function Home({ audience }) {
         ) : (
           <>
             {/* avval tezkor tugmalar va «Ish topish endi oson» bentosi, keyin «So'nggi ish imkoniyatlari», ostida — «Siz uchun vakansiyalar» */}
-            <SeekerBento />
-            <LatestJobs jobs={allJobs} />
-            {/* «Siz uchun vakansiyalar» — faqat mobil/planshetda; desktop landingda yashiriladi (fixes.css: .home-rec) */}
-            <div className="home-rec">
+            {!dash && <SeekerBento />}
+            {!dash && <LatestJobs jobs={allJobs} />}
+            {/* «Siz uchun vakansiyalar» — landingda faqat mobil/planshetda (fixes.css: .home-rec), dashboardda hamma joyda */}
+            <div className={`home-rec${dash ? ' dash-list' : ''}`}>
               <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />
               <div className="list-grid">{uniqueRec.map((j) => <JobCard key={j.id} job={j} />)}</div>
             </div>
