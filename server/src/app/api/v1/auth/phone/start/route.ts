@@ -4,8 +4,8 @@ import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { getSettings } from '@/lib/settings'
 import { phoneStartSchema } from '@/lib/validators'
-import { activeLoginCode, createVerification, recentPhoneLink, setCode } from '@/lib/phone-verify'
-import { devCodes, loginBotUsername, sendVerificationCode } from '@/lib/login-bot'
+import { activeLoginCode, createVerification, recentPhoneLink } from '@/lib/phone-verify'
+import { botUnreachable, loginBotUsername, sendVerificationCode } from '@/lib/login-bot'
 
 // Telefonni tasdiqlashni boshlash: bot havolasi qaytadi. Raqam shu botda avval ulangan bo'lsa — kod darhol yuboriladi
 export const POST = api(async (req) => {
@@ -28,12 +28,10 @@ export const POST = api(async (req) => {
     if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
   }
 
-  // lokal ishlab chiqish: production boti bu serverga xabar bermaydi — kod javobda qaytadi va saytda ko'rsatiladi
-  if (devCodes()) {
-    const v = await createVerification(phone, purpose)
-    const { code, expiresAt } = await setCode(v.id, 'dev', purpose)
-    console.info(`[login-bot] lokal rejim: ${phone} uchun kod ${code}`)
-    return json({ id: v.id, bot: '', botUrl: '', sent: true, devCode: code, expiresAt: expiresAt.toISOString() }, 201)
+  // Kod faqat Telegram bot orqali beriladi. Lokal server botni tinglamasa (sukut), bot kodni boshqa (production) bazasiga
+  // yozadi va bu yerda tasdiqlab bo'lmaydi — foydalanuvchini adashtirmaslik uchun darhol aytamiz
+  if (botUnreachable()) {
+    throw new ApiError(503, 'verify_unavailable', "Kirish boti bu serverda ishlamayapti: alohida test boti bilan LOGIN_BOT_POLLING=true qo'ying")
   }
 
   const bot = await loginBotUsername()

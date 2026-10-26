@@ -174,7 +174,6 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
       setSession(s)
       onSession?.(s)
       setWait(RESEND_S)
-      if (r.devCode) setCode(r.devCode) // lokal server: bot ishlamaydi, kod javobda keladi
     } catch (e) {
       // raqam band / topilmadi / bloklangan — oldingi qadamda ko'rsatiladi
       if (['exists', 'nouser', 'blocked', 'registration_closed'].includes(e.code)) return onError(e.code)
@@ -216,15 +215,11 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
   return (
     <form className="aw-verify" onSubmit={submit} noValidate>
       <h2>{t.verifyTitle}</h2>
-      {!session?.devCode && <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>}
+      <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>
       <div className="aw-vphone"><small>{t.verifyFor}</small><b>{phone}</b></div>
-      {session?.devCode ? (
-        <p className="aw-sub" role="note">🧪 Lokal rejim: Telegram bot ishlatilmaydi. Kod: <b>{session.devCode}</b></p>
-      ) : (
-        <button type="button" className="aw-btn aw-tg" disabled={!session?.botUrl} onClick={() => openTelegram(session.botUrl)}>
-          <TelegramLogo size={20} weight="fill" /> {t.openBot}
-        </button>
-      )}
+      <button type="button" className="aw-btn aw-tg" disabled={!session?.botUrl} onClick={() => openTelegram(session.botUrl)}>
+        <TelegramLogo size={20} weight="fill" /> {t.openBot}
+      </button>
       <label className="aw-field"><span>{t.codeLabel}</span>
         <input className="aw-code" value={code} onChange={(e) => { setErr(''); tried.current = ''; setCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
           inputMode="numeric" autoComplete="one-time-code" placeholder={t.codePh} maxLength={6} />

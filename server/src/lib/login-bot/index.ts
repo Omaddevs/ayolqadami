@@ -21,8 +21,9 @@ const st = (): BotState => (g.__loginBot ??= { username: '', started: false, off
 // chiqadi. Shuning uchun sukut bo'yicha faqat production tinglaydi; lokalda LOGIN_BOT_POLLING=true (alohida test boti bilan)
 export const loginBotPolling = () =>
   Boolean(loginBotToken()) && (process.env.LOGIN_BOT_POLLING ? process.env.LOGIN_BOT_POLLING === 'true' : process.env.NODE_ENV === 'production')
-// Lokal ishlab chiqish: bot tinglanmaydi — tasdiqlash kodi saytning o'zida ko'rsatiladi (productionda hech qachon)
-export const devCodes = () => process.env.NODE_ENV !== 'production' && !loginBotPolling()
+// Lokal server botni tinglamasa, tasdiqlash ishlamaydi (kod faqat botdan; saytda hech qachon ko'rsatilmaydi).
+// Productionda LOGIN_BOT_POLLING=false bo'lishi mumkin (bir nechta nusxa, bittasi tinglaydi, baza umumiy) — u yerda to'xtatmaymiz
+export const botUnreachable = () => process.env.NODE_ENV !== 'production' && !loginBotPolling()
 export const loginBotStatus = () => ({ configured: Boolean(loginBotToken()), polling: loginBotPolling(), ...st() })
 
 // Bot username (deep link uchun) — getMe bir marta so'raladi

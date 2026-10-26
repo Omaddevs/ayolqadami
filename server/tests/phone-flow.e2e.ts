@@ -306,8 +306,8 @@ test("bir raqamga bir necha sessiya: kod qaysi sessiyaga kelgan bo'lsa ham saytd
   }
 })
 
-test("lokal rejim: bot tinglanmasa kod saytda qaytadi; productionda hech qachon", async () => {
-  const { devCodes, loginBotPolling } = await import('../src/lib/login-bot')
+test("kod faqat botdan: javobda hech qachon qaytmaydi; botni tinglamaydigan lokal server tasdiqlashni boshlamaydi", async () => {
+  const { botUnreachable, loginBotPolling } = await import('../src/lib/login-bot')
   const { db } = await import('../src/lib/db')
   const env = { polling: process.env.LOGIN_BOT_POLLING, node: process.env.NODE_ENV }
   const setEnv = (polling: string | undefined, node: string | undefined) => {
@@ -316,25 +316,28 @@ test("lokal rejim: bot tinglanmasa kod saytda qaytadi; productionda hech qachon"
     ;(process.env as Record<string, string | undefined>).NODE_ENV = node
   }
   const phone4 = '99895' + String(Date.now()).slice(-7)
+  const start = () => post('../src/app/api/v1/auth/phone/start/route', { phone: '+' + phone4, purpose: 'register' })
   try {
-    // production: bot tinglanadi, kod saytga hech qachon chiqmaydi
+    // production: bot tinglanadi, kod javobda yo'q — faqat bot havolasi
     setEnv(undefined, 'production')
     assert.equal(loginBotPolling(), true)
-    assert.equal(devCodes(), false)
+    assert.equal(botUnreachable(), false)
+    const prod = await start()
+    assert.equal(prod.status, 201)
+    assert.ok(prod.json.botUrl)
+    assert.doesNotMatch(JSON.stringify(prod.json), /"\d{6}"/, 'javobda kod bo\'lmasligi kerak')
+    // bir nechta nusxa: bu nusxa tinglamasa ham (baza umumiy) productionda ishlaydi
     setEnv('false', 'production')
-    assert.equal(devCodes(), false)
+    assert.equal(botUnreachable(), false)
 
-    // lokal (development): production botini tinglamaydi — kod javobda
+    // lokal server production botini tinglamaydi — kod bu bazaga hech qachon kelmaydi, shuning uchun darhol rad etiladi
     setEnv(undefined, 'development')
     assert.equal(loginBotPolling(), false)
-    assert.equal(devCodes(), true)
     const n = sent.length
-    const start = await post('../src/app/api/v1/auth/phone/start/route', { phone: '+' + phone4, purpose: 'register' })
-    assert.equal(start.status, 201)
-    assert.match(start.json.devCode, /^\d{6}$/)
-    assert.equal(sent.length, n, "lokal rejimda Telegram'ga hech narsa yuborilmaydi")
-    const ok = await post('../src/app/api/v1/auth/phone/verify/route', { id: start.json.id, code: start.json.devCode })
-    assert.equal(ok.status, 200)
+    const dev = await start()
+    assert.equal(dev.status, 503)
+    assert.equal(dev.json.error.code, 'verify_unavailable')
+    assert.equal(sent.length, n, "Telegram'ga hech narsa yuborilmaydi")
   } finally {
     setEnv(env.polling, env.node)
     await db.phoneVerification.deleteMany({ where: { phone: phone4 } })
