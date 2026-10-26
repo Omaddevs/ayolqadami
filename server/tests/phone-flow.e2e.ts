@@ -24,6 +24,7 @@ before(async () => {
   await new Promise<void>((r) => fake.listen(0, '127.0.0.1', r))
   process.env.TELEGRAM_API_BASE = `http://127.0.0.1:${(fake.address() as { port: number }).port}`
   process.env.TELEGRAM_LOGIN_BOT_TOKEN = '123456:fake-token-for-tests-only-xxxxxxxxxxxx'
+  process.env.LOGIN_BOT_POLLING = 'true' // bot oqimi sinaladi (lokal «kod saytda» rejimi emas)
 })
 
 const PHONE = '9989' + String(Date.now()).slice(-8) // 998 9X XXX XX XX — har ishga tushirishda yangi
@@ -302,5 +303,40 @@ test("bir raqamga bir necha sessiya: kod qaysi sessiyaga kelgan bo'lsa ham saytd
   } finally {
     await db.phoneVerification.deleteMany({ where: { phone: phone3 } })
     await db.telegramPhone.deleteMany({ where: { telegramId: String(TG3) } })
+  }
+})
+
+test("lokal rejim: bot tinglanmasa kod saytda qaytadi; productionda hech qachon", async () => {
+  const { devCodes, loginBotPolling } = await import('../src/lib/login-bot')
+  const { db } = await import('../src/lib/db')
+  const env = { polling: process.env.LOGIN_BOT_POLLING, node: process.env.NODE_ENV }
+  const setEnv = (polling: string | undefined, node: string | undefined) => {
+    if (polling === undefined) delete process.env.LOGIN_BOT_POLLING
+    else process.env.LOGIN_BOT_POLLING = polling
+    ;(process.env as Record<string, string | undefined>).NODE_ENV = node
+  }
+  const phone4 = '99895' + String(Date.now()).slice(-7)
+  try {
+    // production: bot tinglanadi, kod saytga hech qachon chiqmaydi
+    setEnv(undefined, 'production')
+    assert.equal(loginBotPolling(), true)
+    assert.equal(devCodes(), false)
+    setEnv('false', 'production')
+    assert.equal(devCodes(), false)
+
+    // lokal (development): production botini tinglamaydi — kod javobda
+    setEnv(undefined, 'development')
+    assert.equal(loginBotPolling(), false)
+    assert.equal(devCodes(), true)
+    const n = sent.length
+    const start = await post('../src/app/api/v1/auth/phone/start/route', { phone: '+' + phone4, purpose: 'register' })
+    assert.equal(start.status, 201)
+    assert.match(start.json.devCode, /^\d{6}$/)
+    assert.equal(sent.length, n, "lokal rejimda Telegram'ga hech narsa yuborilmaydi")
+    const ok = await post('../src/app/api/v1/auth/phone/verify/route', { id: start.json.id, code: start.json.devCode })
+    assert.equal(ok.status, 200)
+  } finally {
+    setEnv(env.polling, env.node)
+    await db.phoneVerification.deleteMany({ where: { phone: phone4 } })
   }
 })

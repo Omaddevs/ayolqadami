@@ -16,7 +16,14 @@ export const loginBotToken = () => process.env.TELEGRAM_LOGIN_BOT_TOKEN || ''
 type BotState = { username: string; started: boolean; offset: number; lastError: string; lastPollAt: number }
 const g = globalThis as unknown as { __loginBot?: BotState }
 const st = (): BotState => (g.__loginBot ??= { username: '', started: false, offset: 0, lastError: '', lastPollAt: 0 })
-export const loginBotStatus = () => ({ configured: Boolean(loginBotToken()), ...st() })
+// Botni faqat bitta server tinglashi kerak: ikki joy (masalan, lokal `next dev` va production) bitta token bilan
+// getUpdates qilsa, Telegram xabarlarni ular orasida bo'lib beradi — kod boshqa bazaga yoziladi va saytda «kod yuborilmagan»
+// chiqadi. Shuning uchun sukut bo'yicha faqat production tinglaydi; lokalda LOGIN_BOT_POLLING=true (alohida test boti bilan)
+export const loginBotPolling = () =>
+  Boolean(loginBotToken()) && (process.env.LOGIN_BOT_POLLING ? process.env.LOGIN_BOT_POLLING === 'true' : process.env.NODE_ENV === 'production')
+// Lokal ishlab chiqish: bot tinglanmaydi — tasdiqlash kodi saytning o'zida ko'rsatiladi (productionda hech qachon)
+export const devCodes = () => process.env.NODE_ENV !== 'production' && !loginBotPolling()
+export const loginBotStatus = () => ({ configured: Boolean(loginBotToken()), polling: loginBotPolling(), ...st() })
 
 // Bot username (deep link uchun) — getMe bir marta so'raladi
 export async function loginBotUsername(): Promise<string | null> {
@@ -518,7 +525,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export function startLoginPoller() {
   const s = st()
-  if (s.started || !loginBotToken()) return
+  if (s.started || !loginBotPolling()) return
   s.started = true
   void (async () => {
     let synced = ''

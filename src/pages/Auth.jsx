@@ -159,6 +159,7 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
   const [busy, setBusy] = useState(false)
   const [wait, setWait] = useState(0)
   const tried = useRef('') // shu kod bilan avtomatik tasdiqlash bir marta
+  const started = useRef(false) // React StrictMode effektni ikki marta chaqiradi — sessiya bitta ochilsin
   const codeErr = (c) => ({
     code_invalid: t.errCodeInvalid, code_expired: t.errCodeExpired, code_attempts: t.errCodeAttempts, code_not_sent: t.errCodeNotSent,
     verify_unavailable: t.errVerifyOff, rate_limited: t.errRate, network: t.errNetwork, validation: t.errCodeInvalid,
@@ -173,6 +174,7 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
       setSession(s)
       onSession?.(s)
       setWait(RESEND_S)
+      if (r.devCode) setCode(r.devCode) // lokal server: bot ishlamaydi, kod javobda keladi
     } catch (e) {
       // raqam band / topilmadi / bloklangan — oldingi qadamda ko'rsatiladi
       if (['exists', 'nouser', 'blocked', 'registration_closed'].includes(e.code)) return onError(e.code)
@@ -181,7 +183,11 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
       setBusy(false)
     }
   }
-  useEffect(() => { if (!session) start() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (session || started.current) return
+    started.current = true
+    start()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (wait <= 0) return
     const id = setTimeout(() => setWait((w) => w - 1), 1000)
@@ -210,11 +216,15 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
   return (
     <form className="aw-verify" onSubmit={submit} noValidate>
       <h2>{t.verifyTitle}</h2>
-      <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>
+      {!session?.devCode && <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>}
       <div className="aw-vphone"><small>{t.verifyFor}</small><b>{phone}</b></div>
-      <button type="button" className="aw-btn aw-tg" disabled={!session} onClick={() => openTelegram(session.botUrl)}>
-        <TelegramLogo size={20} weight="fill" /> {t.openBot}
-      </button>
+      {session?.devCode ? (
+        <p className="aw-sub" role="note">🧪 Lokal rejim: Telegram bot ishlatilmaydi. Kod: <b>{session.devCode}</b></p>
+      ) : (
+        <button type="button" className="aw-btn aw-tg" disabled={!session?.botUrl} onClick={() => openTelegram(session.botUrl)}>
+          <TelegramLogo size={20} weight="fill" /> {t.openBot}
+        </button>
+      )}
       <label className="aw-field"><span>{t.codeLabel}</span>
         <input className="aw-code" value={code} onChange={(e) => { setErr(''); tried.current = ''; setCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
           inputMode="numeric" autoComplete="one-time-code" placeholder={t.codePh} maxLength={6} />

@@ -26,6 +26,7 @@ export default async function SettingsPage() {
                 <label className="check"><input type="checkbox" name="phoneVerification" defaultChecked={s.phoneVerification} /> Ro&apos;yxatdan o&apos;tishda telefon raqami kirish boti orqali tasdiqlanadi</label>
                 <small style={{ color: 'var(--muted)', marginTop: -8 }}>
                   Kirish boti: {bot.configured ? (bot.username ? `@${bot.username}` : 'ulanmoqda…') : 'TELEGRAM_LOGIN_BOT_TOKEN berilmagan'}
+                  {bot.configured && !bot.polling ? ' · bu server botni tinglamaydi (LOGIN_BOT_POLLING)' : ''}
                   {bot.lastError ? ` · xato: ${bot.lastError}` : ''}
                 </small>
                 <div className="field"><label htmlFor="supportGreeting">Murojaatga avtomatik javob</label><textarea id="supportGreeting" className="textarea" name="supportGreeting" defaultValue={s.supportGreeting} maxLength={500} style={{ minHeight: 70 }} /></div>

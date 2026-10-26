@@ -4,8 +4,8 @@ import { ApiError, api, body, clientIp, json } from '@/lib/http'
 import { rateLimit } from '@/lib/rate-limit'
 import { getSettings } from '@/lib/settings'
 import { phoneStartSchema } from '@/lib/validators'
-import { activeLoginCode, createVerification, recentPhoneLink } from '@/lib/phone-verify'
-import { loginBotUsername, sendVerificationCode } from '@/lib/login-bot'
+import { activeLoginCode, createVerification, recentPhoneLink, setCode } from '@/lib/phone-verify'
+import { devCodes, loginBotUsername, sendVerificationCode } from '@/lib/login-bot'
 
 // Telefonni tasdiqlashni boshlash: bot havolasi qaytadi. Raqam shu botda avval ulangan bo'lsa — kod darhol yuboriladi
 export const POST = api(async (req) => {
@@ -26,6 +26,14 @@ export const POST = api(async (req) => {
     // xodim hisobi (ADMIN/MODERATOR) bu yerda "topilmadi": paroli Telegram orqali tiklanmaydi, raqam xodimniki ekani ham oshkor bo'lmaydi
     if (!user || !APP_ROLES.includes(user.role)) throw new ApiError(404, 'nouser', 'Bu raqam bilan hisob topilmadi')
     if (user.status !== 'ACTIVE') throw new ApiError(403, 'blocked', 'Hisobingiz bloklangan')
+  }
+
+  // lokal ishlab chiqish: production boti bu serverga xabar bermaydi — kod javobda qaytadi va saytda ko'rsatiladi
+  if (devCodes()) {
+    const v = await createVerification(phone, purpose)
+    const { code, expiresAt } = await setCode(v.id, 'dev', purpose)
+    console.info(`[login-bot] lokal rejim: ${phone} uchun kod ${code}`)
+    return json({ id: v.id, bot: '', botUrl: '', sent: true, devCode: code, expiresAt: expiresAt.toISOString() }, 201)
   }
 
   const bot = await loginBotUsername()
