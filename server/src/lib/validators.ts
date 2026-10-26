@@ -68,6 +68,7 @@ export const jobInputSchema = z
   .object({
     title: str(120).min(3),
     category: str(40).min(1),
+    subcategory: str(40).optional(),
     city: str(60).min(1),
     region: str(60).optional(),
     district: str(80).optional(),

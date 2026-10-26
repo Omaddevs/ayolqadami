@@ -214,6 +214,7 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
 
   return (
     <form className="aw-verify" onSubmit={submit} noValidate>
+      <span className="aw-verify-ic" aria-hidden="true"><TelegramLogo size={30} weight="fill" /></span>
       <h2>{t.verifyTitle}</h2>
       <p className="aw-sub">{session?.sent ? t.verifySent.replace('{bot}', session.bot) : t.verifySub}</p>
       <div className="aw-vphone"><small>{t.verifyFor}</small><b>{phone}</b></div>
@@ -225,10 +226,12 @@ function PhoneVerify({ phone, purpose, t, session: saved, onSession, onVerified,
           inputMode="numeric" autoComplete="one-time-code" placeholder={t.codePh} maxLength={6} />
       </label>
       {err && <div className="aw-err" role="alert">{err}</div>}
-      <button className="aw-btn" type="submit" disabled={busy || !session || code.length !== 6}>{t.verifyBtn}</button>
-      <p className="aw-foot">
-        <button type="button" onClick={start} disabled={busy || wait > 0}>{wait > 0 ? t.resendIn.replace('{s}', wait) : t.resend}</button>
-      </p>
+      <div className="aw-verify-actions">
+        <button className="aw-btn" type="submit" disabled={busy || !session || code.length !== 6}>{t.verifyBtn}</button>
+        <p className="aw-foot">
+          <button type="button" onClick={start} disabled={busy || wait > 0}>{wait > 0 ? t.resendIn.replace('{s}', wait) : t.resend}</button>
+        </p>
+      </div>
     </form>
   )
 }

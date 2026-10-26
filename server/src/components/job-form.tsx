@@ -1,11 +1,16 @@
 import type { Job } from '@prisma/client'
 import { ActionForm } from './action-form'
-import { CATEGORIES, CITIES, JOB_STATUS, JOB_TYPES } from '@/lib/catalog'
+import { CITIES, JOB_STATUS, JOB_TYPES, catName } from '@/lib/catalog'
+import type { CategoryNode } from '@/lib/categories'
 import { saveJob } from '@/app/admin/(panel)/actions'
 import { toDateInput } from '@/lib/dates'
 
-export function JobForm({ job, companies }: { job?: Job | null; companies: string[] }) {
+// Soha tanlovi: bo'limli sohalar guruh bo'lib chiqadi — «it» (butun soha) yoki «it/frontend» (bo'lim) yuboriladi
+export function JobForm({ job, companies, categories }: { job?: Job | null; companies: string[]; categories: CategoryNode[] }) {
   const d = job
+  const current = d ? (d.subcategory ? `${d.category}/${d.subcategory}` : d.category) : ''
+  const known = new Set(categories.flatMap((c) => [c.slug, ...c.children.map((s) => `${c.slug}/${s.slug}`)]))
+  const off = (c: { active: boolean }) => (c.active ? '' : " (o'chirilgan)")
   return (
     <ActionForm action={saveJob} cancelHref="/admin/jobs">
       {d && <input type="hidden" name="id" value={d.id} />}
@@ -18,10 +23,18 @@ export function JobForm({ job, companies }: { job?: Job | null; companies: strin
         </div>
         <div className="field">
           <label htmlFor="category">Soha *</label>
-          <select id="category" className="select" name="category" defaultValue={d?.category || ''} required>
+          <select id="category" className="select" name="category" defaultValue={current} required>
             <option value="" disabled>Tanlang</option>
-            {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {/* kategoriyalarda yo'q (o'chirib yuborilgan) soha — vakansiyada saqlanib qoladi */}
+            {current && !known.has(current) && <option value={current}>{catName(d!.category)}{d!.subcategory ? ` / ${d!.subcategory}` : ''}</option>}
+            {categories.map((c) => (c.children.length ? (
+              <optgroup key={c.id} label={c.name + off(c)}>
+                <option value={c.slug}>{c.name} — barcha bo&apos;limlar</option>
+                {c.children.map((s) => <option key={s.id} value={`${c.slug}/${s.slug}`}>{s.name + off(s)}</option>)}
+              </optgroup>
+            ) : <option key={c.id} value={c.slug}>{c.name + off(c)}</option>))}
           </select>
+          <small>Bo&apos;limlar «Kategoriyalar» sahifasida qo&apos;shiladi</small>
         </div>
         <div className="field">
           <label htmlFor="city">Shahar *</label>

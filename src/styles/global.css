@@ -72,7 +72,9 @@
   --shadow: 0 10px 30px rgba(43, 38, 140, .10);
   --shadow-lg: 0 18px 50px rgba(43, 38, 140, .18);
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --safe-t: env(safe-area-inset-top, 0px);
+  /* Telegram fullscreen rejimida tizim paneli + Telegram'ning «Закрыть / ⋯» tugmalari kontent ustida turadi —
+     ularning balandligini Telegram --tg-*-safe-area-inset-top o'zgaruvchilarida beradi */
+  --safe-t: max(env(safe-area-inset-top, 0px), calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px)));
   color-scheme: light;
 }
 
@@ -1305,11 +1307,17 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .pf-alert.green span { color: var(--success-ink); }
 .pf-progress { --pos: clamp(26px, var(--p), calc(100% - 26px)); position: relative; height: 32px; margin: 8px 0 -2px; }
 .pf-progress::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; background: rgba(146, 86, 10, .14); }
-.pf-progress i { position: absolute; left: 0; top: 50%; width: var(--pos); height: 6px; margin-top: -3px; border-radius: 3px; background: linear-gradient(90deg, #8B8CFF, var(--primary-600)); animation: pf-grow 1.4s cubic-bezier(.22, 1, .36, 1) .15s both; }
-.pf-progress em { position: absolute; left: var(--pos); top: 50%; transform: translate(-50%, -50%); padding: 4px 10px; border-radius: 12px; background: var(--primary-600); color: #fff; font-style: normal; font-size: 14px; font-weight: 700; line-height: 1.2; white-space: nowrap; box-shadow: 0 4px 10px -3px rgba(79, 70, 229, .5); animation: pf-slide 1.4s cubic-bezier(.22, 1, .36, 1) .15s both; }
+.pf-progress i { position: absolute; left: 0; top: 50%; width: var(--pos); height: 6px; margin-top: -3px; border-radius: 3px; background: linear-gradient(90deg, #8B8CFF, var(--primary-600)); animation: pf-grow 1.4s cubic-bezier(.22, 1, .36, 1) .15s both; transition: width .9s cubic-bezier(.22, 1, .36, 1); }
+.pf-progress em { position: absolute; left: var(--pos); top: 50%; transform: translate(-50%, -50%); padding: 4px 10px; border-radius: 12px; background: var(--primary-600); color: #fff; font-style: normal; font-size: 14px; font-weight: 700; line-height: 1.2; white-space: nowrap; box-shadow: 0 4px 10px -3px rgba(79, 70, 229, .5); animation: pf-slide 1.4s cubic-bezier(.22, 1, .36, 1) .15s both; transition: left .9s cubic-bezier(.22, 1, .36, 1); }
+.pf-next { display: block; margin-top: 4px; font-size: 13px; }
+.pf-next b { font-size: inherit; }
+/* rezyume to'ldirilmagan — asosiy tugma yumshoq pulsatsiya qiladi */
+.pf-nudge { animation: pf-pulse 2.4s ease-in-out infinite; }
+@keyframes pf-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, .45); } 60% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); } }
+@media (prefers-reduced-motion: reduce) { .pf-nudge { animation: none; } }
 @keyframes pf-grow { from { width: 0; } }
 @keyframes pf-slide { from { left: 26px; opacity: 0; } 25% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .pf-progress i, .pf-progress em { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pf-progress i, .pf-progress em { animation: none; transition: none; } }
 .pf-resume-stats { display: flex; gap: 8px; }
 .pf-resume-stats a { flex: 1; padding: 10px 12px; border-radius: 14px; background: var(--card); font-size: 14px; color: var(--text-2); text-align: center; transition: background .2s; }
 .pf-resume-stats a:hover { background: var(--primary-50); }

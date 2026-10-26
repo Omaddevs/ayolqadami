@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDesktop } from '../lib/media'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon3D from '../components/Icon3D'
-import { Avatar, Sheet, TopBar, Select } from '../components/UI'
+import { Avatar, Sheet, TopBar, Select, useCountUp } from '../components/UI'
 import LocationSheet from '../components/LocationSheet'
 import ResumeBuilder from './ResumeBuilder'
 import ProfileDesktop from '../components/ProfileDesktop'
@@ -10,12 +10,11 @@ import { readPhoto } from '../lib/photo'
 import {
   CaretDown, CaretRight, Check, CheckCircle, EnvelopeSimple, MagnifyingGlass, PencilSimple, Phone, Plus, TelegramLogo, WarningCircle,
 } from '@phosphor-icons/react'
-import { profileCompletion, useApp } from '../context/AppContext'
-import { CATEGORIES, CITIES, catName, formatSum } from '../data/mock'
+import { profileCompletion, profileMissing, useApp } from '../context/AppContext'
+import { CITIES, catName, catOptions, formatSum } from '../data/mock'
 import { tr, tx } from '../i18n'
 
 
-const CAT_OPTS = CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
 
 const SEARCH_STATUS = [
   { id: 'active', label: 'Faol ish qidiryapman', hint: "Ish beruvchilar sizni birinchi ko'radi", tone: 'green' },
@@ -56,6 +55,8 @@ function ProfileMobile() {
   const { user, updateUser, applications, saved, posted, invites } = useApp()
   const isEmp = user.role === 'employer'
   const pct = profileCompletion(user)
+  const shownPct = useCountUp(pct)
+  const nextStep = profileMissing(user)[0]
   const [statusOpen, setStatusOpen] = useState(false)
   const [locOpen, setLocOpen] = useState(false)
   const [compact, setCompact] = useState(false)
@@ -153,12 +154,13 @@ function ProfileMobile() {
                 {pct < 100 ? (
                   <div className="pf-alert amber">
                     <div>
-                      <b>{tr("Rezyume {n}% to'ldirilgan", { n: pct })}</b>
+                      <b>{pct === 0 ? tr("Rezyumeingiz hali bo'sh") : tr("Rezyume {n}% to'ldirilgan", { n: shownPct })}</b>
                       <span>{tr("To'liq rezyume 3 barobar ko'p taklif oladi")}</span>
                       <div className="pf-progress" style={{ '--p': `${pct}%` }} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
                         <i />
-                        <em>{pct}%</em>
+                        <em>{shownPct}%</em>
                       </div>
+                      {nextStep && <span className="pf-next">{tr('Keyingi qadam')}: <b>{tr(nextStep.label)}</b></span>}
                     </div>
                     <WarningCircle size={26} />
                   </div>
@@ -172,7 +174,7 @@ function ProfileMobile() {
                   <Link to="/applications"><b>{applications.length}</b> {tr("ariza")}</Link>
                   <Link to="/applications?tab=saved"><b>{saved.length}</b> {tr("saqlangan")}</Link>
                 </div>
-                <Link to="/profile/edit" className="btn btn-primary btn-block">{pct < 100 ? tr("Rezyumeni to'ldirish") : tr('Rezyumeni tahrirlash')}</Link>
+                <Link to="/profile/edit" className={`btn btn-primary btn-block ${pct < 100 ? 'pf-nudge' : ''}`}>{pct === 0 ? tr('Rezyume yaratish') : pct < 100 ? tr("Rezyumeni to'ldirish") : tr('Rezyumeni tahrirlash')}</Link>
               </div>
             </section>
 
@@ -344,7 +346,7 @@ function CompanyEdit() {
             <label className="field"><span>{tr("Telegram")}</span><input value={f.telegram} onChange={set('telegram')} placeholder={tr("@username")} /></label>
           </div>
           <label className="field"><span>{tr("Soha")}</span>
-            <Select value={f.category} options={CAT_OPTS} onChange={pick('category')} /></label>
+            <Select value={f.category} options={catOptions()} onChange={pick('category')} /></label>
           <label className="field"><span>{tr("Kompaniya haqida")}</span><textarea rows={4} value={f.about} onChange={set('about')} /></label>
         </fieldset>
 

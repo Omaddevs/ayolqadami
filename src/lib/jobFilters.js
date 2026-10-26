@@ -1,5 +1,5 @@
 // Vakansiya filtrlari — bosh sahifa qidiruvi, mobil filtr oynasi va /jobs sahifasi uchun bitta qoida.
-// Holat URL'da saqlanadi (?q=&cat=&city=&type=&min=&exp=&period=&sort=): havolani ulashish va Google uchun qulay
+// Holat URL'da saqlanadi (?q=&cat=&sub=&city=&type=&min=&exp=&period=&sort=; sub — soha bo'limi, masalan frontend): havolani ulashish va Google uchun qulay
 import { tx } from '../i18n'
 import { inPeriod } from './time'
 
@@ -22,8 +22,8 @@ export const EXP_STEPS = [
   { value: '5', label: '5 yilgacha' },
 ]
 
-const KEYS = ['q', 'cat', 'city', 'type', 'min', 'exp', 'period', 'sort']
-export const EMPTY = { q: '', cat: '', city: '', type: '', min: '', exp: '', period: '', sort: 'new' }
+const KEYS = ['q', 'cat', 'sub', 'city', 'type', 'min', 'exp', 'period', 'sort']
+export const EMPTY = { q: '', cat: '', sub: '', city: '', type: '', min: '', exp: '', period: '', sort: 'new' }
 
 export const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 
@@ -32,6 +32,7 @@ export function readFilters(params) {
   for (const k of KEYS) { const v = params.get(k); if (v != null) f[k] = v }
   if (!SALARY_STEPS.some((s) => s.value === f.min)) f.min = ''
   if (!EXP_STEPS.some((s) => s.value === f.exp)) f.exp = ''
+  if (!f.cat) f.sub = '' // bo'lim faqat soha ichida
   return f
 }
 
@@ -61,6 +62,7 @@ const expOk = (j, exp) => exp === '' || (Number(j.experience) || 0) <= Number(ex
 export function matchJob(j, f) {
   const nq = norm(f.q.trim())
   return (!f.cat || j.category === f.cat) &&
+    (!f.sub || j.subcategory === f.sub) &&
     (!f.city || norm(j.city).includes(norm(f.city)) || norm(j.region).includes(norm(f.city))) &&
     (!f.type || j.type === f.type) &&
     salaryOk(j, f.min) &&

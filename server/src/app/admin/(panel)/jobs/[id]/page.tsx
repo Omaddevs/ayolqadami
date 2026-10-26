@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Archive, Check, Trash2, X } from 'lucide-react'
+import { Archive, Check, MessageCircle, Phone, Send, Trash2, X } from 'lucide-react'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { APP_STATUS, JOB_STATUS } from '@/lib/catalog'
@@ -9,19 +9,22 @@ import { formatUzPhone } from '@/lib/phone'
 import { Avatar, Badge, Card, PageHead } from '@/components/ui'
 import { Submit } from '@/components/client'
 import { JobForm } from '@/components/job-form'
+import { categoryTree } from '@/lib/categories'
 import { approveJob, archiveJob, deleteJob, rejectJob } from '../../actions'
 import { sendJobNow } from '../../telegram/actions'
 import { ActionForm } from '@/components/action-form'
 import { channelMatchesJob } from '@/lib/telegram/service'
 import { getTelegramConfig } from '@/lib/telegram/config'
 import { POST_STATUS, postLink } from '../../telegram/shared'
+import { CONTACT_KIND, contactStats, conversion } from '@/lib/contacts'
+import { LineChart } from '@/components/charts'
 
 export const metadata = { title: 'Vakansiya' }
 
 export default async function JobPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const admin = await requireAdmin()
-  const [job, companies] = await Promise.all([
+  const [job, companies, categories] = await Promise.all([
     db.job.findUnique({
       where: { id },
       include: {
@@ -31,11 +34,14 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
       },
     }),
     db.company.findMany({ select: { name: true }, orderBy: { name: 'asc' } }),
+    categoryTree(),
   ])
-  const [tgCfg, channels, tgPosts] = await Promise.all([
+  const [tgCfg, channels, tgPosts, cs, contacts] = await Promise.all([
     getTelegramConfig(),
     db.telegramChannel.findMany({ where: { active: true }, orderBy: { title: 'asc' } }),
     db.telegramPost.findMany({ where: { jobId: id }, orderBy: { createdAt: 'desc' }, include: { channel: { select: { title: true, chatId: true, username: true } } } }),
+    contactStats({ jobId: id }, 7),
+    db.jobContact.findMany({ where: { jobId: id }, orderBy: { createdAt: 'desc' }, take: 15, include: { user: { select: { id: true, name: true, photo: true, phone: true } } } }),
   ])
   if (!job) notFound()
   const details = (job.details || {}) as Record<string, unknown>
@@ -47,7 +53,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         <Badge tone={JOB_STATUS[job.status].tone}>{JOB_STATUS[job.status].label}</Badge>
       </PageHead>
       <div className="grid g-side">
-        <Card title="Tahrirlash"><JobForm job={job} companies={companies.map((c) => c.name)} /></Card>
+        <Card title="Tahrirlash"><JobForm job={job} companies={companies.map((c) => c.name)} categories={categories} /></Card>
         <div className="grid" style={{ alignContent: 'start' }}>
           {job.status === 'PENDING' && (
             <Card title="Moderatsiya" tone="yellow">
@@ -73,6 +79,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <dt>Muddati</dt><dd>{job.expiresAt ? dateTime(job.expiresAt) : '—'}</dd>
               <dt>Ko&apos;rishlar</dt><dd>{job.views}</dd>
               <dt>Yoqtirishlar</dt><dd>{job.likes}</dd>
+              <dt>Qo&apos;ng&apos;iroqlar</dt><dd>{job.calls}</dd>
+              <dt>Yozishlar</dt><dd>{job.writes}</dd>
               <dt>Arizalar</dt><dd>{job._count.applications}</dd>
               {job.rejectReason && <><dt>Rad sababi</dt><dd>{job.rejectReason}</dd></>}
               {job.author?.phone && <><dt>Muallif tel.</dt><dd>{formatUzPhone(job.author.phone)}</dd></>}
@@ -84,6 +92,28 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               {admin.role === 'ADMIN' && (
                 <form action={deleteJob}><input type="hidden" name="id" value={job.id} /><Submit className="btn sm danger" confirm="Vakansiya va unga tegishli barcha arizalar butunlay o'chiriladi. Davom etasizmi?"><Trash2 size={14} /> O&apos;chirish</Submit></form>
               )}
+            </div>
+          </Card>
+          <Card title="Bog'lanishlar" icon={<Phone size={12} />} tone="green" href={`/admin/contacts?job=${job.id}`}>
+            <div className="kpi"><b>{cs.total}</b><span className="delta-note">{cs.unique} kishi · ko&apos;rishdan {conversion(cs.unique, job.views)}%</span></div>
+            <div className="mini-tiles" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', margin: '10px 0' }}>
+              <div className="mini-tile"><span><Phone size={11} /> Qo&apos;ng&apos;iroq</span><b>{cs.calls}</b></div>
+              <div className="mini-tile"><span><Send size={11} /> Telegram</span><b>{cs.telegram}</b></div>
+              <div className="mini-tile"><span><MessageCircle size={11} /> Savol</span><b>{cs.messages}</b></div>
+            </div>
+            <LineChart points={cs.chart} color="var(--green)" />
+            <div className="rows" style={{ marginTop: 10 }}>
+              {contacts.length === 0 && <div className="empty">Hali hech kim bog&apos;lanmagan</div>}
+              {contacts.map((c) => (
+                <div key={c.id} className="row" style={{ gridTemplateColumns: '34px 1fr auto' }}>
+                  <Avatar name={c.user?.name || 'Mehmon'} src={c.user?.photo} />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="t">{c.user ? <Link href={`/admin/users/${c.user.id}`}>{c.user.name}</Link> : 'Mehmon'}</div>
+                    <div className="s" style={c.text ? { whiteSpace: 'normal' } : undefined}>{c.text ? `«${c.text}»` : c.user?.phone ? formatUzPhone(c.user.phone) : ''} · {timeAgo(c.createdAt)}</div>
+                  </div>
+                  <Badge tone={CONTACT_KIND[c.kind].tone}>{CONTACT_KIND[c.kind].label}</Badge>
+                </div>
+              ))}
             </div>
           </Card>
           <Card title="Telegram">

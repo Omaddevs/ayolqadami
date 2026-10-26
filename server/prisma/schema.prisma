@@ -94,6 +94,7 @@ model User {
   invitesSent  Invite[]        @relation("InviteEmployer")
   auditLogs    AuditLog[]
   jobLikes     JobLike[]
+  jobContacts  JobContact[]
   telegram     TelegramUser?
   notifications Notification[]
 
@@ -115,6 +116,27 @@ model Company {
   jobs Job[]
 }
 
+// Vakansiya kategoriyalari (sohalar) va ularning bo'limlari: «IT va dizayn» → Frontend, Backend... — admin paneldan boshqariladi.
+// slug — vakansiyadagi Job.category (soha) yoki Job.subcategory (bo'lim) qiymati. Dastlabki sohalar slug'lari
+// web ilovadagi id'lar bilan bir xil (src/data/mock.js) — eski vakansiyalar o'zgarishsiz ishlaydi
+model Category {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  name      String
+  short     String     @default("") // tor joylar uchun qisqa nom (bo'sh — to'liq nom)
+  icon      String     @default("briefcase") // web ilovadagi 3D ikonka nomi (Icon3D)
+  parentId  String? // bo'sh — soha, to'ldirilgan — shu sohaning bo'limi (faqat bir daraja)
+  sort      Int        @default(0)
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+
+  @@index([parentId, sort])
+}
+
 model Job {
   id           String    @id @default(cuid())
   number       Int           @unique @default(autoincrement()) // ochiq raqamli ID: /jobs/1024-frontend-dasturchi
@@ -123,6 +145,7 @@ model Job {
   companyId    String?
   color        String    @default("#6366F6")
   category     String
+  subcategory  String? // soha bo'limi (Category.slug), masalan «frontend»; bo'lmasa — butun soha
   city         String
   region       String?
   district     String?
@@ -143,6 +166,8 @@ model Job {
   authorId     String?
   views        Int       @default(0) // noyob ko'rishlar: bir kishi — kuniga bir marta (JobView)
   likes        Int       @default(0) // yoqtirishlar soni (JobLike bilan bir tranzaksiyada yangilanadi)
+  calls        Int       @default(0) // «Bog'lanish» → qo'ng'iroq bosilgan (JobContact CALL)
+  writes       Int       @default(0) // yozishlar: Telegram'ga o'tish + saytdan savol (JobContact TELEGRAM/MESSAGE)
   publishedAt  DateTime?
   expiresAt    DateTime?
   createdAt    DateTime  @default(now())
@@ -154,9 +179,11 @@ model Job {
   telegramPosts TelegramPost[]
   likedBy      JobLike[]
   viewLog      JobView[]
+  contacts     JobContact[]
 
   @@index([status, publishedAt])
   @@index([category])
+  @@index([category, subcategory])
   @@index([city])
   @@index([authorId])
   ad           Ad?
@@ -186,6 +213,31 @@ model JobView {
   job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@id([jobId, viewer, day])
+  @@index([createdAt])
+}
+
+enum ContactKind {
+  CALL // telefon raqamiga qo'ng'iroq (tel:)
+  TELEGRAM // ish beruvchining Telegram'iga o'tish
+  MESSAGE // saytdagi «Ish beruvchiga savol» shakli orqali yozish
+}
+
+// Vakansiya bo'yicha bog'lanish urinishlari: admin panelda har bir e'lon uchun statistika va savollar matni.
+// Bir kishining bir xil turdagi takroriy bosishi 10 daqiqa ichida qayta hisoblanmaydi (MESSAGE bundan mustasno)
+model JobContact {
+  id        String      @id @default(cuid())
+  jobId     String
+  kind      ContactKind
+  viewer    String // u:<userId> yoki a:<IP+brauzer xeshi> — IP xom holda saqlanmaydi
+  userId    String?
+  text      String? // MESSAGE — savol matni
+  createdAt DateTime    @default(now())
+
+  job  Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([jobId, kind, createdAt])
+  @@index([viewer, jobId, kind, createdAt])
   @@index([createdAt])
 }
 

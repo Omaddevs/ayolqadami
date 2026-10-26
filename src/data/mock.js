@@ -1,5 +1,8 @@
 import { tr } from '../i18n'
 
+// Sohalar (kategoriyalar) admin paneldan keladi (/api/v1/content → categories, bo'limlari bilan: subs).
+// Bu ro'yxat — server bo'lmasa yoki javob kelguncha zaxira. syncCategories uni joyida almashtiradi:
+// CATEGORIES import qilgan barcha joylar (filtrlar, formalar, dashboard) keyingi chizilishda yangisini ko'radi
 export const CATEGORIES = [
   { id: 'office', name: 'Ofis ishlari', short: 'Ofis', icon: 'folder' },
   { id: 'edu', name: "Ta'lim va pedagogika", short: "Ta'lim", icon: 'gradcap' },
@@ -35,6 +38,18 @@ const findCat = (id) => CATEGORIES.find((c) => c.id === (LEGACY_CAT[id] || id))
 export const catName = (id) => tr(findCat(id)?.name || id)
 export const catShort = (id) => (findCat(id) ? tr(findCat(id).short) : catName(id))
 export const catIcon = (id) => findCat(id)?.icon || 'briefcase'
+// soha bo'limlari (IT va dizayn → Frontend, Backend...): [{ id, name, short }]
+export const subsOf = (id) => findCat(id)?.subs || []
+export const subName = (cat, sub) => tr(subsOf(cat).find((s) => s.id === sub)?.short || sub)
+// tanlov ro'yxatlari uchun — chizish paytida (modul darajasida emas), admin qo'shgan sohalar ham chiqsin
+export const catOptions = () => CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
+
+export function syncCategories(list) {
+  if (!Array.isArray(list) || !list.length) return
+  CATEGORIES.splice(0, CATEGORIES.length, ...list.map((c) => ({
+    id: c.id, name: c.name, short: c.short || c.name, icon: c.icon || 'briefcase', subs: Array.isArray(c.subs) ? c.subs : [],
+  })))
+}
 
 // botdan kelgan vakansiyalarda maosh satr bo'lishi mumkin — raqamga o'giramiz
 export const formatSum = (n) => (Number(n) || 0).toLocaleString('ru-RU').replace(/[,\u00A0\u202F]/g, ' ')

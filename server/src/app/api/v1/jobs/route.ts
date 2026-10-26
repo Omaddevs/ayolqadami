@@ -10,7 +10,7 @@ import { autoPostJob } from '@/lib/telegram/service'
 
 export const dynamic = 'force-dynamic'
 
-// Faol vakansiyalar: ?q=&category=&city=&type=&page=&limit= (limit 500 gacha — web ilova filtrlashni o'zida bajaradi)
+// Faol vakansiyalar: ?q=&category=&subcategory=&city=&type=&page=&limit= (limit 500 gacha — web ilova filtrlashni o'zida bajaradi)
 export const GET = api(async (req) => {
   const url = new URL(req.url)
   const { limit, skip, page } = pageParams(url, 50, 500)
@@ -19,6 +19,7 @@ export const GET = api(async (req) => {
     status: 'ACTIVE',
     OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     ...(url.searchParams.get('category') && { category: url.searchParams.get('category')! }),
+    ...(url.searchParams.get('subcategory') && { subcategory: url.searchParams.get('subcategory')! }),
     ...(url.searchParams.get('city') && { city: url.searchParams.get('city')! }),
     ...(url.searchParams.get('type') && { type: url.searchParams.get('type')! }),
     ...(q && {
@@ -60,6 +61,7 @@ export const POST = api(async (req) => {
       companyId: company?.id ?? null,
       color: input.color || '#6366F6',
       category: input.category,
+      subcategory: input.subcategory || null,
       city: input.city,
       region: input.region,
       district: input.district,

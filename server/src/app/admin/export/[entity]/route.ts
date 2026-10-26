@@ -1,9 +1,11 @@
-import type { ApplicationStatus, JobStatus, Prisma, Role } from '@prisma/client'
+import type { ApplicationStatus, ContactKind, JobStatus, Prisma, Role } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getAdmin } from '@/lib/auth'
 import { audit } from '@/lib/audit'
 import { APP_STATUS, JOB_STATUS, ROLE, catName } from '@/lib/catalog'
 import { dateTime } from '@/lib/format'
+import { CONTACT_KIND } from '@/lib/contacts'
+import { endOfDayTashkent, startOfDayTashkent } from '@/lib/dates'
 import { formatUzPhone, phoneDigits } from '@/lib/phone'
 
 export const dynamic = 'force-dynamic'
@@ -46,8 +48,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
       ...(q && { OR: [{ title: { contains: q, mode: 'insensitive' } }, { companyName: { contains: q, mode: 'insensitive' } }] }),
     }
     const jobs = await db.job.findMany({ where, orderBy: { createdAt: 'desc' }, take: MAX, include: { _count: { select: { applications: true } } } })
-    rows = [['Lavozim', 'Kompaniya', 'Soha', 'Shahar', 'Turi', 'Maosh dan', 'Maosh gacha', 'Holat', 'Arizalar', "Ko'rishlar", 'Yaratilgan'],
-      ...jobs.map((j) => [j.title, j.companyName, catName(j.category), j.city, j.type, j.salaryFrom, j.salaryTo, JOB_STATUS[j.status].label, j._count.applications, j.views, dateTime(j.createdAt)])]
+    rows = [['Lavozim', 'Kompaniya', 'Soha', 'Shahar', 'Turi', 'Maosh dan', 'Maosh gacha', 'Holat', 'Arizalar', "Ko'rishlar", "Qo'ng'iroqlar", 'Yozishlar', 'Yaratilgan'],
+      ...jobs.map((j) => [j.title, j.companyName, catName(j.category), j.city, j.type, j.salaryFrom, j.salaryTo, JOB_STATUS[j.status].label, j._count.applications, j.views, j.calls, j.writes, dateTime(j.createdAt)])]
   } else if (entity === 'applications') {
     const where: Prisma.ApplicationWhereInput = {
       ...(status && { status: status as ApplicationStatus }),
@@ -56,6 +58,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ entity: 
     const apps = await db.application.findMany({ where, orderBy: { createdAt: 'desc' }, take: MAX, include: { user: true, job: true } })
     rows = [['Nomzod', 'Telefon', 'Vakansiya', 'Kompaniya', 'Holat', 'Xat', 'Sana'],
       ...apps.map((a) => [a.user.name, formatUzPhone(a.user.phone), a.job.title, a.job.companyName, APP_STATUS[a.status].label, a.letter, dateTime(a.createdAt)])]
+  } else if (entity === 'contacts') {
+    const kind = url.searchParams.get('kind') || ''
+    const jobId = url.searchParams.get('job') || ''
+    const from = startOfDayTashkent(url.searchParams.get('from') || '')
+    const to = endOfDayTashkent(url.searchParams.get('to') || '')
+    const where: Prisma.JobContactWhereInput = {
+      ...(kind in CONTACT_KIND && { kind: kind as ContactKind }),
+      ...(jobId && { jobId }),
+      ...((from || to) && { createdAt: { ...(from && { gte: from }), ...(to && { lte: to }) } }),
+      ...(q && { OR: [{ job: { title: { contains: q, mode: 'insensitive' } } }, { job: { companyName: { contains: q, mode: 'insensitive' } } },
+        { user: { name: { contains: q, mode: 'insensitive' } } }, { text: { contains: q, mode: 'insensitive' } }] }),
+    }
+    const list = await db.jobContact.findMany({ where, orderBy: { createdAt: 'desc' }, take: MAX, include: { user: true, job: true } })
+    rows = [['Sana', 'Turi', 'Vakansiya', 'Kompaniya', 'Nomzod', 'Telefon', 'Savol'],
+      ...list.map((c) => [dateTime(c.createdAt), CONTACT_KIND[c.kind].label, c.job.title, c.job.companyName, c.user?.name || 'Mehmon', c.user ? formatUzPhone(c.user.phone) : '', c.text])]
   } else {
     return new Response('Not found', { status: 404 })
   }

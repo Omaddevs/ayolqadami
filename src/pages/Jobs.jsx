@@ -9,13 +9,14 @@ import {
 } from '@phosphor-icons/react'
 import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Select, Sheet, TopBar } from '../components/UI'
 import { canUseAI, useApp } from '../context/AppContext'
-import { CATEGORIES, CITIES, JOB_TYPES, catName, salaryText } from '../data/mock'
+import { CATEGORIES, CITIES, JOB_TYPES, catName, salaryText, subName, subsOf } from '../data/mock'
 import { EXP_STEPS, SALARY_STEPS, activeCount, filterJobs, readFilters } from '../lib/jobFilters'
 import { placeJobs } from '../data/geo'
 import { companySlug } from '../data/companies'
 import { WORK_MODES, WORK_TIME } from '../data/resume'
 import { breadcrumbLd, findJobByRef, jobPath, jobPostingLd, siteUrl, useSeo } from '../lib/seo'
 import { api as server, apiEnabled } from '../lib/api'
+import { jobPhone, jobTelegram, telHref, tgHref } from '../lib/contact'
 import { tr, tx, useT } from '../i18n'
 import { PERIODS, compactNum, fullDateTime, postedAt, postedText } from '../lib/time'
 
@@ -51,9 +52,9 @@ export function Jobs() {
   const ai = canUseAI(user)
   const t = useT()
   const [params, setParams] = useSearchParams()
-  // barcha filtrlar URL'da (?q=&cat=&city=&type=&min=&exp=&period=&sort=) — bosh sahifadagi qidiruv shu manzilni ochadi
+  // barcha filtrlar URL'da (?q=&cat=&sub=&city=&type=&min=&exp=&period=&sort=) — bosh sahifadagi qidiruv shu manzilni ochadi
   const f = readFilters(params)
-  const { q, cat, city, type, min, exp, period, sort } = f
+  const { q, cat, sub, city, type, min, exp, period, sort } = f
   // filtr o'zgarsa — birinchi sahifaga qaytamiz
   const setF = (k, v) => {
     const p = new URLSearchParams(params)
@@ -62,7 +63,15 @@ export function Jobs() {
     setParams(p, { replace: true })
   }
   const setPeriod = (v) => setF('period', v)
-  const setCat = (id) => setF('cat', id)
+  // soha almashsa — oldingi sohaning bo'limi tushib qoladi
+  const setCat = (id) => {
+    const p = new URLSearchParams(params)
+    id ? p.set('cat', id) : p.delete('cat')
+    p.delete('sub')
+    p.delete('page')
+    setParams(p, { replace: true })
+  }
+  const subs = subsOf(cat)
   const setQ = (v) => setF('q', v)
   const setType = (v) => setF('type', v)
   const setSort = (v) => setF('sort', v)
@@ -77,8 +86,15 @@ export function Jobs() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const list = useMemo(() => filterJobs(allJobs, { q, cat, city, type, min, exp, period, sort }, postedAt),
-    [allJobs, q, cat, city, type, min, exp, period, sort])
+  const list = useMemo(() => filterJobs(allJobs, { q, cat, sub, city, type, min, exp, period, sort }, postedAt),
+    [allJobs, q, cat, sub, city, type, min, exp, period, sort])
+  // soha tanlanganda — shu e'lonlarni bergan kompaniyalar (ko'p vakansiyalisi oldin)
+  const companies = useMemo(() => {
+    if (!cat) return []
+    const m = new Map()
+    list.forEach((j) => { const c = m.get(j.company) || { name: j.company, color: j.color, n: 0 }; c.n++; m.set(j.company, c) })
+    return [...m.values()].sort((a, b) => b.n - a.n).slice(0, 12)
+  }, [cat, list])
 
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE))
   const cur = Math.min(page, pages)
@@ -102,6 +118,15 @@ export function Jobs() {
             </button>
           ))}
         </div>
+        {/* tanlangan sohaning bo'limlari (admin paneldan): IT va dizayn → Frontend, Backend... */}
+        {subs.length > 0 && (
+          <div className="pill-row jobs-subs">
+            <button className={`pill pill-sm ${!sub ? 'on' : ''}`} onClick={() => setF('sub', '')}>{t("Barcha bo'limlar")}</button>
+            {subs.map((s) => (
+              <button key={s.id} className={`pill pill-sm ${sub === s.id ? 'on' : ''}`} onClick={() => setF('sub', s.id)}>{t(s.short || s.name)}</button>
+            ))}
+          </div>
+        )}
         <div className="pill-row">
           {['', ...JOB_TYPES].map((jt) => (
             <button key={jt || 'all'} className={`pill pill-sm ${type === jt ? 'on' : ''}`} onClick={() => { setType(jt) }}>{t(jt || 'Har qanday format')}</button>
@@ -132,6 +157,20 @@ export function Jobs() {
           <Select value={city} options={cityOpts} onChange={(v) => setF('city', v)} />
           {active > 0 && <button type="button" className="jobs-clear" onClick={clearAll}>{t('Filtrlarni tozalash')} ({active})</button>}
         </div>
+
+        {companies.length > 0 && (
+          <section className="jobs-cos" aria-label={t('Kompaniyalar')}>
+            <span className="jobs-cos-title">{t('Kompaniyalar')}{sub ? ` · ${subName(cat, sub)}` : ''}</span>
+            <div className="jobs-cos-row">
+              {companies.map((c) => (
+                <Link key={c.name} to={`/companies/${companySlug(c.name)}`} className="jobs-co">
+                  <CompanyLogo name={c.name || '?'} color={c.color || '#5B57F0'} size={30} />
+                  <span><b>{c.name}</b><small>{t('{n} vakansiya', { n: c.n })}</small></span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="result-bar">
           <div className="result-count">
@@ -183,7 +222,7 @@ function JobMiniMap({ pos }) {
 export function JobDetail() {
   const { id: ref } = useParams()
   const nav = useNavigate()
-  const { jobsAll, allJobs, user, saved, toggleSave, viewJob, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
+  const { jobsAll, allJobs, user, saved, toggleSave, viewJob, contactJob, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
   const t = useT()
   // /jobs/1001-nom (raqam) yoki eski /jobs/<id>; ro'yxatda bo'lmasa — serverdan (to'g'ridan-to'g'ri havola, Google)
   const [loaded, setLoaded] = useState(null) // null — kutilmoqda, false — topilmadi
@@ -252,15 +291,15 @@ export function JobDetail() {
     } catch { /* foydalanuvchi bekor qildi */ }
   }
   const back = () => (window.history.length > 1 ? nav(-1) : nav('/jobs'))
-  const contactPhone = job.contact?.ways?.includes('phone') && job.contact.phone
-  const contactTg = job.contact?.ways?.includes('telegram') && job.contact.telegram
+  const contactPhone = jobPhone(job)
+  const contactTg = jobTelegram(job)
   const hasContacts = !!(contactPhone || contactTg)
   const companyJobs = allJobs.filter((j) => j.company === job.company).length
 
   const facts = [
     [t('Ish tajribasi'), job.experience ? t('{n}+ yil', { n: job.experience }) : t('Talab qilinmaydi')],
     [t('Ish formati'), t(job.type)],
-    [t('Soha'), catName(job.category)],
+    [t('Soha'), job.subcategory ? `${catName(job.category)} · ${subName(job.category, job.subcategory)}` : catName(job.category)],
     ...jobFacts(job),
   ]
   const applyBtn = (cls = '') => (
@@ -268,11 +307,22 @@ export function JobDetail() {
       {applied ? <><CheckCircle size={19} weight="fill" /> {t('Ariza yuborilgan')}</> : t('Ariza topshirish')}
     </button>
   )
-  // kontakt bo'lsa — kontaktlar bo'limiga o'tamiz, bo'lmasa savol yozish oynasini ochamiz
-  const contact = () => {
-    if (!hasContacts) return requireAuth(() => setAsk(''))
+  // «Bog'lanish»: telefon bo'lsa — darhol qo'ng'iroq, faqat Telegram bo'lsa — chatga o'tish, kontakt bo'lmasa — savol oynasi.
+  // Har bir urinish admin panel statistikasi uchun yoziladi
+  const call = () => contactJob(job.id, 'CALL')
+  const writeTg = () => contactJob(job.id, 'TELEGRAM')
+  const contact = () => requireAuth(() => {
     setShowContacts(true)
-    document.getElementById('jd-contacts')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // kompyuterda tel: ochilmasligi mumkin — raqam ko'rinib turishi uchun kontaktlar bo'limiga ham o'tamiz
+    if (hasContacts) document.getElementById('jd-contacts')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (contactPhone) { call(); window.location.href = telHref(contactPhone) }
+    else if (contactTg) { writeTg(); window.open(tgHref(contactTg), '_blank', 'noopener') }
+    else setAsk('')
+  })
+  const sendQuestion = () => {
+    contactJob(job.id, 'MESSAGE', ask.trim())
+    setAsk(null)
+    notify(t('Savolingiz ish beruvchiga yuborildi'))
   }
 
   return (
@@ -308,7 +358,11 @@ export function JobDetail() {
             </p>
             <div className="jd-actions">
               {seeker && applyBtn('jd-apply-inline')}
-              {seeker && <button type="button" className="btn btn-soft" onClick={contact}><ChatCircleText size={19} weight="bold" /> {t("Bog'lanish")}</button>}
+              {seeker && (
+                <button type="button" className="btn btn-soft" onClick={contact}>
+                  {contactPhone ? <Phone size={19} weight="bold" /> : <ChatCircleText size={19} weight="bold" />} {t("Bog'lanish")}
+                </button>
+              )}
               <button type="button" className={`jd-sq ${isSaved ? 'saved' : ''}`} onClick={() => requireAuth(() => toggleSave(job.id))} aria-label={t('Saqlash')} aria-pressed={isSaved}>
                 <Heart size={20} weight={isSaved ? 'fill' : 'bold'} />
               </button>
@@ -368,8 +422,8 @@ export function JobDetail() {
               {job.contact.name && <p className="jd-contact-name">{job.contact.name}</p>}
               {showContacts ? (
                 <div className="jd-contact fade-in">
-                  {contactPhone && <a className="btn btn-soft" href={`tel:${contactPhone.replace(/\s/g, '')}`}><Phone size={18} weight="fill" /> {contactPhone}</a>}
-                  {contactTg && <a className="btn btn-soft" href={`https://t.me/${contactTg.replace(/^@/, '')}`} target="_blank" rel="noreferrer"><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
+                  {contactPhone && <a className="btn btn-soft" href={telHref(contactPhone)} onClick={call}><Phone size={18} weight="fill" /> {contactPhone}</a>}
+                  {contactTg && <a className="btn btn-soft" href={tgHref(contactTg)} target="_blank" rel="noreferrer" onClick={writeTg}><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
                 </div>
               ) : (
                 <button type="button" className="btn btn-soft" onClick={() => requireAuth(() => setShowContacts(true))}><Phone size={18} weight="fill" /> {t("Kontaktlarni ko'rsatish")}</button>
@@ -487,7 +541,7 @@ export function JobDetail() {
         <label className="field"><span>{t('Savolingiz')}</span>
           <textarea rows={4} value={ask || ''} onChange={(e) => setAsk(e.target.value)} placeholder={t('Savolingizni yozing')} /></label>
         <button className="btn btn-primary btn-lg btn-block" disabled={!ask?.trim()}
-          onClick={() => { setAsk(null); notify(t('Savolingiz ish beruvchiga yuborildi')) }}><Icon name="send" size={18} /> {t('Yuborish')}</button>
+          onClick={sendQuestion}><Icon name="send" size={18} /> {t('Yuborish')}</button>
       </Sheet>
 
       <Sheet open={report !== null} onClose={() => setReport(null)} title={t('Vakansiyadan shikoyat')}>

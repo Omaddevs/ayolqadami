@@ -9,6 +9,7 @@ import { canUseAI, useApp } from '../context/AppContext'
 import { CATEGORIES, catName, salaryText, formatSum } from '../data/mock'
 import { LANGS, tr, tx, useT } from '../i18n'
 import { jobPath } from '../lib/seo'
+import { jobPhone, telHref } from '../lib/contact'
 import { originOf } from '../lib/theme'
 import { compactNum, fullDateTime, postedAt, postedText } from '../lib/time'
 
@@ -19,6 +20,32 @@ export const THEME_OPTIONS = [
 ]
 
 // Tezkor almashtirish tugmasi (yorug' ⇄ qorong'i). Ikonka joriy ko'rinishga qarab CSS orqali almashadi
+// Sonni oldingi qiymatdan yangisiga silliq "sanab" boradi (birinchi ko'rinishda 0 dan) — foiz hisoblagichlari uchun
+export function useCountUp(value, duration = 900) {
+  const [shown, setShown] = useState(0)
+  const from = useRef(0)
+  useEffect(() => {
+    const start = from.current
+    if (start === value || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      from.current = value
+      setShown(value)
+      return
+    }
+    let raf
+    const t0 = performance.now()
+    const tick = (now) => {
+      const k = Math.min(1, (now - t0) / duration)
+      const v = Math.round(start + (value - start) * (1 - (1 - k) ** 3))
+      from.current = v
+      setShown(v)
+      if (k < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return shown
+}
+
 export function ThemeToggle({ className = '', size = 24 }) {
   const { setTheme } = useApp()
   const t = useT()
@@ -674,8 +701,9 @@ export function JobStats({ job }) {
 }
 
 export function JobCard({ job, compact }) {
-  const { user, saved, toggleSave, applications, apply, notify, requireAuth } = useApp()
+  const { user, saved, toggleSave, applications, apply, notify, requireAuth, contactJob } = useApp()
   const nav = useNavigate()
+  const phone = jobPhone(job)
   const isSaved = saved.includes(job.id)
   const applied = applications.some((a) => a.jobId === job.id)
   const showActions = !compact && user?.role !== 'employer' && !job.own
@@ -725,7 +753,10 @@ export function JobCard({ job, compact }) {
           <button type="button" className={`btn ${applied ? 'btn-done' : 'btn-primary'}`} disabled={applied} onClick={quickApply}>
             {applied ? <><CheckCircle size={18} weight="fill" /> {t('Ariza yuborildi')}</> : t('Ariza yuborish')}
           </button>
-          <button type="button" className="btn btn-soft" onClick={() => nav(jobPath(job))}>{t("Bog'lanish")}</button>
+          {/* telefon bo'lsa — darhol qo'ng'iroq (admin statistikasi uchun yoziladi), aks holda vakansiya sahifasi */}
+          <button type="button" className="btn btn-soft" onClick={() => (phone
+            ? requireAuth(() => { contactJob(job.id, 'CALL'); window.location.href = telHref(phone) })
+            : nav(jobPath(job)))}>{t("Bog'lanish")}</button>
         </div>
       )}
     </article>

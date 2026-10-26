@@ -18,6 +18,7 @@ export function jobOut(j: JobWithCount) {
     company: j.companyName,
     color: j.color,
     category: j.category,
+    subcategory: j.subcategory ?? undefined,
     city: j.city,
     region: j.region ?? undefined,
     district: j.district ?? undefined,
@@ -37,6 +38,8 @@ export function jobOut(j: JobWithCount) {
     applicants: (Number(applicantsBase) || 0) + (j._count?.applications ?? 0),
     views: j.views,
     likes: j.likes,
+    calls: j.calls,
+    writes: j.writes,
     status: j.status,
     rejectReason: j.rejectReason ?? undefined,
   }

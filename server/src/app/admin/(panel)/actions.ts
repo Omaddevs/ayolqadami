@@ -10,6 +10,7 @@ import { hashPassword, requireAdmin, setAdminCookie, verifyPassword } from '@/li
 import { audit } from '@/lib/audit'
 import { saveSettings as persistSettings } from '@/lib/settings'
 import { endOfDayTashkent, startOfDayTashkent } from '@/lib/dates'
+import { splitCategoryChoice } from '@/lib/categories'
 import { autoPostJob, notifyUser } from '@/lib/telegram/service'
 import { esc } from '@/lib/telegram/format'
 
@@ -74,7 +75,7 @@ export async function deleteJob(f: FormData) {
 const jobForm = z.object({
   title: z.string().trim().min(3, 'kamida 3 belgi').max(120),
   companyName: z.string().trim().min(2, 'kompaniya nomini kiriting').max(120),
-  category: z.string().min(1, 'sohani tanlang').max(40),
+  category: z.string().min(1, 'sohani tanlang').max(81), // «it» yoki «it/frontend» (soha/bo'lim)
   city: z.string().min(1, 'shaharni tanlang').max(60),
   type: z.string().min(1).max(40),
   salaryFrom: z.coerce.number().int().min(0).max(2_000_000_000),
@@ -96,7 +97,7 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
   const jobId = text(f, 'id')
   const company = await db.company.findUnique({ where: { name: v.companyName }, select: { id: true } })
   const data = {
-    title: v.title, companyName: v.companyName, companyId: company?.id ?? null, category: v.category, city: v.city, type: v.type,
+    title: v.title, companyName: v.companyName, companyId: company?.id ?? null, ...splitCategoryChoice(v.category), city: v.city, type: v.type,
     salaryFrom: v.salaryFrom, salaryTo: v.salaryTo, experience: v.experience, color: v.color, description: v.description, status: v.status,
     skills: list(text(f, 'skills')).slice(0, 30), tags: list(text(f, 'tags')).slice(0, 20),
     requirements: lines(text(f, 'requirements')).slice(0, 30), conditions: lines(text(f, 'conditions')).slice(0, 30),

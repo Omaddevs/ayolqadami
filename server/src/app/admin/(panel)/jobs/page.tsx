@@ -10,12 +10,19 @@ import { approveJob, archiveJob, rejectJob } from '../actions'
 
 export const metadata = { title: 'Vakansiyalar' }
 const LIMIT = 20
+// Saralash: eng ko'p bog'lanilgan / ko'rilgan e'lonlar
+const SORTS: Record<string, { label: string; orderBy: Prisma.JobOrderByWithRelationInput[] }> = {
+  calls: { label: "Ko'p qo'ng'iroq", orderBy: [{ calls: 'desc' }, { createdAt: 'desc' }] },
+  writes: { label: "Ko'p yozilgan", orderBy: [{ writes: 'desc' }, { createdAt: 'desc' }] },
+  views: { label: "Ko'p ko'rilgan", orderBy: [{ views: 'desc' }, { createdAt: 'desc' }] },
+}
 
 export default async function JobsPage({ searchParams }: { searchParams: SearchParams }) {
   const p = await searchParams
   const status = sp(p.status)
   const q = sp(p.q)
   const category = sp(p.category)
+  const sort = sp(p.sort)
   const page = pageOf(p.page)
 
   const base: Prisma.JobWhereInput = {
@@ -28,7 +35,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
     db.job.findMany({
       where, skip: (page - 1) * LIMIT, take: LIMIT,
       // moderatsiyadagilar avval — eng eskisidan (navbat tartibida)
-      orderBy: status === 'PENDING' ? { createdAt: 'asc' } : { createdAt: 'desc' },
+      orderBy: SORTS[sort]?.orderBy ?? (status === 'PENDING' ? { createdAt: 'asc' } : { createdAt: 'desc' }),
       include: { _count: { select: { applications: true } }, author: { select: { name: true } } },
     }),
     db.job.count({ where }),
@@ -37,7 +44,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const now = new Date()
   const n = (s: string) => counts.find((c) => c.status === s)?._count ?? 0
   const all = counts.reduce((a, c) => a + c._count, 0)
-  const link = (o: Record<string, string | number | undefined>) => `/admin/jobs${qs({ status, q, category, ...o })}`
+  const link = (o: Record<string, string | number | undefined>) => `/admin/jobs${qs({ status, q, category, sort, ...o })}`
 
   return (
     <>
@@ -55,6 +62,10 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       />
       <div style={{ height: 12 }} />
       <SearchBox q={q} placeholder="Lavozim, kompaniya yoki shahar" keep={{ status }}>
+        <select className="select" name="sort" defaultValue={sort} aria-label="Saralash">
+          <option value="">Yangilari oldin</option>
+          {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
         <select className="select" name="category" defaultValue={category} aria-label="Soha">
           <option value="">Barcha sohalar</option>
           {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -68,7 +79,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>Vakansiya</th><th>Soha / shahar</th><th>Maosh</th><th className="num">Arizalar</th><th>Holat</th><th>Sana</th><th /></tr>
+                <tr><th>Vakansiya</th><th>Soha / shahar</th><th>Maosh</th><th className="num">Arizalar</th><th className="num" title="Ko'rishlar">Ko&apos;rish</th><th className="num" title="Qo'ng'iroqlar">Qo&apos;ng&apos;iroq</th><th className="num" title="Telegram va saytdan yozishlar">Yozish</th><th>Holat</th><th>Sana</th><th /></tr>
               </thead>
               <tbody>
                 {jobs.map((j) => (
@@ -82,6 +93,9 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
                     <td><div>{catName(j.category)}</div><small style={{ color: 'var(--muted)' }}>{j.city} · {j.type}</small></td>
                     <td style={{ whiteSpace: 'nowrap' }}>{salaryText(j.salaryFrom, j.salaryTo)}</td>
                     <td className="num">{j._count.applications}</td>
+                    <td className="num">{j.views}</td>
+                    <td className="num">{j.calls ? <Link href={`/admin/contacts?job=${j.id}&kind=CALL`} style={{ color: 'var(--green)', fontWeight: 600 }}>{j.calls}</Link> : 0}</td>
+                    <td className="num">{j.writes ? <Link href={`/admin/contacts?job=${j.id}`} style={{ color: 'var(--blue)', fontWeight: 600 }}>{j.writes}</Link> : 0}</td>
                     <td>
                       {j.status === 'ACTIVE' && j.expiresAt && j.expiresAt <= now
                         ? <Badge tone="gray">Muddati o&apos;tgan</Badge>

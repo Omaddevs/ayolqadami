@@ -59,6 +59,7 @@ export const api = {
   removeJob: (id) => fire(`/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   like: (id, on) => fire(`/jobs/${encodeURIComponent(id)}/like`, { method: on ? 'POST' : 'DELETE' }),
   view: (id) => fire(`/jobs/${encodeURIComponent(id)}/view`, { method: 'POST' }),
+  contact: (id, kind, text) => fire(`/jobs/${encodeURIComponent(id)}/contact`, { method: 'POST', body: { kind, ...(text && { text }) } }),
   apply: (id, letter) => fire(`/jobs/${encodeURIComponent(id)}/apply`, { method: 'POST', body: { letter: letter || '' } }),
   enroll: (id) => fire(`/courses/${encodeURIComponent(id)}/enroll`, { method: 'POST' }),
   invite: (candidateId) => fire('/invites', { method: 'POST', body: { candidateId } }),

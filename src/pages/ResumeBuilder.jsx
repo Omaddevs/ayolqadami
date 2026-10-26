@@ -7,7 +7,7 @@ import {
 import { Sheet, Select, TopBar } from '../components/UI'
 import { Check2, Chips, Field, Stepper } from '../components/Wizard'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES, formatSum } from '../data/mock'
+import { catOptions, formatSum } from '../data/mock'
 import {
   DRIVING, EDU_LEVELS, EMPLOYMENT, EXP_LEVELS, LANGUAGES, LANG_LEVELS, MONTHS, REGIONS, SEARCH_OPTIONS, SKILL_LEVELS, SKILL_SUGGEST,
   SOCIAL, WORK_MODES, WORK_TIME, duration, findRegion, monthText, regionByCity,
@@ -20,7 +20,6 @@ import { tr, tx } from '../i18n'
 const STEPS = ["Shaxsiy ma'lumotlar", 'Lavozim va mutaxassislik', 'Ish tajribasi', "Ta'lim", "Ko'nikmalar"]
 const EXP_ICONS = { none: Briefcase, lt1: CalendarBlank, '1-3': ChartBar, '3-5': TrendUp, '5+': Star }
 const SEARCH_ICONS = { active: MagnifyingGlass, open: Briefcase, off: Pause }
-const CAT_OPTS = CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
 const REGION_OPTS = REGIONS.map((r) => ({ value: r.id, label: r.name }))
 const YEARS = Array.from({ length: 60 }, (_, i) => String(new Date().getFullYear() - i))
 const MONTH_OPTS = MONTHS.map((m, i) => ({ value: String(i + 1).padStart(2, '0'), label: m }))
@@ -326,7 +325,7 @@ export default function ResumeBuilder() {
             <div className="rb-stack">
               <div className="rb-grid two">
                 <Field as="div" label={tr("Soha")} req error={err('category')}>
-                  <Select value={d.category} options={CAT_OPTS} placeholder={tr("Sohani tanlang")} onChange={(v) => set('category', v)} />
+                  <Select value={d.category} options={catOptions()} placeholder={tr("Sohani tanlang")} onChange={(v) => set('category', v)} />
                 </Field>
                 <Field label={tr("Kim bo'lib ishlamoqchisiz?")} req error={err('headline')}>
                   <input {...bind('headline')} placeholder={tr("Masalan: Buxgalter, enaga, SMM menejer")} maxLength={80} />

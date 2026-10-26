@@ -1,14 +1,15 @@
 import { Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import {
-  Bell, Buildings, CaretDoubleLeft, CaretDown, CaretRight, CaretUp, CheckCircle, DotsThree, DotsThreeVertical, FolderSimple, GearSix,
-  House, IdentificationCard, MagnifyingGlass, PencilSimple, Plus, SignOut, Sparkle, SquaresFour, Target, Trash, Tray, UsersThree,
+  Baby, Bell, Briefcase, Buildings, CaretDoubleLeft, CaretDown, CaretRight, CaretUp, CheckCircle, Coins, CookingPot, DotsThree, DotsThreeVertical,
+  Factory, FlowerLotus, FolderSimple, ForkKnife, GearSix, GlobeHemisphereWest, GraduationCap, HandHeart, House, IdentificationCard, Laptop,
+  MagnifyingGlass, Megaphone, Plus, Scales, ShoppingBag, SignOut, Sparkle, SprayBottle, SquaresFour, Stethoscope, Target, Trash, Tray, UsersThree, Wrench,
 } from '@phosphor-icons/react'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
-import { CompanyLogo } from '../components/UI'
-import { profileCompletion, useApp } from '../context/AppContext'
-import { catIcon, catShort, formatSum } from '../data/mock'
+import { CompanyLogo, JobCard, useCountUp } from '../components/UI'
+import { profileCompletion, profileMissing, useApp } from '../context/AppContext'
+import { CATEGORIES, catIcon, catShort, formatSum, subName } from '../data/mock'
 import { tx, useT } from '../i18n'
 import { jobPath } from '../lib/seo'
 import { fullDate, postedAt, postedText, timeAgo } from '../lib/time'
@@ -38,9 +39,16 @@ function Logos({ jobs, max = 3, size = 26 }) {
 
 // Soha «papkasi»: chapda baland yorliq, o'ngga silliq tushadi; orqada ikki lavanda varaq chiqib turadi.
 // Shakl SVG'da (viewBox 212×166, yuqoridagi 14px — varaqlar uchun) — egri chiziq CSS bilan aniq chiqmaydi
+// soha ikonkasi (mock.js CATEGORIES.icon) → panel ikonkalari bilan bir uslubdagi Phosphor ikonka
+const CAT_PH = {
+  folder: FolderSimple, gradcap: GraduationCap, stethoscope: Stethoscope, bottle: Baby, house: House, spray: SprayBottle, pot: CookingPot,
+  heart: HandHeart, bag: ShoppingBag, lipstick: FlowerLotus, laptop: Laptop, building: Wrench, woman: GlobeHemisphereWest, spool: Factory,
+  cloche: ForkKnife, target: Megaphone, coins: Coins, books: Scales, briefcase: Briefcase, sparkle: Sparkle,
+}
 const FOLDER_FRONT = 'M0 32Q0 14 18 14H78C90 14 94 18 100 24C106 30 110 32 122 32H194Q212 32 212 50V148Q212 166 194 166H18Q0 166 0 148Z'
 function Folder({ to, dark, icon, title, meta, jobs }) {
   const id = 'dbf' + useId().replace(/:/g, '') // url(#...) ichida «:» ishlamaydi
+  const Ico = CAT_PH[icon] || Briefcase
   return (
     <Link to={to} className={`db-folder${dark ? ' dark' : ''}`}>
       <svg className="db-folder-shape" viewBox="0 0 212 166" aria-hidden="true">
@@ -55,7 +63,7 @@ function Folder({ to, dark, icon, title, meta, jobs }) {
         <path className="db-folder-front" d={FOLDER_FRONT} fill={`url(#${id})`} />
       </svg>
       <span className="db-folder-body">
-        <Icon3D name={icon} size={30} />
+        <span className="db-folder-ico"><Ico size={20} weight="duotone" /></span>
         <b>{title}</b>
         <small>{meta}</small>
         <Logos jobs={jobs} size={30} />
@@ -64,49 +72,53 @@ function Folder({ to, dark, icon, title, meta, jobs }) {
   )
 }
 
-// Daraxt: soha → kompaniya → vakansiya
-function Tree({ jobs, onPick }) {
+// Kategoriyalar (admin paneldan): soha → bo'limlar. Bo'limi bor soha ochiladi-yopiladi («Barcha vakansiyalar» + bo'limlar),
+// bo'limsiz soha bosilsa — darhol shu sohaning vakansiyalari. Ochiq turgan soha/bo'lim (/jobs?cat=&sub=) ajratib ko'rsatiladi
+function CatTree({ jobs }) {
   const t = useT()
-  const groups = useMemo(() => {
+  const { pathname, search } = useLocation()
+  const params = new URLSearchParams(search)
+  const curCat = pathname === '/jobs' ? params.get('cat') : null
+  const curSub = curCat && params.get('sub')
+  const counts = useMemo(() => {
     const m = new Map()
-    jobs.forEach((j) => {
-      const c = m.get(j.category) || new Map()
-      c.set(j.company, [...(c.get(j.company) || []), j])
-      m.set(j.category, c)
-    })
-    return [...m.entries()]
+    const add = (k) => m.set(k, (m.get(k) || 0) + 1)
+    jobs.forEach((j) => { add(j.category); if (j.subcategory) add(`${j.category}/${j.subcategory}`) })
+    return m
   }, [jobs])
-  const [open, setOpen] = useState(() => new Set(groups.slice(0, 1).flatMap(([cat, cos]) => [cat, `${cat}/${[...cos.keys()][0]}`])))
+  const [open, setOpen] = useState(() => new Set(curCat ? [curCat] : []))
+  useEffect(() => { if (curCat) setOpen((s) => (s.has(curCat) ? s : new Set(s).add(curCat))) }, [curCat])
   const toggle = (k) => setOpen((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n })
-  if (!groups.length) return <p className="db-tree-empty">{t("Hali hech narsa saqlanmagan — yoqqan vakansiyalarni yurakcha bilan saqlang")}</p>
+  const num = (k) => <em className="db-count">{counts.get(k) || 0}</em>
+
   return (
     <ul className="db-tree">
-      {groups.map(([cat, cos]) => (
-        <li key={cat} className={open.has(cat) ? 'open' : ''}>
-          <button type="button" className="db-node" onClick={() => toggle(cat)}>
-            <FolderSimple size={19} /> <span>{catShort(cat)}</span>
-            {open.has(cat) ? <CaretUp size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
-          </button>
-          {open.has(cat) && (
-            <ul>
-              {[...cos.entries()].map(([co, list]) => {
-                const k = `${cat}/${co}`
-                return (
-                  <li key={k}>
-                    <button type="button" className="db-node sub" onClick={() => toggle(k)}>
-                      <FolderSimple size={17} /> <span>{co}</span>
-                      {open.has(k) ? <CaretUp size={13} weight="bold" /> : <CaretRight size={13} weight="bold" />}
-                    </button>
-                    {open.has(k) && (
-                      <ul>{list.map((j) => <li key={j.id}><button type="button" className="db-leaf" onClick={() => onPick(j)}>{tx(j.title)}</button></li>)}</ul>
-                    )}
+      {CATEGORIES.map((c) => {
+        const subs = c.subs || []
+        const isOpen = subs.length > 0 && open.has(c.id)
+        const head = <><FolderSimple size={19} weight={curCat === c.id ? 'fill' : 'regular'} /> <span>{t(c.short)}</span> {num(c.id)}</>
+        return (
+          <li key={c.id} className={isOpen ? 'open' : ''}>
+            {subs.length ? (
+              <button type="button" className={`db-node${curCat === c.id ? ' on' : ''}`} onClick={() => toggle(c.id)} aria-expanded={isOpen}>
+                {head} {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+              </button>
+            ) : (
+              <Link to={`/jobs?cat=${c.id}`} className={`db-node${curCat === c.id ? ' on' : ''}`}>{head} <CaretRight size={14} weight="bold" /></Link>
+            )}
+            {isOpen && (
+              <ul>
+                <li><Link to={`/jobs?cat=${c.id}`} className={`db-leaf${curCat === c.id && !curSub ? ' on' : ''}`}><span>{t('Barcha vakansiyalar')}</span> {num(c.id)}</Link></li>
+                {subs.map((x) => (
+                  <li key={x.id}>
+                    <Link to={`/jobs?cat=${c.id}&sub=${x.id}`} className={`db-leaf${curCat === c.id && curSub === x.id ? ' on' : ''}`}><span>{t(x.short || x.name)}</span> {num(`${c.id}/${x.id}`)}</Link>
                   </li>
-                )
-              })}
-            </ul>
-          )}
-        </li>
-      ))}
+                ))}
+              </ul>
+            )}
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -154,20 +166,21 @@ const SECTIONS = [
 const sectionOf = (pathname) => SECTIONS.find(([p]) => pathname === p || pathname.startsWith(p + '/'))
 
 export function DashShell() {
-  const { user, jobsAll, applications, saved, posted, unreadNotifs, logout, toast } = useApp()
+  const { user, allJobs, applications, saved, posted, unreadNotifs, logout, toast } = useApp()
   const t = useT()
   const nav = useNavigate()
   const { pathname } = useLocation()
-  const cat = useSearchParams()[0].get('cat')
+  const [sp] = useSearchParams()
+  const cat = sp.get('cat')
+  const sub = cat && sp.get('sub')
   const overview = pathname === '/dashboard'
   const isEmp = user.role === 'employer'
   // telefonda yon menyu yopiq holda ochiladi (ustma-ust chiqadi)
   const [collapsed, setCollapsed] = useState(() => window.matchMedia('(max-width: 960px)').matches)
   const [overviewOpen, setOverviewOpen] = useState(true)
   const [q, setQ] = useState('')
-  const [tab, setTab] = useState(isEmp ? 'mine' : 'apps')
+  const [tab, setTab] = useState(isEmp ? 'mine' : 'all')
   const searchRef = useRef(null)
-  const byId = useMemo(() => new Map(jobsAll.map((j) => [j.id, j])), [jobsAll])
 
   // Layout kabi: bo'lim almashganda sahifa boshidan ochiladi
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
@@ -185,11 +198,10 @@ export function DashShell() {
     if (e.key === 'Enter' && !overview && q.trim()) nav(`/jobs?q=${encodeURIComponent(q.trim())}`)
   }
 
-  const savedJobs = useMemo(() => saved.map((id) => byId.get(id)).filter(Boolean), [saved, byId])
-  const treeJobs = isEmp ? posted : savedJobs
   const activityCount = isEmp ? posted.length : applications.length + saved.length
-  const open = (j) => nav(jobPath(j))
   const pct = profileCompletion(user)
+  const shownPct = useCountUp(pct)
+  const nextStep = profileMissing(user)[0]
   const section = sectionOf(pathname)
   const rail = [
     { to: '/dashboard', icon: SquaresFour, label: 'Dashboard', end: true },
@@ -246,20 +258,40 @@ export function DashShell() {
           )}
 
           <div className="db-label">
-            <span>{isEmp ? t('Mening vakansiyalarim') : t('Saqlanganlar')}</span>
-            <Link to={isEmp ? '/applications' : '/applications?tab=saved'} aria-label={t('Tahrirlash')}><PencilSimple size={17} /></Link>
+            <span>{t('Kategoriyalar')}</span>
+            <Link to="/categories" aria-label={t('Barcha kategoriyalar')} title={t('Barcha kategoriyalar')}><SquaresFour size={17} /></Link>
           </div>
-          <Tree key={treeJobs.length} jobs={treeJobs} onPick={open} />
+          <CatTree jobs={allJobs} />
 
           <Link to={isEmp ? '/post-job' : '/jobs'} className="db-new"><span><Plus size={13} weight="bold" /></span> {isEmp ? t('Yangi vakansiya') : t('Vakansiya qidirish')}</Link>
         </div>
 
-        <div className="db-promo">
-          <button type="button" className="db-promo-dots" aria-label={t('Amallar')}><DotsThreeVertical size={18} weight="bold" /></button>
-          <h3>{isEmp ? t('Nomzodlar kutmoqda!') : pct < 100 ? t("Profilingiz {n}% to'liq!", { n: pct }) : t('Profilingiz tayyor!')}</h3>
-          <p>{isEmp ? t("Vakansiya joylang — QadamAI mos nomzodlarni darhol tavsiya qiladi.") : t("To'liq rezyume ish beruvchilarga 3 barobar ko'proq ko'rinadi.")}</p>
-          <Link to={isEmp ? '/post-job' : '/profile/edit'} className="db-promo-btn"><Sparkle size={16} /> {isEmp ? t('Vakansiya joylash') : t('Rezyumeni to\'ldirish')}</Link>
-        </div>
+        {isEmp ? (
+          <div className="db-promo">
+            <button type="button" className="db-promo-dots" aria-label={t('Amallar')}><DotsThreeVertical size={18} weight="bold" /></button>
+            <h3>{t('Nomzodlar kutmoqda!')}</h3>
+            <p>{t("Vakansiya joylang — QadamAI mos nomzodlarni darhol tavsiya qiladi.")}</p>
+            <Link to="/post-job" className="db-promo-btn"><Sparkle size={16} /> {t('Vakansiya joylash')}</Link>
+          </div>
+        ) : (
+          <div className={`db-promo ${pct < 100 ? 'is-nudge' : 'is-done'}`}>
+            <button type="button" className="db-promo-dots" aria-label={t('Amallar')}><DotsThreeVertical size={18} weight="bold" /></button>
+            <h3>{pct === 0 ? t("Rezyumeingiz hali bo'sh") : pct < 100 ? t("Profilingiz {n}% to'liq!", { n: shownPct }) : t('Profilingiz tayyor!')}</h3>
+            <div className="db-promo-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t("Profil to'liqligi")}>
+              <s style={{ width: `${pct}%` }} />
+            </div>
+            <p>
+              {pct === 100
+                ? t('Ish beruvchilar sizni QadamAI orqali topishadi')
+                : pct === 0
+                  ? t("To'liq rezyume ish beruvchilarga 3 barobar ko'proq ko'rinadi.")
+                  : <>{t('Keyingi qadam')}: <b>{t(nextStep.label)}</b></>}
+            </p>
+            <Link to="/profile/edit" className="db-promo-btn">
+              <Sparkle size={16} weight={pct < 100 ? 'fill' : 'regular'} /> {pct === 0 ? t('Rezyume yaratish') : pct < 100 ? t("Rezyumeni to'ldirish") : t('Rezyumeni tahrirlash')}
+            </Link>
+          </div>
+        )}
       </aside>
 
       {!collapsed && <button type="button" className="db-backdrop" aria-label={t('Yopish')} onClick={() => setCollapsed(true)} />}
@@ -268,7 +300,7 @@ export function DashShell() {
           {collapsed && <button type="button" className="db-round light" onClick={() => setCollapsed(false)} aria-label={t('Menyuni ochish')}><CaretDoubleLeft size={16} weight="bold" style={{ transform: 'scaleX(-1)' }} /></button>}
           <span className="db-cloud"><IdentificationCard size={22} weight="fill" /></span>
           <div className="db-meter">
-            <div><b>{isEmp ? t('Kompaniya profili') : t("Profil to'liqligi")}</b> <span><em>{pct}%</em> / 100%</span></div>
+            <div><b>{isEmp ? t('Kompaniya profili') : t("Profil to'liqligi")}</b> <span><em>{shownPct}%</em> / 100%</span></div>
             <i><s style={{ width: `${pct}%` }} /></i>
           </div>
         </header>
@@ -285,7 +317,9 @@ export function DashShell() {
             {section && (pathname === section[0] && !cat
               ? <><span>/</span> <b>{t(section[1])}</b></>
               : <><span>/</span> <Link to={section[0]}>{t(section[1])}</Link></>)}
-            {pathname === '/jobs' && cat && <><span>/</span> <b>{catShort(cat)}</b></>}
+            {pathname === '/jobs' && cat && (sub
+              ? <><span>/</span> <Link to={`/jobs?cat=${cat}`}>{catShort(cat)}</Link> <span>/</span> <b>{subName(cat, sub)}</b></>
+              : <><span>/</span> <b>{catShort(cat)}</b></>)}
           </div>
         )}
 
@@ -329,8 +363,8 @@ export default function DashOverview() {
   }, [allJobs, user.categories, user.category])
 
   const tabs = isEmp
-    ? [{ id: 'mine', label: t('Mening vakansiyalarim') }, { id: 'all', label: t('Barcha vakansiyalar') }]
-    : [{ id: 'apps', label: t('Arizalarim') }, { id: 'saved', label: t('Saqlanganlar') }, { id: 'all', label: t('Barcha vakansiyalar') }]
+    ? [{ id: 'mine', label: t('Mening vakansiyalarim') }, { id: 'all', label: t("E'lonlar") }]
+    : [{ id: 'all', label: t("E'lonlar") }, { id: 'apps', label: t('Arizalarim') }, { id: 'saved', label: t('Saqlanganlar') }]
   const rows = useMemo(() => {
     const list = tab === 'apps' ? appRows
       : tab === 'saved' ? savedJobs.map((j) => ({ job: j, date: postedAt(j), status: null }))
@@ -378,6 +412,12 @@ export default function DashOverview() {
         ))}
       </div>
 
+      {/* E'lonlar — jadval emas, vakansiyalar sahifasidagi kartalar */}
+      {tab === 'all' ? (
+        rows.length
+          ? <div className="list-grid">{rows.map(({ job }) => <JobCard key={job.id} job={job} />)}</div>
+          : <p className="db-empty pad">{q ? t('Hech narsa topilmadi') : t("Hozircha vakansiyalar yo'q")}</p>
+      ) : (
       <div className="db-table" role="table">
         <div className="db-tr head" role="row">
           <span><input type="checkbox" checked={allChecked} onChange={toggleAll} aria-label={t('Hammasini tanlash')} /></span>
@@ -401,6 +441,7 @@ export default function DashOverview() {
         ))}
         {!rows.length && <p className="db-empty pad">{q ? t('Hech narsa topilmadi') : t("Bu ro'yxat hozircha bo'sh")}</p>}
       </div>
+      )}
     </section>
 
     {focus && (

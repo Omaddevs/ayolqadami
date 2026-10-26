@@ -5,9 +5,9 @@ import {
 } from '@phosphor-icons/react'
 import { FaTelegramPlane } from 'react-icons/fa'
 import { FaEnvelope, FaPhone } from 'react-icons/fa6'
-import { Avatar, Select, Sheet } from './UI'
+import { Avatar, Select, Sheet, useCountUp } from './UI'
 import { SocialSheet, SocialTiles } from './SocialContacts'
-import { profileCompletion, useApp } from '../context/AppContext'
+import { profileCompletion, profileMissing, useApp } from '../context/AppContext'
 import { catName, formatSum } from '../data/mock'
 import { EMPLOYMENT, LANG_LEVELS, SOCIAL, WORK_MODES } from '../data/resume'
 import { fullName, placeText } from './ResumeView'
@@ -66,6 +66,8 @@ export default function ProfileDesktop() {
   const [photoTip, setPhotoTip] = useState(!user.photo)
   const [social, setSocial] = useState({ open: false, id: null })
   const pct = profileCompletion(user)
+  const shownPct = useCountUp(pct)
+  const nextStep = profileMissing(user)[0]
   const name = fullName(user) || 'Ism kiritilmagan'
   const place = placeText(user) || user.city
   const edus = user.educations?.length ? user.educations : user.education ? [{ school: user.education }] : []
@@ -148,7 +150,12 @@ export default function ProfileDesktop() {
             {pct < 100 ? (
               <div className="pd-alert">
                 <WarningCircle size={18} weight="fill" />
-                <div><b>{tr("Rezyume {n}% to'ldirilgan", { n: pct })}</b><span>{tr("To'liq rezyume ish beruvchilarga ko'rinadi va 3 barobar ko'p taklif oladi")}</span></div>
+                <div>
+                  <b>{pct === 0 ? tr("Rezyumeingiz hali bo'sh") : tr("Rezyume {n}% to'ldirilgan", { n: shownPct })}</b>
+                  <span>{tr("To'liq rezyume ish beruvchilarga ko'rinadi va 3 barobar ko'p taklif oladi")}</span>
+                  <i className="pd-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><s style={{ width: `${pct}%` }} /></i>
+                  {nextStep && <span>{tr('Keyingi qadam')}: <b>{tr(nextStep.label)}</b></span>}
+                </div>
               </div>
             ) : (
               <div className="pd-alert ok">
@@ -157,7 +164,7 @@ export default function ProfileDesktop() {
               </div>
             )}
             <div className="pd-resume-foot">
-              <Link to={EDIT} className="pd-btn">{pct < 100 ? tr("To'ldirish") : tr('Tahrirlash')}</Link>
+              <Link to={EDIT} className={`pd-btn ${pct < 100 ? 'pf-nudge' : ''}`}>{pct === 0 ? tr('Rezyume yaratish') : pct < 100 ? tr("To'ldirish") : tr('Tahrirlash')}</Link>
               <Link to="/applications" className="pd-muted-link">{tr('{n} ta ariza', { n: applications.length })}</Link>
             </div>
           </div>

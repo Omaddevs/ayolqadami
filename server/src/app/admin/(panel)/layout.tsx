@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
   Bell, BellRing, Briefcase, Building2, CalendarDays, CircleHelp, FileText, GraduationCap, History, LayoutDashboard, LogOut, MessageCircle,
-  Newspaper, Send, Settings, Users, GalleryHorizontal, Handshake, Megaphone } from 'lucide-react'
+  Newspaper, Send, Settings, Users, GalleryHorizontal, Handshake, Megaphone, FolderTree, PhoneCall } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NavLink } from '@/components/client'
@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 
 const RAIL = [
   { href: '/admin', icon: LayoutDashboard, label: 'Bosh sahifa', exact: true },
+  { href: '/admin/categories', icon: FolderTree, label: 'Kategoriyalar' },
   { href: '/admin/companies', icon: Building2, label: 'Kompaniyalar' },
   { href: '/admin/courses', icon: GraduationCap, label: 'Kurslar' },
   { href: '/admin/articles', icon: Newspaper, label: 'Maqolalar' },
@@ -39,6 +40,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     { href: '/admin/ads', label: "E'lonlar", icon: Megaphone, count: pendingAds },
     { href: '/admin/users', label: 'Foydalanuvchilar', icon: Users },
     { href: '/admin/applications', label: 'Arizalar', icon: FileText, count: newApps },
+    { href: '/admin/contacts', label: "Bog'lanishlar", icon: PhoneCall },
     { href: '/admin/support', label: 'Murojaatlar', icon: MessageCircle, count: openTickets },
     { href: '/admin/telegram', label: 'Telegram', icon: Send },
   ]

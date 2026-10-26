@@ -8,6 +8,7 @@ import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
 import { DEMO_JOBS_ENABLED, buildDemoJobs } from '../data/demoJobs'
+import { syncCategories } from '../data/mock'
 import { DEMO_PASSWORD, DEMO_PHONE, DEMO_USER, demoActivity } from '../data/demoUser'
 
 const KEY = 'ayolkaryera_v1'
@@ -39,7 +40,7 @@ if (import.meta.env.DEV && !apiEnabled) {
 }
 const Ctx = createContext(null)
 
-// Kurslar, maqolalar, tadbirlar, bannerlar va hamkorlar — admin paneldan (API) keladi
+// Kurslar, maqolalar, tadbirlar, bannerlar va hamkorlar — admin paneldan (API) keladi; sohalar (kategoriyalar) — mock.js CATEGORIES'ga
 const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [], partners: [] }
 const listOr = (v, fallback) => (Array.isArray(v) ? v : fallback)
 const normalizeContent = (d) => ({
@@ -325,7 +326,7 @@ export function AppProvider({ children }) {
     if (!apiEnabled) return
     const ctrl = new AbortController()
     server.jobs(ctrl.signal).then((d) => { if (Array.isArray(d?.items)) setServerJobs(d.items) }).catch(() => {})
-    server.content(ctrl.signal).then((d) => setContent(normalizeContent(d))).catch(() => {})
+    server.content(ctrl.signal).then((d) => { syncCategories(d?.categories); setContent(normalizeContent(d)) }).catch(() => {})
     return () => ctrl.abort()
   }, [])
   // Sessiya tiklanadi: profil, arizalar, kurslar va ish beruvchining vakansiyalari serverdagidek bo'ladi
@@ -406,6 +407,12 @@ export function AppProvider({ children }) {
     if (!apiEnabled || !id || isDemo(id)) return
     server.view(id).then((d) => { if (typeof d?.views === 'number') setJobStat(id, { views: d.views }) })
   }, [setJobStat])
+  // «Bog'lanish»: qo'ng'iroq (CALL), Telegram (TELEGRAM) yoki savol (MESSAGE) — admin panel statistikasi uchun
+  const contactJob = useCallback((id, kind, text) => {
+    trackEvent('job_contact', { job_id: id, kind })
+    if (!apiEnabled || !id || isDemo(id)) return
+    server.contact(id, kind, text).then((d) => { if (typeof d?.calls === 'number') setJobStat(id, { calls: d.calls, writes: d.writes }) })
+  }, [setJobStat])
 
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
   const jobsAll = useMemo(() => {
@@ -420,7 +427,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, viewRole, setViewRole: setAudience, toggleSave, viewJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
+  const value = { ...state, ...api, viewRole, setViewRole: setAudience, toggleSave, viewJob, contactJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
@@ -428,8 +435,37 @@ export const useApp = () => useContext(Ctx)
 // Kontent har doim to'liq obyekt: provider yo'q/eskirgan bo'lsa ham (masalan, hot-reload'dan keyin) sahifa yiqilmaydi
 export const useContent = () => useContext(Ctx)?.content || STATIC_CONTENT
 
+// To'liqlik faqat foydalanuvchi o'zi to'ldiradigan bo'limlardan hisoblanadi: ro'yxatdan o'tishda keladigan
+// ism, telefon, shahar va standart "O'zbek" tili hisobga kirmaydi — yangi rezyume 0% dan boshlanadi.
+const SEEKER_STEPS = [
+  { id: 'photo', label: "Rasm qo'shing", done: (u) => u.photo },
+  { id: 'personal', label: "Tug'ilgan sanani kiriting", done: (u) => u.birthDate },
+  { id: 'headline', label: "Lavozimni ko'rsating", done: (u) => u.headline },
+  { id: 'salary', label: "Kutilayotgan maoshni yozing", done: (u) => u.salary },
+  { id: 'level', label: 'Tajriba darajasini tanlang', done: (u) => u.expLevel },
+  { id: 'experience', label: "Ish tajribasini qo'shing", done: (u) => u.experience?.length || u.expLevel === 'none' || u.careerBreak },
+  { id: 'education', label: "Ta'limni qo'shing", done: (u) => u.educations?.length || u.education },
+  { id: 'skills', label: "Ko'nikmalarni qo'shing", done: (u) => u.skills?.length },
+  { id: 'langs', label: "Tillarni ko'rsating", done: (u) => u.langs?.length },
+  { id: 'about', label: "O'zingiz haqingizda yozing", done: (u) => u.about },
+]
+const EMPLOYER_STEPS = [
+  { id: 'company', label: 'Kompaniya nomini yozing', done: (u) => u.company },
+  { id: 'photo', label: "Logotip qo'shing", done: (u) => u.photo },
+  { id: 'industry', label: 'Sohani tanlang', done: (u) => u.industry || u.category },
+  { id: 'position', label: 'Lavozimingizni yozing', done: (u) => u.position },
+  { id: 'about', label: 'Kompaniya haqida yozing', done: (u) => u.about },
+  { id: 'contact', label: "Email yoki Telegram qo'shing", done: (u) => u.email || u.telegram },
+]
+
+// Hali to'ldirilmagan bo'limlar — tartib bo'yicha, birinchisi "keyingi qadam" sifatida ko'rsatiladi
+export function profileMissing(u) {
+  if (!u) return []
+  return (u.role === 'employer' ? EMPLOYER_STEPS : SEEKER_STEPS).filter((s) => !s.done(u)).map(({ id, label }) => ({ id, label }))
+}
+
 export function profileCompletion(u) {
   if (!u) return 0
-  const checks = [u.name, u.phone, u.city, u.headline, u.about, u.skills?.length, u.experience?.length, u.education, u.languages?.length, u.salary]
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
+  const steps = u.role === 'employer' ? EMPLOYER_STEPS : SEEKER_STEPS
+  return Math.round(((steps.length - profileMissing(u).length) / steps.length) * 100)
 }

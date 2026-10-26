@@ -4,7 +4,7 @@ import { Briefcase, CalendarBlank, ChartBar, CheckCircle, Plus, Star, Trash, Tre
 import { Avatar, Combo, CompanyLogo, Select, TopBar } from '../components/UI'
 import { Check2, Chips, Field, Stepper } from '../components/Wizard'
 import { useApp } from '../context/AppContext'
-import { CATEGORIES, catShort, formatSum, salaryText } from '../data/mock'
+import { catOptions, catShort, formatSum, salaryText, subsOf } from '../data/mock'
 import {
   DRIVING, EMPLOYMENT, EXP_LEVELS, LANGUAGES, LANG_LEVELS, REGIONS, SKILL_SUGGEST, WORK_MODES, WORK_TIME, findRegion, regionByCity,
 } from '../data/resume'
@@ -18,7 +18,6 @@ import { tr, tx } from '../i18n'
 const STEPS = ['Lavozim va joylashuv', 'Ish sharoitlari', 'Nomzodga talablar', 'Tavsif va qulayliklar', "Aloqa va e'lon"]
 const EXP_ICONS = { none: Briefcase, lt1: CalendarBlank, '1-3': ChartBar, '3-5': TrendUp, '5+': Star }
 const EXP_REQ = [{ id: 'none', label: 'Tajriba shart emas' }, ...EXP_LEVELS.slice(1)]
-const CAT_OPTS = CATEGORIES.map((c) => ({ value: c.id, label: c.name }))
 const REGION_OPTS = REGIONS.map((r) => ({ value: r.id, label: r.name }))
 const LEVEL_REQ = LANG_LEVELS.map((l) => (l.value === 'native' ? { ...l, label: tr('Erkin (ona tili darajasida)') } : l))
 const MAX_SKILLS = 15
@@ -31,7 +30,7 @@ const shortOf = (list, ids) => list.filter((o) => ids.includes(o.id)).map((o) =>
 
 function initDraft(u) {
   return {
-    title: '', category: u.industry || u.category || '', count: '1',
+    title: '', category: u.industry || u.category || '', subcategory: '', count: '1',
     region: u.region || regionByCity(u.city)?.id || '', district: '', address: '',
     employment: 'full', workMode: [], workTime: [], hours: '09:00 – 18:00',
     salaryFrom: '', salaryTo: '', negotiable: false,
@@ -51,7 +50,7 @@ function toJob(d, u) {
     : EMPLOYMENT.find((o) => o.id === d.employment)?.short || "To'liq stavka"
   const langs = d.langs.filter((l) => l.lang)
   return {
-    title: d.title.trim(), category: d.category, count: Math.max(1, num(d.count)),
+    title: d.title.trim(), category: d.category, subcategory: d.subcategory || undefined, count: Math.max(1, num(d.count)),
     city: region?.city || u.city || 'Toshkent', region: d.region, district: d.district, address: d.address.trim(),
     company: u.company || u.name, color: u.color || '#6366F6',
     type, employment: d.employment, workMode: mode, workTime: d.workTime, hours: d.hours.trim(),
@@ -194,8 +193,16 @@ export default function PostJob() {
                   onPick={(o) => { if (!d.category && o.category) set('category', o.category) }} />
               </Field>
               <Field as="div" label={tr("Soha")} req error={err('category')}>
-                <Select value={d.category} options={CAT_OPTS} placeholder={tr("Sohani tanlang")} onChange={(v) => set('category', v)} />
+                <Select value={d.category} options={catOptions()} placeholder={tr("Sohani tanlang")}
+                  onChange={(v) => setD((p) => ({ ...p, category: v, subcategory: v === p.category ? p.subcategory : '' }))} />
               </Field>
+              {/* sohaning bo'limlari bo'lsa (IT va dizayn → Frontend, Backend...) — ixtiyoriy aniqlashtirish */}
+              {subsOf(d.category).length > 0 && (
+                <Field as="div" label={tr("Bo'lim")} hint={tr("Ixtiyoriy — nomzodlar aynan shu yo'nalish bo'yicha topadi")}>
+                  <Select value={d.subcategory || ''} placeholder={tr("Bo'limni tanlang")} onChange={(v) => set('subcategory', v)}
+                    options={[{ value: '', label: tr("Butun soha") }, ...subsOf(d.category).map((x) => ({ value: x.id, label: x.name }))]} />
+                </Field>
+              )}
               <Field label={tr("Nechta xodim kerak?")} req error={err('count')}>
                 <input value={d.count} inputMode="numeric" maxLength={3} onChange={(e) => set('count', digits(e.target.value))} />
               </Field>
