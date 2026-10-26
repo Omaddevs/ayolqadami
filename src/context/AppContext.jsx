@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { fetchBotJobs, sendJobToBot } from '../lib/botApi'
 import { api as server, apiEnabled, getToken, setToken } from '../lib/api'
 import { clearAuthDraft, loadAuthDraft } from '../lib/authDraft'
@@ -7,6 +8,7 @@ import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
 import { DEMO_JOBS_ENABLED, buildDemoJobs } from '../data/demoJobs'
+import { DEMO_PASSWORD, DEMO_PHONE, DEMO_USER, demoActivity } from '../data/demoUser'
 
 const KEY = 'ayolkaryera_v1'
 // Oflayn rejim (VITE_API_URL yo'q): yaratilgan hisoblar telefon raqami bo'yicha brauzerda saqlanadi, "Kirish" shu yerdan tiklaydi
@@ -27,6 +29,13 @@ function hashPw(str) {
   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
+}
+// Lokal ishlab chiqishda (oflayn) demo hisob tayyor turadi: src/data/demoUser.js
+if (import.meta.env.DEV && !apiEnabled) {
+  try {
+    if (!findAccount(DEMO_PHONE)) localStorage.setItem(ACC_KEY, JSON.stringify({ ...loadAccounts(), [DEMO_PHONE]: DEMO_USER }))
+    if (!loadPw()[DEMO_PHONE]) localStorage.setItem(PW_KEY, JSON.stringify({ ...loadPw(), [DEMO_PHONE]: hashPw(DEMO_PHONE + DEMO_PASSWORD) }))
+  } catch { /* storage yo'q */ }
 }
 const Ctx = createContext(null)
 
@@ -75,9 +84,19 @@ function load() {
 
 const isDemo = (id) => String(id).startsWith('demo')
 
+// Kirgan foydalanuvchining bosh sahifasi — /dashboard; landing (/ va /ish-beruvchilar) faqat mehmonlar uchun
+export const HOME_AUTHED = '/dashboard'
+export const isLanding = (path) => path === '/' || path === '/ish-beruvchilar'
+// QadamAI ish izlovchi hisobida yo'q: mehmon (landingdagi taqdimot) va ish beruvchi uchun qoladi
+export const canUseAI = (user) => user?.role !== 'seeker'
+
 export function AppProvider({ children }) {
   const [state, setState] = useState(load)
   const [toast, setToast] = useState(null)
+  // navigate har joylashuv o'zgarishida yangilanadi — useMemo([]) ichidagi api eskisini ushlab qolmasin
+  const navigate = useNavigate()
+  const navRef = useRef(navigate)
+  navRef.current = navigate
   // Mehmon rejimi: kirish talab qilinadigan amalda ro'yxatdan o'tish oynasi ochiladi,
   // muvaffaqiyatli o'tgach kutib turgan amal bajariladi
   const [authOpen, setAuthOpen] = useState(false)
@@ -120,8 +139,9 @@ export function AppProvider({ children }) {
     const set = (fn) => setState((s) => ({ ...s, ...fn(s) }))
     return {
       register: (user) => set(() => ({ user: { skills: [], experience: [], languages: ["O'zbek"], ...user } })),
-      // til va mavzu — qurilma sozlamasi, hisobdan chiqilganda saqlanib qoladi
-      logout: () => { setToken(null); setState((s) => ({ ...initial, prefs: s.prefs })) },
+      // til va mavzu — qurilma sozlamasi, hisobdan chiqilganda saqlanib qoladi.
+      // Chiqish — landingga qaytishning yagona yo'li (holat bilan bir renderda: Gate «kiring» oynasini ochib yubormasin)
+      logout: () => { setToken(null); setState((s) => ({ ...initial, prefs: s.prefs })); navRef.current('/', { replace: true }) },
       updateUser: (patch) => {
         set((s) => ({ user: { ...s.user, ...patch } }))
         if (apiEnabled) {
@@ -212,7 +232,10 @@ export function AppProvider({ children }) {
     const fn = pending.current
     pending.current = null
     setAuthOpen(false)
+    // Kutib turgan amal (ariza, yopiq sahifa) bo'lsa — foydalanuvchi o'sha joyda qoladi; aks holda dashboardga.
+    // Landingdan kelgan bo'lsa tarixdagi yozuv almashtiriladi: «orqaga» yana landing → dashboard aylanmasiga tushmasin
     if (fn) setTimeout(() => fn(user), 0)
+    else navRef.current(HOME_AUTHED, { replace: isLanding(window.location.pathname) })
   }, [api])
   // Serverdan kelgan sessiya: token saqlanadi, foydalanuvchi holati serverdagisi bilan almashtiriladi
   const acceptSession = useCallback(({ token, user }) => {
@@ -254,6 +277,8 @@ export function AppProvider({ children }) {
     const saved = loadPw()[digits(phone)]
     if (!saved) return acc.google ? 'google' : 'badpass'
     if (saved !== hashPw(digits(phone) + password)) return 'badpass'
+    // demo hisob: dashboard bo'sh bo'lmasin — arizalar va saqlanganlar (avval bo'lmasa) qo'shiladi
+    if (acc.demo) setState((s) => (s.applications.length || s.saved.length ? s : { ...s, ...demoActivity() }))
     finishAuth(acc)
     return 'ok'
   }, [acceptSession, finishAuth])
@@ -326,10 +351,10 @@ export function AppProvider({ children }) {
       }))
     }).catch((e) => {
       // token eskirgan, foydalanuvchi bloklangan yoki o'chirilgan — hisobdan chiqamiz
-      if (e.status === 401) { setToken(null); setState((s) => ({ ...initial, prefs: s.prefs })) }
+      if (e.status === 401) api.logout()
     })
     return () => ctrl.abort()
-  }, [userId])
+  }, [userId, api])
 
   // Bildirishnomalar (admin paneldan yuborilganlar): kirganda, sahifaga qaytilganda va har 2 daqiqada yangilanadi
   const [notifs, setNotifs] = useState({ items: [], unread: 0 })

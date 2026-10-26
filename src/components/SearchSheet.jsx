@@ -6,6 +6,7 @@ import { Avatar, CompanyLogo } from './UI'
 import { CANDIDATES, CATEGORIES, salaryText } from '../data/mock'
 import { jobPath } from '../lib/seo'
 import { tx, useT } from '../i18n'
+import { canUseAI, useApp } from '../context/AppContext'
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 
@@ -16,6 +17,7 @@ const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 export default function SearchSheet({ open, onClose, isEmp, jobs, inputRef }) {
   const nav = useNavigate()
   const t = useT()
+  const ai = canUseAI(useApp().user)
   const [q, setQ] = useState('')
   const [drag, setDrag] = useState(null)
   const dragStart = useRef(null)
@@ -109,14 +111,16 @@ export default function SearchSheet({ open, onClose, isEmp, jobs, inputRef }) {
               <div className="ss-empty">
                 <Icon3D name="sparkle" size={80} />
                 <b>{t("Aniq mos natija yo'q")}</b>
-                <span className="muted">{t("QadamAI so'rovingizni tahlil qilib, eng yaqin variantlarni topadi")}</span>
+                <span className="muted">{ai ? t("QadamAI so'rovingizni tahlil qilib, eng yaqin variantlarni topadi") : t("Boshqa so'z bilan qidirib ko'ring")}</span>
               </div>
             )}
-            <Link to={`/qadam-ai?q=${encodeURIComponent(q.trim())}`} className="ss-ai">
-              <Icon3D name="sparkle" size={40} />
-              <span className="grow">«{q.trim()}» — <b>{t('QadamAI bilan izlash')}</b></span>
-              <Icon name="right" size={18} />
-            </Link>
+            {ai && (
+              <Link to={`/qadam-ai?q=${encodeURIComponent(q.trim())}`} className="ss-ai">
+                <Icon3D name="sparkle" size={40} />
+                <span className="grow">«{q.trim()}» — <b>{t('QadamAI bilan izlash')}</b></span>
+                <Icon name="right" size={18} />
+              </Link>
+            )}
           </>
         ) : (
           <>

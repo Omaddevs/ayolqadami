@@ -354,7 +354,7 @@ export default function QadamAI() {
                 <Avatar name={user.name || ''} photo={user.photo} size={36} silhouette />
                 <span><b>{user.name || tr('Profil')}</b><small>{user.phone || user.email || tr(isHr ? 'Ish beruvchi' : 'Ish izlovchi')}</small></span>
               </Link>
-              <button type="button" className="qa-ibtn" aria-label={tr('Chiqish')} title={tr('Chiqish')} onClick={() => { logout(); nav('/') }}><QaIcon name="logout-03" size={18} /></button>
+              <button type="button" className="qa-ibtn" aria-label={tr('Chiqish')} title={tr('Chiqish')} onClick={logout}><QaIcon name="logout-03" size={18} /></button>
             </div>
           ) : (
             <button type="button" className="qa-user qa-user--guest" onClick={() => requireAuth()}>

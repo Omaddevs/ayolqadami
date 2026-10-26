@@ -4,7 +4,7 @@ import { ArrowRight, Plus } from '@phosphor-icons/react'
 import { FaTelegramPlane } from 'react-icons/fa'
 import { FaInstagram, FaRobot } from 'react-icons/fa6'
 import Icon3D from './Icon3D'
-import { useApp, useContent } from '../context/AppContext'
+import { canUseAI, useApp, useContent } from '../context/AppContext'
 import { useT } from '../i18n'
 import '../styles/home-footer.css'
 
@@ -45,10 +45,10 @@ function FaqItem({ q, a, open, onToggle }) {
 }
 
 export default function HomeFooter() {
-  const { viewRole, notify } = useApp()
+  const { user, viewRole, notify } = useApp()
   const content = useContent()
-  // bo'sh bo'limlarga havola ko'rsatilmaydi
-  const hidden = new Set([!content.articles.length && '/articles', !content.events.length && '/events'].filter(Boolean))
+  // bo'sh bo'limlarga (va ish izlovchi hisobida QadamAI'ga) havola ko'rsatilmaydi
+  const hidden = new Set([!content.articles.length && '/articles', !content.events.length && '/events', !canUseAI(user) && '/qadam-ai'].filter(Boolean))
   const t = useT()
   const [openQ, setOpenQ] = useState(-1)
   const [email, setEmail] = useState('')

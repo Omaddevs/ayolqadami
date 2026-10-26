@@ -6,13 +6,13 @@ import Icon3D from '../components/Icon3D'
 import GlassIcon from '../components/GlassIcon'
 import QaIcon from '../components/QaIcon'
 import LatestJobs from '../components/LatestJobs'
-import SeekerBento from '../components/SeekerBento'
+import SeekerBento, { SeekerQuick } from '../components/SeekerBento'
 import '../styles/qadam-ai.css'
 import { Empty, JobCard, SectionHead, Select, Sheet, ThemeToggle } from '../components/UI'
 import SearchSheet from '../components/SearchSheet'
 import HomeFooter from '../components/HomeFooter'
 import ArticlesRail from '../components/ArticlesRail'
-import { useApp, useContent } from '../context/AppContext'
+import { canUseAI, useApp, useContent } from '../context/AppContext'
 import { Bell, CaretRight, Fire, Heart, MagnifyingGlass, MapPin, SignIn, SlidersHorizontal, Sparkle, Star, X } from '@phosphor-icons/react'
 import CandidateCard from '../components/CandidateCard'
 import { CANDIDATES, CATEGORIES, CITIES, JOB_TYPES } from '../data/mock'
@@ -540,70 +540,47 @@ function SeekerIntro() {
   )
 }
 
-// Kirgan foydalanuvchi dashboardi (desktop): salomlashish, hisob roliga qarab raqamli kartalar va asosiy tugmalar
-function DashHead({ isEmp }) {
-  const { user, allJobs, applications, saved, posted } = useApp()
-  const t = useT()
-  const first = (user.name || '').split(' ')[0]
-  const received = posted.reduce((n, j) => n + (Number(j.applicants) || 0), 0)
-  const stats = isEmp
-    ? [
-        { icon: 'folder', value: posted.length, label: t('Mening vakansiyalarim'), to: '/applications' },
-        { icon: 'resume', value: received, label: t('Kelgan arizalar'), to: '/applications' },
-        { icon: 'users', value: CANDIDATES.length, label: t('Nomzodlar'), to: '/candidates' },
-      ]
-    : [
-        { icon: 'folder', value: applications.length, label: t('Arizalarim'), to: '/applications' },
-        { icon: 'resume', value: saved.length, label: t('Saqlanganlar'), to: '/applications?tab=saved' },
-        { icon: 'briefcase', value: allJobs.length, label: t('Vakansiyalar'), to: '/jobs' },
-      ]
-  return (
-    <section className="dash-head">
-      <div className="dash-hi">
-        <h1>{first ? t('Salom, {name}!', { name: first }) : t('Xush kelibsiz!')}</h1>
-        <p>{isEmp ? t("Vakansiyalaringiz va sizga mos nomzodlar shu yerda") : t("Sizga mos vakansiyalar va arizalaringiz shu yerda")}</p>
-      </div>
-      <div className="dash-stats">
-        {stats.map(({ icon, value, label, to }) => (
-          <Link key={label} to={to} className="dash-stat">
-            <GlassIcon name={icon} size={44} />
-            <span><b>{value.toLocaleString('ru-RU')}</b><small>{label}</small></span>
-          </Link>
-        ))}
-        <div className="dash-ctas">
-          {isEmp
-            ? <Link to="/post-job" className="btn btn-primary">{t('Vakansiya joylash')}</Link>
-            : <Link to="/profile/edit" className="btn btn-primary">{t('Rezyumeni tahrirlash')}</Link>}
-          <Link to="/qadam-ai" className="btn btn-soft"><Sparkle size={18} weight="fill" /> QadamAI</Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // Bosh sahifa ikki manzilda: / — ish izlovchilar, /ish-beruvchilar — ish beruvchilar (audience="employer").
 // Manzil ko'rinishni belgilaydi: Google har birini alohida sahifa sifatida indekslaydi.
-// Kirgan foydalanuvchiga landing o'rniga dashboard chiqadi — e'lonlar hisob roliga qarab
+// Kirgan foydalanuvchi bu sahifani faqat telefonda (/dashboard) ko'radi — landing bilan bir xil, faqat roli hisobidan olinadi
 export default function Home({ audience }) {
   const { user, viewRole, setViewRole, allJobs, applications, posted, saved, unreadNotifs } = useApp()
   const t = useT()
   const [open, setOpen] = useState(false)
   const inputRef = useRef(null)
-  const dash = !!user
-  const isEmp = dash ? user.role === 'employer' : audience ? audience === 'employer' : viewRole === 'employer'
+  const isEmp = user ? user.role === 'employer' : audience ? audience === 'employer' : viewRole === 'employer'
   const closeSearch = useCallback(() => setOpen(false), [])
   const nav = useNavigate()
   // /ish-beruvchilar ochilsa — sayt ish beruvchi ko'rinishiga o'tadi; / da ish beruvchi ko'rinishi tanlangan bo'lsa — o'z manziliga.
-  // Kirgan foydalanuvchi esa doim o'z roli bosh sahifasida (sarlavha ham shu rolda)
+  // Kirgan foydalanuvchi esa (/dashboard, mobil) manzilini o'zgartirmaydi — sarlavha faqat o'z roliga o'tadi
   useEffect(() => {
     if (user) {
-      const home = user.role === 'employer' ? 'employer' : undefined
       if (viewRole !== user.role) setViewRole(user.role)
-      if (audience !== home) nav(home ? '/ish-beruvchilar' : '/', { replace: true })
     } else if (audience) { if (viewRole !== audience) setViewRole(audience) }
     else if (viewRole === 'employer') nav('/ish-beruvchilar', { replace: true })
   }, [audience, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
   const [filterOpen, setFilterOpen] = useState(false)
+  // Mobil: qidiruv va tezkor tugmalar paneli tepaga yetganda ekranga mahkamlanadi (fixed) va kontent ustida turadi.
+  // sticky emas: u faqat .sheet-body ichida ishlaydi, ish beruvchida esa bu qism qisqa — panel erta chiqib ketardi.
+  // Panel joyida uning balandligidagi bo'sh joy qoladi — kontent sakramaydi
+  const dockMark = useRef(null)
+  const dockRef = useRef(null)
+  const [docked, setDocked] = useState(false)
+  const [dockH, setDockH] = useState(0)
+  useEffect(() => {
+    const el = dockMark.current
+    if (!el || !('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(([e]) => setDocked(!e.isIntersecting && e.boundingClientRect.top < 0))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  useEffect(() => {
+    const el = dockRef.current
+    if (!el || docked || !('ResizeObserver' in window)) return
+    const ro = new ResizeObserver(() => setDockH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [docked])
   const [fCat, setFCat] = useState('')
   const [fType, setFType] = useState('')
   const [fSort, setFSort] = useState('new')
@@ -656,11 +633,18 @@ export default function Home({ audience }) {
           <img src="/rezyume.webp" alt="" decoding="async" className="fcard-art resume-art" />
         </Link>
       )}
-      <Link to="/qadam-ai" className="fcard fcard-ai">
-        <b>QadamAI</b>
-        <span className="ai-sub">{t('HR yordamchi')}</span>
-        <img src="/qadam-ai.webp" alt="" decoding="async" className="fcard-art ai-art" />
-      </Link>
+      {canUseAI(user) ? (
+        <Link to="/qadam-ai" className="fcard fcard-ai">
+          <b>QadamAI</b>
+          <span className="ai-sub">{t('HR yordamchi')}</span>
+          <img src="/qadam-ai.webp" alt="" decoding="async" className="fcard-art ai-art" />
+        </Link>
+      ) : (
+        <Link to="/applications" className="fcard">
+          <b>{t('Arizalarim')}</b>
+          <img src="/arizalar.webp" alt="" decoding="async" className="fcard-art apps-art" />
+        </Link>
+      )}
       {isEmp ? (
         <Link to="/candidates" className="fcard">
           <b>{t('Nomzodlar')}</b>
@@ -683,8 +667,8 @@ export default function Home({ audience }) {
 
   return (
     <div className="home">
-      {dash ? <DashHead isEmp={isEmp} /> : <DesktopIntro isEmp={isEmp} />}
-      {!dash && isEmp && <EmployerWhy />}
+      <DesktopIntro isEmp={isEmp} />
+      {isEmp && <EmployerWhy />}
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-top">
@@ -724,37 +708,31 @@ export default function Home({ audience }) {
 
       <section className="sheet-body">
 
-        <div className="search-bar">
-          <button type="button" className="search search-trigger" onClick={openSearch}>
-            <MagnifyingGlass size={22} />
-            <span>{isEmp ? t("Kasb, ko'nikma, ism") : t("Lavozim, kalit so'zlar")}</span>
-          </button>
-          <button type="button" className="search-btn" aria-label={t('Filtrlar')} onClick={() => setFilterOpen(true)}>
-            <SlidersHorizontal size={22} />
-          </button>
-          {!isEmp && (
-            <Link to="/applications?tab=saved" className="search-btn" aria-label={t('Saqlanganlar')}>
-              <Heart size={22} />
-              {saved.length > 0 && <em className="search-badge">{saved.length}</em>}
-            </Link>
-          )}
+        <span ref={dockMark} className="home-dock-mark" aria-hidden="true" />
+        <div className="home-dock-slot" style={docked ? { height: dockH } : undefined}>
+        <div ref={dockRef} className={`home-dock${docked ? ' is-docked' : ''}`}>
+          <div className="search-bar">
+            <button type="button" className="search search-trigger" onClick={openSearch}>
+              <MagnifyingGlass size={22} />
+              <span>{isEmp ? t("Kasb, ko'nikma, ism") : t("Lavozim, kalit so'zlar")}</span>
+            </button>
+            <button type="button" className="search-btn" aria-label={t('Filtrlar')} onClick={() => setFilterOpen(true)}>
+              <SlidersHorizontal size={22} />
+            </button>
+            {!isEmp && (
+              <Link to="/applications?tab=saved" className="search-btn" aria-label={t('Saqlanganlar')}>
+                <Heart size={22} />
+                {saved.length > 0 && <em className="search-badge">{saved.length}</em>}
+              </Link>
+            )}
+          </div>
+          {!isEmp && <SeekerQuick />}
+        </div>
         </div>
 
 
         <BannerCarousel />
 
-
-        {dash && isEmp && (
-          <div className="dash-list">
-            <SectionHead title={t('Mening vakansiyalarim')} to="/applications" />
-            {posted.length ? (
-              <div className="list-grid">{posted.slice(0, 6).map((j) => <JobCard key={j.id} job={j} compact />)}</div>
-            ) : (
-              <Empty icon="folder" title={t('Hali vakansiya joylamadingiz')} text={t("Birinchi e'loningizni joylang — QadamAI darhol mos nomzodlarni tavsiya qiladi")}
-                action={<Link to="/post-job" className="btn btn-primary">{t('Vakansiya joylash')}</Link>} />
-            )}
-          </div>
-        )}
 
         {isEmp ? (
           CANDIDATES.length > 0 && (
@@ -779,10 +757,10 @@ export default function Home({ audience }) {
         ) : (
           <>
             {/* avval tezkor tugmalar va «Ish topish endi oson» bentosi, keyin «So'nggi ish imkoniyatlari», ostida — «Siz uchun vakansiyalar» */}
-            {!dash && <SeekerBento />}
-            {!dash && <LatestJobs jobs={allJobs} />}
-            {/* «Siz uchun vakansiyalar» — landingda faqat mobil/planshetda (fixes.css: .home-rec), dashboardda hamma joyda */}
-            <div className={`home-rec${dash ? ' dash-list' : ''}`}>
+            <SeekerBento />
+            <LatestJobs jobs={allJobs} />
+            {/* «Siz uchun vakansiyalar» — faqat mobil/planshetda (fixes.css: .home-rec) */}
+            <div className="home-rec">
               <SectionHead title={t('Siz uchun vakansiyalar')} to="/jobs" />
               <div className="list-grid">{uniqueRec.map((j) => <JobCard key={j.id} job={j} />)}</div>
             </div>

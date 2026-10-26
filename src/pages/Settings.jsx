@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   ArrowsLeftRight, Bell, CalendarBlank, Check, CircleHalf, EyeSlash, FileText, Info, PencilSimple, ShieldCheck, SignOut, SquaresFour, Translate, Trash, UserCircle, WarningCircle,
 } from '@phosphor-icons/react'
@@ -15,13 +15,12 @@ import { LANGS, tx, useT } from '../i18n'
 export function Settings() {
   const { user, prefs, setPrefs, setTheme, logout, notify, requireAuth } = useApp()
   const t = useT()
-  const nav = useNavigate()
   const isEmp = user?.role === 'employer'
   const [sheet, setSheet] = useState(null) // 'lang' | 'theme' | 'delete' | 'logout'
   const close = () => setSheet(null)
   const lang = LANGS.find((l) => l.id === prefs.lang) || LANGS[0]
   const theme = THEME_OPTIONS.find((t) => t.id === prefs.theme) || THEME_OPTIONS[2]
-  const leave = (text) => { logout(); nav('/', { replace: true }); if (text) notify(text) }
+  const leave = (text) => { logout(); if (text) notify(text) }
 
   return (
     <div className="page more">
@@ -107,7 +106,6 @@ export function Settings() {
 export function AccountSettings() {
   const { user, switchRole, notify, logout } = useApp()
   const t = useT()
-  const nav = useNavigate()
   // Shaxsiy ma'lumotlar qonuni: foydalanuvchi hisobini va ma'lumotlarini o'zi o'chira oladi
   const removeAccount = async () => {
     if (!window.confirm(t("Hisobingiz va barcha ma'lumotlaringiz (rezyume, arizalar) butunlay o'chiriladi. Davom etasizmi?"))) return
@@ -116,7 +114,6 @@ export function AccountSettings() {
     }
     logout()
     notify(t("Hisob o'chirildi"))
-    nav('/')
   }
   const isEmp = user.role === 'employer'
   const title = isEmp ? user.company : user.name
@@ -185,7 +182,6 @@ export function NotificationSettings() {
           ]
         : [
             { key: 'jobs', label: t('Yangi vakansiyalar'), hint: t("Qidiruv sozlamalaringizga mos e'lonlar") },
-            { key: 'ai', label: t('QadamAI tavsiyalari'), hint: t('Rezyumengizga yuqori moslikdagi ishlar') },
             { key: 'apps', label: t('Ariza holati'), hint: t("Ish beruvchi arizangizni ko'rganda yoki javob berganda") },
             { key: 'courses', label: t('Kurslar'), hint: t('Yozilgan kurslaringiz boshlanishi') },
             { key: 'events', label: t('Tadbirlar'), hint: t('Karyera forumlari va uchrashuvlar') },

@@ -28,7 +28,7 @@ export function useTelegramBackButton() {
     const app = tg()
     if (!app?.BackButton || !app.isVersionAtLeast?.('6.1')) return
     const back = () => navigate(-1)
-    if (pathname === '/') app.BackButton.hide()
+    if (pathname === '/' || pathname === '/dashboard') app.BackButton.hide() // ikkalasi ham bosh sahifa (mehmon / kirgan)
     else app.BackButton.show()
     app.BackButton.onClick(back)
     return () => app.BackButton.offClick(back)

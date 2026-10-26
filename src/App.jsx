@@ -1,8 +1,9 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { useApp } from './context/AppContext'
+import { HOME_AUTHED, canUseAI, useApp } from './context/AppContext'
 import { Layout } from './components/UI'
 import { useTelegramBackButton } from './lib/telegram'
+import { useDesktop } from './lib/media'
 import Auth from './pages/Auth'
 import Home from './pages/Home'
 import { applySeo, routeSeo } from './lib/seo'
@@ -38,6 +39,8 @@ const Terms = page(() => import('./pages/Legal'), 'Terms')
 const Companies = page(() => import('./pages/Companies'), 'Companies')
 const CompanyDetail = page(() => import('./pages/Companies'), 'CompanyDetail')
 const Categories = page(() => import('./pages/Categories'))
+const DashShell = page(() => import('./pages/Dashboard'), 'DashShell')
+const DashOverview = page(() => import('./pages/Dashboard'))
 
 // Shaxsiy sahifalar: mehmon asosiy sahifaga qaytariladi va ro'yxatdan o'tish oynasi ochiladi,
 // muvaffaqiyatli o'tgach so'ralgan sahifaga o'tkaziladi
@@ -47,8 +50,15 @@ function Gate({ children, role }) {
   const navigate = useNavigate()
   useEffect(() => { if (!user) requireAuth(() => navigate(pathname)) }, [user, requireAuth, navigate, pathname])
   if (!user) return <Navigate to="/" replace />
-  if (role && user.role !== role) return <Navigate to="/" replace />
+  if (role && user.role !== role) return <Navigate to={HOME_AUTHED} replace />
   return children
+}
+
+// Landing faqat mehmonlar uchun: kirgan foydalanuvchi (sahifani yangilasa, logoni bossa, eski havoladan kelsa ham)
+// doim dashboardga o'tadi. Landingga qaytish — faqat «Chiqish» orqali (AppContext.logout)
+function GuestOnly({ children }) {
+  const { user } = useApp()
+  return user ? <Navigate to={HOME_AUTHED} replace /> : children
 }
 
 // Bo'lim sahifalari uchun SEO (sarlavha, tavsif, canonical) va Google Analytics page_view.
@@ -64,6 +74,11 @@ function useRouteSeo() {
 
 export default function App() {
   const { user, authOpen } = useApp()
+  // Kirgan foydalanuvchi desktopda barcha bo'limlarni Dashboard qobig'i ichida ko'radi (yon panel, profil, yo'l satri) —
+  // manzillar o'sha-o'sha (/jobs, /applications ...). Telefon/planshetda va mehmonda — odatiy Layout (sarlavha, pastki menyu)
+  const desktop = useDesktop()
+  const dashShell = Boolean(user) && desktop
+  const qadamAI = canUseAI(user) ? <QadamAI /> : <Navigate to={HOME_AUTHED} replace />
   useTelegramBackButton()
   useRouteSeo()
 
@@ -71,14 +86,14 @@ export default function App() {
     <>
       <Suspense fallback={<div className="page" aria-busy="true" />}>
       <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="ish-beruvchilar" element={<Home audience="employer" />} />
+        <Route element={dashShell ? <DashShell /> : <Layout />}>
+          <Route index element={<GuestOnly><Home /></GuestOnly>} />
+          <Route path="ish-beruvchilar" element={<GuestOnly><Home audience="employer" /></GuestOnly>} />
           <Route path="jobs" element={<Jobs />} />
           <Route path="jobs/:id" element={<JobDetail />} />
           <Route path="courses" element={<Courses />} />
           <Route path="courses/:id" element={<CourseDetail />} />
-          <Route path="qadam-ai" element={<QadamAI />} />
+          {!dashShell && <Route path="qadam-ai" element={qadamAI} />}
           <Route path="map" element={<JobsMap />} />
           <Route path="profile" element={<Gate><Profile /></Gate>} />
           <Route path="profile/edit" element={<Gate><ProfileEdit /></Gate>} />
@@ -103,7 +118,10 @@ export default function App() {
           <Route path="candidates" element={<Candidates />} />
           <Route path="candidates/:id" element={<CandidateDetail />} />
           <Route path="post-job" element={<Gate role="employer"><PostJob /></Gate>} />
+          <Route path="dashboard" element={<Gate>{desktop ? <DashOverview /> : <Home />}</Gate>} />
         </Route>
+        {/* QadamAI — o'z yon paneli bor to'liq ekranli ilova: dashboard qobig'iga solinmaydi, landing sarlavhasisiz ochiladi */}
+        {dashShell && <Route path="qadam-ai" element={qadamAI} />}
         <Route path="401" element={<Unauthorized />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

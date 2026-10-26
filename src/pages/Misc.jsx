@@ -4,7 +4,7 @@ import { Bell, BookOpen, CalendarBlank, CaretRight, MapPin, Gear, Lifebuoy, Warn
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
 import { Empty, JobCard, TopBar } from '../components/UI'
-import { useApp, useContent } from '../context/AppContext'
+import { canUseAI, useApp, useContent } from '../context/AppContext'
 import { LANGS, getLang, tx, useT } from '../i18n'
 import { timeAgo } from '../lib/time'
 
@@ -228,7 +228,7 @@ function MoreDesktop({ sections }) {
 }
 
 export function More() {
-  const { notify, viewRole } = useApp()
+  const { notify, viewRole, user } = useApp()
   const isEmp = viewRole === 'employer'
   const { articles } = useContent()
   const t = useT()
@@ -242,7 +242,7 @@ export function More() {
     ] },
     { title: t('Kashf eting'), items: [
       { label: t('Kompaniyalar'), desc: t('Ish beruvchilar, ularning vakansiyalari va sharhlari'), icon: Buildings, to: '/companies', tone: '#0EA5E9' },
-      { label: 'QadamAI', desc: t('HR yordamchi: rezyume, suhbat va vakansiya tanlashda maslahat'), icon: Sparkle, to: '/qadam-ai', tone: '#7C3AED', dk: true },
+      ...(canUseAI(user) ? [{ label: 'QadamAI', desc: t('HR yordamchi: rezyume, suhbat va vakansiya tanlashda maslahat'), icon: Sparkle, to: '/qadam-ai', tone: '#7C3AED', dk: true }] : []),
       { label: t('Kurslar'), desc: t("Kasb o'rganish va malaka oshirish uchun o'quv kurslari"), icon: GraduationCap, tone: '#14B8A6', soon: true, dk: true },
       ...(articles.length ? [{ label: t('Maqolalar'), desc: t("Karyera, rezyume va suhbat bo'yicha foydali maslahatlar"), icon: BookOpen, to: '/articles', tone: '#10B981' }] : []),
     ] },

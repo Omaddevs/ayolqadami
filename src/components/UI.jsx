@@ -1,11 +1,11 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, ChatCircleText, Check, Clock, Desktop, DotsThree, Eye, Globe, Heart, House, MagnifyingGlass, MapPin, MapTrifold, Moon, Plus, SealCheck, SortAscending, Sparkle, SquaresFour, Sun, UsersThree } from '@phosphor-icons/react'
+import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, ChatCircleText, Check, CheckCircle, Clock, Desktop, DotsThree, Eye, Globe, Heart, House, MagnifyingGlass, MapPin, MapTrifold, Moon, Plus, SealCheck, SortAscending, Sparkle, SquaresFour, Sun, UsersThree } from '@phosphor-icons/react'
 import Icon from './Icons'
 import Icon3D from './Icon3D'
 import LocationSheet from './LocationSheet'
-import { useApp } from '../context/AppContext'
+import { canUseAI, useApp } from '../context/AppContext'
 import { CATEGORIES, catName, salaryText, formatSum } from '../data/mock'
 import { LANGS, tr, tx, useT } from '../i18n'
 import { jobPath } from '../lib/seo'
@@ -78,16 +78,18 @@ export function WomanFace({ size = 24, weight = 'regular', className, style }) {
 }
 
 export function navItems(role) {
+  // «Asosiy» — mehmonga landing, kirgan foydalanuvchiga dashboard
+  const home = role ? '/dashboard' : '/'
   return role === 'employer'
     ? [
-        { to: '/', icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
+        { to: home, icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
         { to: '/candidates', icon: 'users', ph: UsersThree, label: tr('Nomzodlar') },
         { to: '/post-job', icon: 'plus', ph: Plus, label: tr('Joylash'), fab: true },
         { to: '/qadam-ai', icon: 'sparkle', ph: Sparkle, label: 'QadamAI' },
         { to: '/profile', icon: 'user', ph: WomanFace, label: tr('Profil') },
       ]
     : [
-        { to: '/', icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
+        { to: home, icon: 'home', ph: House, label: tr('Bosh sahifa'), tab: tr('Asosiy'), end: true },
         { to: '/jobs', icon: 'briefcase', ph: Briefcase, label: tr('Vakansiyalar'), tab: tr('Ishlar') },
         { to: '/companies', icon: 'building', ph: Buildings, label: tr('Kompaniyalar'), tab: tr('Kompaniya') },
         { to: '/map', icon: 'pin', ph: MapTrifold, label: tr('Xarita') },
@@ -344,7 +346,7 @@ function SiteHeader() {
           </form>
 
           <div className="sh-icons">
-            <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>
+            {canUseAI(user) && <Link to="/qadam-ai" className="sh-ico" aria-label="QadamAI" title="QadamAI"><ChatCircleText size={21} /></Link>}
             <Link to="/notifications" className="sh-ico" aria-label={t('Bildirishnomalar')} title={t('Bildirishnomalar')}>
               <Bell size={21} />
               {unreadNotifs > 0 && <em className="sh-badge">{unreadNotifs > 99 ? '99+' : unreadNotifs}</em>}
@@ -384,7 +386,7 @@ export function Layout() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
   return (
-    <div className={`shell ${chat ? 'no-tabs' : ''} ${pathname === '/' ? 'is-home' : ''} ${pathname === '/map' ? 'is-map' : ''}`}>
+    <div className={`shell ${chat ? 'no-tabs' : ''} ${pathname === '/' || pathname === '/dashboard' ? 'is-home' : ''} ${pathname === '/map' ? 'is-map' : ''}`}>
       <SiteHeader />
 
       <main className="main">
@@ -719,8 +721,9 @@ export function JobCard({ job, compact }) {
 
       {showActions && (
         <div className="job-actions">
-          <button type="button" className="btn btn-primary" disabled={applied} onClick={quickApply}>
-            {applied ? t('Ariza yuborildi') : t('Ariza yuborish')}
+          {/* yuborilgan holat — vakansiya sahifasidagi kabi yashil «bajarildi» (xiralashgan binafsha tugma o'qilmasdi) */}
+          <button type="button" className={`btn ${applied ? 'btn-done' : 'btn-primary'}`} disabled={applied} onClick={quickApply}>
+            {applied ? <><CheckCircle size={18} weight="fill" /> {t('Ariza yuborildi')}</> : t('Ariza yuborish')}
           </button>
           <button type="button" className="btn btn-soft" onClick={() => nav(jobPath(job))}>{t("Bog'lanish")}</button>
         </div>

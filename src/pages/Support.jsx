@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Checks, DotsThree, Lifebuoy, PaperPlaneRight, Plus, Robot, Trash } from '@phosphor-icons/react'
 import { Sheet } from '../components/UI'
-import { useApp } from '../context/AppContext'
+import { canUseAI, useApp } from '../context/AppContext'
 import { api as server, apiEnabled } from '../lib/api'
 import { tr, tx } from '../i18n'
 
@@ -79,7 +79,8 @@ export default function Support() {
     setTyping(true)
     timer.current = setTimeout(() => {
       const a = answer(q)
-      addSupport({ from: 'bot', text: a.text, link: a.link })
+      // ish izlovchi hisobida QadamAI yo'q — unga havola berilmaydi
+      addSupport({ from: 'bot', text: a.text, link: a.link?.to === '/qadam-ai' && !canUseAI(user) ? undefined : a.link })
       setTyping(false)
     }, 900 + Math.min(q.length * 15, 900))
   }
@@ -123,7 +124,7 @@ export default function Support() {
       <div className="sp-dock">
         {topics && (
           <div className="sp-topics">
-            {TOPICS.map((t) => <button key={t} type="button" onClick={() => send(t)}>{t}</button>)}
+            {TOPICS.filter((t) => canUseAI(user) || t !== 'QadamAI nima?').map((t) => <button key={t} type="button" onClick={() => send(t)}>{t}</button>)}
           </div>
         )}
         <form className="sp-composer" onSubmit={(e) => { e.preventDefault(); send(text) }}>

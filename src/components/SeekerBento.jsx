@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import GlassIcon from './GlassIcon'
-import { useApp } from '../context/AppContext'
+import { canUseAI, useApp } from '../context/AppContext'
 import { postedAt } from '../lib/time'
 import { useT } from '../i18n'
 
@@ -53,6 +53,13 @@ function Quick({ q, t }) {
     : <Link className="sb-q" to={q.to}>{inner}</Link>
 }
 
+// Tezkor tugmalar (rezyume, Telegram bot, xarita...). Mobilda bosh sahifadagi yopishqoq qidiruv paneli ichida,
+// desktopda — bento ustida (fixes.css: .home .sb > .sb-quick)
+export function SeekerQuick() {
+  const t = useT()
+  return <div className="sb-quick">{QUICK.map((q) => <Quick key={q.label[0]} q={q} t={t} />)}</div>
+}
+
 export default function SeekerBento() {
   const { allJobs, user } = useApp()
   const t = useT()
@@ -74,7 +81,7 @@ export default function SeekerBento() {
 
   return (
     <section className="sb" aria-labelledby="sb-h">
-      <div className="sb-quick">{QUICK.map((q) => <Quick key={q.label[0]} q={q} t={t} />)}</div>
+      <SeekerQuick />
 
       <h2 id="sb-h">{t('Ish topish endi oson')}</h2>
 
@@ -101,12 +108,15 @@ export default function SeekerBento() {
           </div>
         </Link>
 
-        <Link to="/qadam-ai?mode=job" className="sb-card sb-card--ai">
-          <b>{t('Qadam AI HR sizga mos ishni topadi')}</b>
-          <img className="sb-obj" src="/qadam-ai.webp" alt="" loading="lazy" />
-        </Link>
+        {canUseAI(user) && (
+          <Link to="/qadam-ai?mode=job" className="sb-card sb-card--ai">
+            <b>{t('Qadam AI HR sizga mos ishni topadi')}</b>
+            <img className="sb-obj" src="/qadam-ai.webp" alt="" loading="lazy" />
+          </Link>
+        )}
 
-        <Link to="/profile/edit" className="sb-card sb-card--cv">
+        {/* QadamAI kartasi bo'lmasa — rezyume kartasi ikki qator egallaydi (gridda bo'sh katak qolmasin) */}
+        <Link to="/profile/edit" className={`sb-card sb-card--cv${canUseAI(user) ? '' : ' sb-card--tall'}`}>
           <b>{t('Rezyumeni 10 daqiqada')}<br />{t('tuzing')}</b>
           <img className="sb-obj" src="/rezyume.webp" alt="" loading="lazy" />
         </Link>

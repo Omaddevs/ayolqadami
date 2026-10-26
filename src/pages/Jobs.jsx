@@ -8,7 +8,7 @@ import {
   ArrowLeft, Buildings, CalendarBlank, CaretRight, ChatCircleText, CheckCircle, Clock, CurrencyCircleDollar, DotsThree, Export, Eye, EyeSlash, Fire, Flag, Heart, HeartStraight, Info, MapPin, PaperPlaneTilt, Phone, SealCheck, Sparkle, TelegramLogo, UsersThree,
 } from '@phosphor-icons/react'
 import { CompanyLogo, Dropdown, Empty, JobCard, Pagination, Select, Sheet, TopBar } from '../components/UI'
-import { useApp } from '../context/AppContext'
+import { canUseAI, useApp } from '../context/AppContext'
 import { CATEGORIES, CITIES, JOB_TYPES, catName, salaryText } from '../data/mock'
 import { EXP_STEPS, SALARY_STEPS, activeCount, filterJobs, readFilters } from '../lib/jobFilters'
 import { placeJobs } from '../data/geo'
@@ -47,7 +47,8 @@ const SORTS = [
 
 
 export function Jobs() {
-  const { allJobs } = useApp()
+  const { allJobs, user } = useApp()
+  const ai = canUseAI(user)
   const t = useT()
   const [params, setParams] = useSearchParams()
   // barcha filtrlar URL'da (?q=&cat=&city=&type=&min=&exp=&period=&sort=) — bosh sahifadagi qidiruv shu manzilni ochadi
@@ -85,7 +86,7 @@ export function Jobs() {
 
   return (
     <div className="page">
-      <TopBar title={t('Vakansiyalar')} back={false} right={<Link to="/qadam-ai" className="icon-btn ai" aria-label="QadamAI"><Icon name="sparkle" /></Link>} />
+      <TopBar title={t('Vakansiyalar')} back={false} right={ai && <Link to="/qadam-ai" className="icon-btn ai" aria-label="QadamAI"><Icon name="sparkle" /></Link>} />
       <div className="page-body">
         <div className="search search-solid">
           <Icon name="search" size={22} />
@@ -150,10 +151,10 @@ export function Jobs() {
             <Empty icon="briefcase" title={t("Bu davrda yangi e'lon yo'q")} text={t("Vaqt oralig'ini kengaytirib ko'ring")}
               action={<button type="button" className="btn btn-primary" onClick={() => setPeriod('')}>{t("Barcha e'lonlarni ko'rish")}</button>} />
           ) : (
-            <Empty icon="briefcase" title={t('Hech narsa topilmadi')} text={t("Filtrlarni o'zgartirib ko'ring yoki QadamAI'dan so'rang")}
+            <Empty icon="briefcase" title={t('Hech narsa topilmadi')} text={ai ? t("Filtrlarni o'zgartirib ko'ring yoki QadamAI'dan so'rang") : t("Filtrlarni o'zgartirib ko'ring")}
               action={active > 0
                 ? <button type="button" className="btn btn-primary" onClick={clearAll}>{t('Filtrlarni tozalash')}</button>
-                : <Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
+                : ai && <Link to="/qadam-ai" className="btn btn-primary">{t('QadamAI bilan izlash')}</Link>} />
           )
         )}
       </div>
@@ -417,7 +418,7 @@ export function JobDetail() {
             <CaretRight size={18} weight="bold" className="jd-company-go" />
           </Link>
 
-          {seeker && (
+          {seeker && canUseAI(user) && (
             <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-promo">
               <div>
                 <b>{t('Bu ish sizga qanchalik mos?')}</b>
@@ -448,9 +449,11 @@ export function JobDetail() {
 
       {seeker && (
         <div className="jd-cta jd-cta-mobile">
-          <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-cta-ai" aria-label={t('QadamAI moslik')}>
-            <Sparkle size={22} weight="fill" />
-          </Link>
+          {canUseAI(user) && (
+            <Link to={`/qadam-ai?q=${encodeURIComponent(job.title)}`} className="jd-cta-ai" aria-label={t('QadamAI moslik')}>
+              <Sparkle size={22} weight="fill" />
+            </Link>
+          )}
           <button className="jd-cta-main" disabled={applied} onClick={() => requireAuth(() => setOpen(true))}>
             {applied ? <><CheckCircle size={20} weight="fill" /> {t('Ariza yuborilgan')}</> : <>{t('Ariza topshirish')} <PaperPlaneTilt size={19} weight="fill" /></>}
           </button>

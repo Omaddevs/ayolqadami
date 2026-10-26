@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
-  CaretRight, Car, IdentificationCard, LockSimple, PencilSimple, Plus, SignOut, Sparkle, WarningCircle,
+  CaretRight, Car, IdentificationCard, LockSimple, PencilSimple, Plus, SignOut, WarningCircle,
 } from '@phosphor-icons/react'
 import { FaTelegramPlane } from 'react-icons/fa'
 import { FaEnvelope, FaPhone } from 'react-icons/fa6'
@@ -62,7 +62,6 @@ function Empty({ text, btn = "Qo'shish" }) {
 // Profil — desktop/laptop ko'rinishi (≥1024px): chapda rasm va yordamchi kartalar, o'ngda rezyume bo'limlari
 export default function ProfileDesktop() {
   const { user, updateUser, applications, logout } = useApp()
-  const nav = useNavigate()
   const [confirmOut, setConfirmOut] = useState(false)
   const [photoTip, setPhotoTip] = useState(!user.photo)
   const [social, setSocial] = useState({ open: false, id: null })
@@ -112,12 +111,6 @@ export default function ProfileDesktop() {
           <small>{sent} / {APPLY_GOAL}</small>
         </Link>
 
-        <Link to="/qadam-ai" className="pd-promo">
-          <Sparkle size={30} weight="fill" />
-          <b>{tr("QadamAI sizga mos ishlarni topadi")}</b>
-          <span>{tr("Rezyumengiz asosida shaxsiy tavsiyalar oling")}</span>
-          <em>{tr("Sinab ko'rish")} <CaretRight size={14} weight="bold" /></em>
-        </Link>
       </aside>
 
       <div className="pd-main">
@@ -134,7 +127,7 @@ export default function ProfileDesktop() {
         <Sheet open={confirmOut} onClose={() => setConfirmOut(false)} title={tr("Akkauntdan chiqish")}>
           <div className="st-confirm">
             <p>{tr("Haqiqatan ham akkauntdan chiqmoqchimisiz? Qayta kirish uchun telefon raqamingiz kerak bo'ladi.")}</p>
-            <button type="button" className="btn btn-danger btn-lg btn-block" onClick={() => { logout(); nav('/', { replace: true }) }}>{tr("Chiqish")}</button>
+            <button type="button" className="btn btn-danger btn-lg btn-block" onClick={logout}>{tr("Chiqish")}</button>
             <button type="button" className="btn btn-ghost btn-lg btn-block" onClick={() => setConfirmOut(false)}>{tr("Bekor qilish")}</button>
           </div>
         </Sheet>

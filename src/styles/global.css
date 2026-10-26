@@ -329,6 +329,9 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .fcard-ai:hover .ai-art { transform: translateY(-3px) rotate(-3deg); }
 .fcard-art.books-art { width: 84px; height: auto; right: 8px; bottom: 8px; filter: none; transition: transform .3s; }
 .fcard:hover .books-art { transform: translateY(-3px) rotate(-3deg); }
+/* «Arizalarim» (ish izlovchida QadamAI o'rnida) — kichik katak, kurslar rasmi o'lchamida */
+.fcard-art.apps-art { width: 58px; height: auto; right: 10px; top: 10px; bottom: auto; filter: none; transition: transform .3s; } /* yuqori burchakda — pastdagi nomni yopmasin */
+.fcard:hover .apps-art { transform: translateY(-3px) rotate(-3deg); }
 .fcard-art.resume-art { width: 120px; height: auto; right: 0; bottom: 0; filter: none; transition: transform .3s; }
 .fcard:hover .resume-art { transform: translateY(-3px) rotate(-3deg); }
 .fcard-art.plus-art { width: 112px; height: auto; right: 4px; bottom: 6px; filter: drop-shadow(0 10px 14px rgba(60, 50, 220, .28)); transition: transform .3s; }
@@ -453,7 +456,7 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .job-new { padding: 2px 8px; margin-right: 3px; border-radius: 8px; background: var(--success-bg); color: var(--success-ink); font-style: normal; font-size: 11.5px; font-weight: 700; }
 .job-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
 .job-actions .btn { position: relative; z-index: 1; height: 52px; font-size: 16px; }
-.job-actions .btn-primary { flex: 1.6; }
+.job-actions .btn-primary, .job-actions .btn-done { flex: 1.6; } /* yuborilgandan keyin ham kenglik o'zgarmasin */
 .job-actions .btn-soft { flex: 1; }
 .save-btn { position: relative; z-index: 1; width: 40px; height: 40px; margin: -6px -6px 0 0; border-radius: 12px; display: grid; place-items: center; color: var(--text); flex-shrink: 0; transition: transform .15s, color .2s; }
 .save-btn.on { color: #F43F5E; }
@@ -1045,6 +1048,7 @@ h1, h2, h3 { letter-spacing: -.01em; }
   .fcard-art.resume-art { width: 170px; right: 12px; bottom: auto; top: 18px; }
   .fcard-art.plus-art { width: 150px; height: auto; right: 16px; bottom: auto; top: 22px; }
   .fcard-art.books-art { width: 160px; height: auto; right: 12px; bottom: auto; top: 18px; }
+  .fcard-art.apps-art { width: 150px; right: 12px; bottom: auto; top: 22px; }
   .cats { grid-template-columns: repeat(8, 1fr); gap: 14px; margin-top: 16px; }
   .hb { margin: 24px 0 0; }
   .hb-track { padding: 0; scroll-padding: 0; }

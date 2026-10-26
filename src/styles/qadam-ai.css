@@ -233,6 +233,9 @@
   .qa-frame.is-collapsed .qa-main { margin-left: 12px; }
   .qa-frame.is-collapsed .qa-open { display: grid; }
   .qa-frame { transition: grid-template-columns .3s cubic-bezier(.2, .8, .2, 1); }
+  /* kirgan foydalanuvchi: sayt sarlavhasisiz (Layout'dan tashqarida) — ramka butun ekran bo'yi */
+  #root > .qa { min-height: 100dvh; border-radius: 0; }
+  #root > .qa .qa-frame { height: calc(100dvh - 36px); }
 }
 
 /* ——— planshet va mobil: yon panel chapdan chiqadi ——— */
