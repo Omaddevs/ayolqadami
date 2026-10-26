@@ -1,6 +1,7 @@
 // Shaharlar markazlari [lat, lng] — vakansiyalarni xaritada joylash uchun
 export const CITY_COORDS = {
   Toshkent: [41.3111, 69.2797],
+  'Toshkent viloyati': [41.0, 69.6],
   Samarqand: [39.6542, 66.9597],
   Buxoro: [39.7681, 64.4556],
   Andijon: [40.7821, 72.3442],

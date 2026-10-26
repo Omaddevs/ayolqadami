@@ -297,7 +297,7 @@ function renderCard(tpl: AdTemplate, fields: AdFields, opts: { link?: string; fo
 export function adToJob(tpl: AdTemplate, f: AdFields) {
   const nums = (f.salary || '').replace(/(\d)[\s.,](?=\d{3}\b)/g, '$1').match(/\d{5,}/g)?.map(Number) || []
   const usd = /\$|usd|dollar/i.test(f.salary || '')
-  const city = CITIES.find((c) => (f.city || '').toLowerCase().startsWith(c.toLowerCase().slice(0, 4))) || (f.city || '').split(',')[0].trim() || 'Toshkent'
+  const city = CITIES.find((c) => c.toLowerCase() === (f.city || '').trim().toLowerCase()) || CITIES.find((c) => (f.city || '').toLowerCase().startsWith(c.toLowerCase().slice(0, 4))) || (f.city || '').split(',')[0].trim() || 'Toshkent'
   const type = f.format === 'Masofaviy' ? 'Masofaviy' : f.format === 'Gibrid' ? 'Gibrid' : f.employment === 'Yarim stavka' ? 'Yarim stavka' : "To'liq stavka"
   const lines = (v?: string) => (v ? v.split('\n').map((l) => l.replace(/^[\s\-•*✅😊]+/u, '').trim()).filter(Boolean).slice(0, 30) : [])
   const desc = [f.company && tpl.id === 'it_vacancy' ? f.company : '', f.tech && `Texnologiyalar: ${f.tech}`, f.tasks && `Vazifalar:\n${f.tasks}`, f.schedule && `Ish vaqti: ${f.schedule}`, f.languages && `Tillar: ${f.languages}`]

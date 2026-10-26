@@ -640,16 +640,8 @@ html:not([lang="uz"]):not([lang="uz-Cyrl"]) .tile span { font-size: 12.5px; lett
   .sb-quick { display: flex; overflow-x: auto; scrollbar-width: none; gap: 10px; }
   .sb-quick::-webkit-scrollbar { display: none; }
   .sb-q { flex: 0 0 auto; }
-  .sb h2 { font-size: 24px; }
-  .sb-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: 340px 200px 200px 360px; }
-  .sb-card--jobs { grid-row: 1; }
-  .sb-card--flex { grid-column: 1; grid-row: 4; }
-  .sb-card { border-radius: 28px; padding: 24px 24px 0; }
-  .sb-obj { width: 120px; }
-  .sb-card--ai .sb-obj { width: 130px; }
-  .sb-ph--1 { width: 64%; }
-  .sb-ph--2 { width: 52%; }
-  .sb-loop { width: 74%; }
+  /* telefonda bento (sarlavha + kartalar) ko'rsatilmaydi — faqat tezkor tugmalar qoladi */
+  .sb h2, .sb-grid { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .sb-card, .sb-art-main, .sb-obj, .sb-ph { transition: none; } .sb-card--flex:hover .sb-loop path { animation: none; } }
 

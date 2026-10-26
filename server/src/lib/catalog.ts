@@ -23,7 +23,7 @@ export const CATEGORIES: { id: string; name: string }[] = [
 ]
 export const catName = (id: string) => CATEGORIES.find((c) => c.id === id)?.name || id
 
-export const CITIES = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', "Farg'ona", 'Namangan', 'Navoiy', 'Qarshi', 'Nukus', 'Urganch', 'Jizzax', 'Guliston', 'Termiz']
+export const CITIES = ['Toshkent', 'Toshkent viloyati', 'Samarqand', 'Buxoro', 'Andijon', "Farg'ona", 'Namangan', 'Navoiy', 'Qarshi', 'Nukus', 'Urganch', 'Jizzax', 'Guliston', 'Termiz']
 export const JOB_TYPES = ["To'liq stavka", 'Yarim stavka', 'Masofaviy', 'Gibrid']
 
 type Tone = 'green' | 'yellow' | 'red' | 'blue' | 'gray' | 'purple' | 'pink'
