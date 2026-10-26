@@ -255,3 +255,52 @@ test('kod bilan kirish: raqam botga ulanmagan foydalanuvchi — havola → konta
     await db.user.deleteMany({ where: { phone: phone2 } })
   }
 })
+
+// Saytda «Avval Telegram botdan kodni oling» chiqib qolgan holat: bir raqamga bir necha sessiya ochilgan,
+// kod esa saytdagisiga emas, boshqasiga kelgan (havolasiz kontakt ulashish, botdagi eski xabarda «🔄 Yangi kod»)
+test("bir raqamga bir necha sessiya: kod qaysi sessiyaga kelgan bo'lsa ham saytdagisida qabul qilinadi", async () => {
+  const { handleLoginUpdate } = await import('../src/lib/login-bot')
+  const { db } = await import('../src/lib/db')
+  const phone3 = '99893' + String(Date.now()).slice(-7)
+  const TG3 = ME + 13
+  const start = (purpose = 'register') => post('../src/app/api/v1/auth/phone/start/route', { phone: '+' + phone3, purpose })
+  const verify = (id: string, code: string) => post('../src/app/api/v1/auth/phone/verify/route', { id, code })
+  try {
+    // A: havola ochildi (Telegram hisobiga bog'landi), lekin kontakt ulashilmadi
+    const a = await start()
+    await handleLoginUpdate(msg(TG3, { text: `/start ${/start=(v_[\w-]+)/.exec(a.json.botUrl)![1]}` }))
+    // B: saytda yangi sessiya (qayta olish / yangi tab). Raqam hali botga ulanmagan — kod yuborilmaydi
+    const b = await start()
+    assert.equal(b.json.sent, false)
+    assert.equal((await verify(b.json.id, '123456')).json.error.code, 'code_not_sent')
+
+    // foydalanuvchi botga havolasiz kirib raqamini ulashadi → kod saytdagi eng yangi sessiyaga (B) keladi
+    let n = sent.length
+    await handleLoginUpdate(msg(TG3, { contact: { phone_number: '+' + phone3, first_name: 'K', user_id: TG3 } }))
+    const codeB = sentSince(n).map((s) => codeFrom(s.body.text)).find(Boolean)
+    assert.ok(codeB, 'kontaktdan keyin kod kelmadi')
+    assert.equal((await db.phoneVerification.findUnique({ where: { id: b.json.id } }))!.telegramId, String(TG3))
+    assert.equal((await verify(b.json.id, codeB!)).status, 200)
+
+    // C: yangi sessiya (raqam endi ulangan — kod darhol keladi), foydalanuvchi esa botdagi A xabarida «🔄 Yangi kod»ni bosadi
+    const c = await start()
+    assert.equal(c.json.sent, true)
+    n = sent.length
+    await handleLoginUpdate(cb(TG3, `lc:new:${a.json.id}`))
+    const codeA = sentSince(n).map((s) => codeFrom(s.body.text)).find(Boolean)!
+    assert.ok(codeA)
+    // A ning kodi saytdagi C sessiyasida qabul qilinadi; A yopiladi — kodni ikkinchi marta ishlatib bo'lmaydi
+    const ok = await verify(c.json.id, codeA)
+    assert.equal(ok.status, 200, JSON.stringify(ok.json))
+    assert.ok((await db.phoneVerification.findUnique({ where: { id: a.json.id } }))!.usedAt)
+    assert.equal((await verify(a.json.id, codeA)).json.error.code, 'code_expired')
+
+    // boshqa raqamga yuborilgan kod qabul qilinmaydi
+    const other = await post('../src/app/api/v1/auth/phone/start/route', { phone: '+99894' + phone3.slice(5), purpose: 'register' })
+    assert.equal((await verify(other.json.id, codeA)).json.error.code, 'code_not_sent')
+    await db.phoneVerification.deleteMany({ where: { phone: '99894' + phone3.slice(5) } })
+  } finally {
+    await db.phoneVerification.deleteMany({ where: { phone: phone3 } })
+    await db.telegramPhone.deleteMany({ where: { telegramId: String(TG3) } })
+  }
+})

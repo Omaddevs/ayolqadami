@@ -46,18 +46,36 @@ export function activeLoginCode(phone: string) {
   })
 }
 
+// Saytdagi sessiya (vid) bilan birga shu raqamga yuborilgan, hali amal qilayotgan boshqa kodlar ham qabul qilinadi.
+// Bir raqamga bir necha sessiya bo'lishi tabiiy: saytda «Kodni qayta olish», yangi tab, botdagi eski xabarda «🔄 Yangi kod»,
+// havolasiz kontakt ulashish. Kod faqat raqam egasi ekanini isbotlagan Telegram hisobiga yuborilgani uchun
+// qaysi sessiyaniki ekanidan qat'i nazar raqamga egalikni isbotlaydi. Ishlatilgan kod bekor qilinadi (usedAt).
+const SIBLING_CODES = 10
+
 export async function checkCode(vid: string, code: string) {
+  const now = new Date()
   const v = await db.phoneVerification.findUnique({ where: { id: vid } })
-  if (!v || v.usedAt || v.expiresAt < new Date()) throw new ApiError(410, 'code_expired', "Kod muddati o'tgan. Qaytadan kod oling")
-  if (!v.codeHash) throw new ApiError(400, 'code_not_sent', 'Avval Telegram botdan kodni oling')
-  // urinishlar soni atomar oshiriladi — parallel so'rovlar bilan ham 5 tadan oshmaydi
+  if (!v || v.usedAt || v.expiresAt < now) throw new ApiError(410, 'code_expired', "Kod muddati o'tgan. Qaytadan kod oling")
+  const siblings = await db.phoneVerification.findMany({
+    where: { phone: v.phone, id: { not: v.id }, usedAt: null, verifiedAt: null, codeHash: { not: null }, expiresAt: { gt: now } },
+    orderBy: { createdAt: 'desc' },
+    take: SIBLING_CODES,
+  })
+  if (!v.codeHash && !siblings.length) throw new ApiError(400, 'code_not_sent', 'Avval Telegram botdan kodni oling')
+  // urinishlar soni saytdagi sessiyada atomar oshiriladi — parallel so'rovlar bilan ham 5 tadan oshmaydi
   const { count } = await db.phoneVerification.updateMany({
     where: { id: vid, attempts: { lt: MAX_CODE_ATTEMPTS } },
     data: { attempts: { increment: 1 } },
   })
   if (!count) throw new ApiError(429, 'code_attempts', "Urinishlar tugadi. Qaytadan kod oling")
-  if (!same(hashCode(vid, code), v.codeHash)) throw new ApiError(400, 'code_invalid', "Kod noto'g'ri")
-  await db.phoneVerification.update({ where: { id: vid }, data: { verifiedAt: v.verifiedAt ?? new Date() } })
+  const match = [v, ...siblings].find((c) => c.codeHash && same(hashCode(c.id, code), c.codeHash))
+  if (!match) throw new ApiError(400, 'code_invalid', "Kod noto'g'ri")
+  if (match.id !== v.id) {
+    // boshqa sessiyaning kodi — o'sha sessiya yopiladi, kodni ikkinchi marta ishlatib bo'lmaydi
+    const { count: took } = await db.phoneVerification.updateMany({ where: { id: match.id, usedAt: null }, data: { usedAt: now } })
+    if (!took) throw new ApiError(410, 'code_expired', "Kod muddati o'tgan. Qaytadan kod oling")
+  }
+  await db.phoneVerification.update({ where: { id: vid }, data: { verifiedAt: v.verifiedAt ?? now } })
   return signPhoneToken({ phone: v.phone, purpose: v.purpose as PhonePurpose, vid })
 }
 

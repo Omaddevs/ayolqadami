@@ -242,17 +242,33 @@ export async function sendVerificationCode(v: Pick<PhoneVerification, 'id' | 'pu
 
 // Kontakt kutilayotgan tasdiqlash: ro'yxatdan o'tish/tiklash, yoki saytdan boshlangan, hali kod yuborilmagan kirish.
 // (botdagi «Kirish kodi» yaratgan kirish yozuvlarida kod allaqachon bor — ular bu yerga kirmaydi)
-const pendingFor = (telegramId: string) =>
-  db.phoneVerification.findFirst({
-    where: { telegramId, usedAt: null, verifiedAt: null, expiresAt: { gt: new Date() }, OR: [{ purpose: { not: 'login' } }, { codeHash: null }] },
+// phone berilsa (raqam isbotlangan) — havolasi ochilmagan saytdagi sessiyalar ham topiladi: foydalanuvchi botga
+// havola orqali emas, to'g'ridan-to'g'ri kirib raqamini ulashsa ham kod saytda ochiq turgan eng yangi sessiyaga boradi
+async function pendingFor(telegramId: string, phone?: string) {
+  const v = await db.phoneVerification.findFirst({
+    where: {
+      usedAt: null, verifiedAt: null, expiresAt: { gt: new Date() },
+      AND: [
+        { OR: [{ purpose: { not: 'login' } }, { codeHash: null }] },
+        { OR: [{ telegramId }, ...(phone ? [{ telegramId: null, phone }] : [])] },
+      ],
+    },
     orderBy: { createdAt: 'desc' },
   })
+  if (!v || v.telegramId) return v
+  // havolasiz topilgan sessiya shu Telegram hisobiga bog'lanadi (boshqasi ochib ulgurgan bo'lsa — olinmaydi)
+  const { count } = await db.phoneVerification.updateMany({ where: { id: v.id, telegramId: null }, data: { telegramId } })
+  return count ? { ...v, telegramId } : null
+}
 
 // ================= Amallar =================
 
 async function cmdCode(msg: TgMessage, t: Texts, link: TelegramPhone | null) {
   const tgId = String(msg.from!.id)
   if (!link) return send(msg.chat.id, t.needPhone, contactKeyboard(t))
+  // saytda shu raqam bilan ro'yxatdan o'tish / parolni tiklash ochiq turgan bo'lsa — o'sha uchun kod
+  const pending = await pendingFor(tgId, link.phone)
+  if (pending?.phone === link.phone) return sendVerificationCode(pending, tgId, msg.from)
   const user = await db.user.findUnique({ where: { phone: link.phone } })
   if (!user) return send(msg.chat.id, t.noAccount(formatUzPhone(link.phone)), { inline_keyboard: [urlButton(t.registerBtn, '/?auth=signup')].filter((r) => r.length) })
   if (user.status !== 'ACTIVE') return send(msg.chat.id, t.blocked)
@@ -346,7 +362,7 @@ async function onContact(msg: TgMessage) {
     update: { phone, firstName: from.first_name.slice(0, 120), username: from.username ?? null },
   })
 
-  const v = await pendingFor(tgId)
+  const v = await pendingFor(tgId, phone)
   if (v && v.phone !== phone) return send(msg.chat.id, t.mismatch(formatUzPhone(phone), maskPhone(v.phone)), menuKeyboard(t))
   await send(msg.chat.id, t.linked(formatUzPhone(phone)), menuKeyboard(t))
   if (v) return sendVerificationCode(v, tgId, from)
@@ -460,8 +476,9 @@ export async function handleLoginUpdate(update: TgUpdate) {
   if (is('btnSettings', '/settings')) return cmdSettings(msg, t, link)
   if (is('btnHelp', '/help')) return cmdHelp(msg, t, link)
 
-  // tasdiqlash kutilayotgan bo'lsa — kontakt so'raymiz
-  const v = await pendingFor(String(msg.from.id))
+  // tasdiqlash kutilayotgan bo'lsa: raqam shu Telegram'da allaqachon isbotlangan — kod, aks holda kontakt so'raymiz
+  const v = await pendingFor(String(msg.from.id), link?.phone)
+  if (v && link?.phone === v.phone) return sendVerificationCode(v, String(msg.from.id), msg.from)
   if (v) return send(msg.chat.id, t.askContact(maskPhone(v.phone)), contactKeyboard(t))
   return send(msg.chat.id, link ? t.unknown : t.needPhone, link ? menuKeyboard(t) : contactKeyboard(t))
 }
