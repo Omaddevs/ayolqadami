@@ -31,6 +31,7 @@ function jobFacts(job) {
     [tr('Ish soatlari'), job.hours],
     [tr('Ish vaqti'), pick(WORK_TIME, job.workTime)],
     [tr('Ish usuli'), pick(WORK_MODES, job.workMode)],
+    [tr('Bandlik shartlari'), Array.isArray(job.employment) && job.employment.map((x) => tr(x)).join(', ')],
     [tr("Ta'lim"), tr(job.education)],
     [tr('Tillar'), job.langs?.map((l) => `${tr(l.lang)}${l.level && l.level !== 'native' ? ` (${tr('{level} va yuqori', { level: l.level })})` : ''}`).join(', ')],
     [tr('Haydovchilik guvohnomasi'), job.driving?.length > 0 && job.driving.join(', ')],
@@ -203,6 +204,34 @@ export function Jobs() {
 
 const QUESTIONS = ['Ish joyi qayerda joylashgan?', 'Qanday ish jadvali?', 'Vakansiya hali ochiqmi?', 'Ish haqi qancha?', "Siz bilan qanday bog'lanish mumkin?"]
 const REPORTS = ["Firibgarlik yoki to'lov talab qilinmoqda", "Noto'g'ri yoki eskirgan ma'lumot", 'Kamsituvchi talablar', 'Boshqa sabab']
+
+// Xarita ilovalarida ochish: admin bergan havola (faqat https Yandex/Google) yoki koordinata bo'yicha
+const MAP_URL_RE = /^https:\/\/([a-z0-9-]+\.)*(yandex\.(uz|ru|com)|google\.[a-z.]+|goo\.gl)\//i
+function mapLinks(job, pos) {
+  const own = typeof job.mapUrl === 'string' && MAP_URL_RE.test(job.mapUrl) ? job.mapUrl : ''
+  const isYa = /yandex\./i.test(own)
+  const [lat, lng] = pos
+  return {
+    yandex: own && isYa ? own : `https://yandex.uz/maps/?pt=${lng},${lat}&z=16&l=map`,
+    google: own && !isYa ? own : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+  }
+}
+const YandexMapsLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#FC3F1D" d="M12 1.5a8 8 0 0 0-8 8c0 5.6 6.4 12 7.3 12.8a1 1 0 0 0 1.4 0C13.6 21.5 20 15.1 20 9.5a8 8 0 0 0-8-8Z" />
+    <circle cx="12" cy="9.5" r="3.2" fill="#fff" />
+  </svg>
+)
+const GoogleMapsLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#34A853" d="M7.2 15.6 12 22.3c.9-1 7.5-7.6 7.9-12.4L7.2 15.6Z" />
+    <path fill="#FBBC04" d="M4.4 12.3c.7 1.2 1.7 2.3 2.8 3.3l5.9-6.9-4.6-3.9a7.9 7.9 0 0 0-4.1 7.5Z" />
+    <path fill="#4285F4" d="m13.1 8.7-5.9 6.9L19.9 9.9A7.9 7.9 0 0 0 17.4 4l-4.3 4.7Z" />
+    <path fill="#1A73E8" d="M17.4 4A8 8 0 0 0 8.5 4.8l4.6 3.9L17.4 4Z" />
+    <path fill="#EA4335" d="M8.5 4.8a8 8 0 0 0-4.1 7.5l4.1-4.8 4.6 1.2-4.6-3.9Z" />
+    <circle cx="12" cy="9.6" r="2.6" fill="#fff" />
+  </svg>
+)
 
 // Ish joyi xaritasi (kichik, faqat ko'rish uchun)
 function JobMiniMap({ pos }) {
@@ -447,6 +476,12 @@ export function JobDetail() {
               <h3>{t('Qayerda ishlash kerak')}</h3>
               <p className="jd-address"><MapPin size={17} weight="fill" /> {tx([job.city, job.district, job.address].filter(Boolean).join(', '))}</p>
               <JobMiniMap pos={pos} />
+              {(job.lat && job.lng) ? (
+                <div className="jd-maplinks">
+                  <a href={mapLinks(job, pos).yandex} target="_blank" rel="noopener noreferrer"><YandexMapsLogo /> Yandex Xaritalar</a>
+                  <a href={mapLinks(job, pos).google} target="_blank" rel="noopener noreferrer"><GoogleMapsLogo /> Google Maps</a>
+                </div>
+              ) : null}
               <Link to="/map" className="jd-link">{t("Katta xaritada ko'rish")} <CaretRight size={14} weight="bold" /></Link>
             </section>
           )}

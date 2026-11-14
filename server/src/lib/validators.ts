@@ -68,7 +68,7 @@ export const jobInputSchema = z
   .object({
     title: str(120).min(3),
     category: str(40).min(1),
-    subcategory: str(40).optional(),
+    subcategory: str(80).optional(),
     city: str(60).min(1),
     region: str(60).optional(),
     district: str(80).optional(),
@@ -76,7 +76,7 @@ export const jobInputSchema = z
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
     salaryFrom: money,
     salaryTo: money,
-    type: str(40).default("To'liq stavka"),
+    type: str(80).default("To'liq stavka"),
     experience: z.coerce.number().int().min(0).max(50).default(0),
     tags: strList(20, 80),
     skills: strList(30, 60),

@@ -11,6 +11,9 @@ import { audit } from '@/lib/audit'
 import { saveSettings as persistSettings } from '@/lib/settings'
 import { endOfDayTashkent, startOfDayTashkent } from '@/lib/dates'
 import { splitCategoryChoice } from '@/lib/categories'
+import { findRegion } from '@/lib/regions'
+import { EMPLOYMENT_ALL } from '@/lib/employment'
+import { isMapUrl, resolveJobLocation } from '@/lib/geo'
 import { autoPostJob, notifyUser } from '@/lib/telegram/service'
 import { esc } from '@/lib/telegram/format'
 
@@ -76,8 +79,13 @@ const jobForm = z.object({
   title: z.string().trim().min(3, 'kamida 3 belgi').max(120),
   companyName: z.string().trim().min(2, 'kompaniya nomini kiriting').max(120),
   category: z.string().min(1, 'sohani tanlang').max(81), // «it» yoki «it/frontend» (soha/bo'lim)
-  city: z.string().min(1, 'shaharni tanlang').max(60),
-  type: z.string().min(1).max(40),
+  region: z.string().min(1, 'viloyatni tanlang').max(40),
+  district: z.string().trim().max(80).optional().default(''),
+  address: z.string().trim().max(200).optional().default(''),
+  mapUrl: z.string().trim().max(500).optional().default(''),
+  lat: z.string().trim().max(20).optional().default(''),
+  lng: z.string().trim().max(20).optional().default(''),
+  type: z.string().min(1).max(80),
   salaryFrom: z.coerce.number().int().min(0).max(2_000_000_000),
   salaryTo: z.coerce.number().int().min(0).max(2_000_000_000),
   experience: z.coerce.number().int().min(0).max(50),
@@ -94,10 +102,23 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
   const v = parsed.data
   if (v.salaryTo && v.salaryFrom > v.salaryTo) return { error: "Maosh: «dan» qiymati «gacha»dan katta bo'lmasligi kerak" }
 
+  const region = findRegion(v.region)
+  if (!region) return { error: 'Viloyatni tanlang' }
+  if (v.district && !region.districts.includes(v.district)) return { error: "Tuman tanlangan viloyatga tegishli emas" }
+  if (v.mapUrl && !isMapUrl(v.mapUrl)) return { error: "Lokatsiya havolasi Yandex yoki Google xaritadan bo'lishi kerak (https://...)" }
+  const loc = await resolveJobLocation(v)
+  if ('error' in loc) return { error: loc.error }
+  const employment = f.getAll('employment').map(String).filter((t) => EMPLOYMENT_ALL.has(t))
+  const geo = v.lat || v.lng ? 'manual' : loc.exact ? 'link' : 'district'
+  const locDetails = {
+    address: v.address || undefined, mapUrl: v.mapUrl || undefined, employment,
+    lat: loc.pos?.[0], lng: loc.pos?.[1], geo: loc.pos ? geo : undefined,
+  }
+
   const jobId = text(f, 'id')
   const company = await db.company.findUnique({ where: { name: v.companyName }, select: { id: true } })
   const data = {
-    title: v.title, companyName: v.companyName, companyId: company?.id ?? null, ...splitCategoryChoice(v.category), city: v.city, type: v.type,
+    title: v.title, companyName: v.companyName, companyId: company?.id ?? null, ...splitCategoryChoice(v.category), city: region.city, region: region.id, district: v.district || null, type: v.type,
     salaryFrom: v.salaryFrom, salaryTo: v.salaryTo, experience: v.experience, color: v.color, description: v.description, status: v.status,
     skills: list(text(f, 'skills')).slice(0, 30), tags: list(text(f, 'tags')).slice(0, 20),
     requirements: lines(text(f, 'requirements')).slice(0, 30), conditions: lines(text(f, 'conditions')).slice(0, 30),
@@ -107,16 +128,19 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
     return { error: "Faol vakansiyaning amal qilish muddati o'tgan sana bo'lishi mumkin emas" }
   }
   if (jobId) {
-    const prev = await db.job.findUnique({ where: { id: jobId }, select: { status: true, publishedAt: true } })
+    const prev = await db.job.findUnique({ where: { id: jobId }, select: { status: true, publishedAt: true, details: true } })
     if (!prev) return { error: 'Vakansiya topilmadi' }
+    const prevDetails = prev.details && typeof prev.details === 'object' && !Array.isArray(prev.details) ? prev.details : {}
+    // undefined maydonlar JSON'ga yozilmaydi — olib tashlangan havola/manzil eski qiymatda qolmaydi
+    const details = JSON.parse(JSON.stringify({ ...prevDetails, ...locDetails })) as Prisma.InputJsonObject
     await db.job.update({
       where: { id: jobId },
-      data: { ...data, ...(v.status === 'ACTIVE' && !prev.publishedAt && { publishedAt: new Date() }) },
+      data: { ...data, details, ...(v.status === 'ACTIVE' && !prev.publishedAt && { publishedAt: new Date() }) },
     })
     await audit(admin.id, 'job.update', 'job', jobId)
     if (v.status === 'ACTIVE' && prev.status !== 'ACTIVE') await autoPostJob(jobId)
   } else {
-    const job = await db.job.create({ data: { ...data, source: 'ADMIN', authorId: null, publishedAt: v.status === 'ACTIVE' ? new Date() : null } })
+    const job = await db.job.create({ data: { ...data, details: JSON.parse(JSON.stringify(locDetails)) as Prisma.InputJsonObject, source: 'ADMIN', authorId: null, publishedAt: v.status === 'ACTIVE' ? new Date() : null } })
     await audit(admin.id, 'job.create', 'job', job.id, { title: job.title })
     if (job.status === 'ACTIVE') await autoPostJob(job.id)
   }
