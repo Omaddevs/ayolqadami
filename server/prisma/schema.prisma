@@ -619,3 +619,20 @@ model Notification {
   @@index([createdAt])
   @@index([userId, createdAt])
 }
+
+// Sayt tashriflari — admin paneldagi «Statistika» bo'limi uchun (shaxsiy ma'lumot saqlanmaydi: IP yozilmaydi)
+model PageView {
+  id        BigInt   @id @default(autoincrement())
+  path      String
+  visitor   String // brauzerdagi anonim identifikator (localStorage)
+  session   String // tashrif (30 daqiqa faolsizlikdan keyin yangisi)
+  userId    String?
+  country   String? // ISO kod: UZ, RU, ...
+  device    String? // mobile | tablet | desktop
+  browser   String?
+  referrer  String? // qayerdan kelgan (domen)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([path, createdAt])
+}

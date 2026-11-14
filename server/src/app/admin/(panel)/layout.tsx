@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
   Bell, BellRing, Briefcase, Building2, CalendarDays, CircleHelp, FileText, GraduationCap, History, LayoutDashboard, LogOut, MessageCircle,
-  Newspaper, Send, Settings, Users, GalleryHorizontal, Handshake, Megaphone, FolderTree, PhoneCall } from 'lucide-react'
+  Newspaper, Send, Settings, Users, BarChart3, GalleryHorizontal, Handshake, Megaphone, FolderTree, PhoneCall } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NavLink } from '@/components/client'
@@ -43,6 +43,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     { href: '/admin/contacts', label: "Bog'lanishlar", icon: PhoneCall },
     { href: '/admin/support', label: 'Murojaatlar', icon: MessageCircle, count: openTickets },
     { href: '/admin/telegram', label: 'Telegram', icon: Send },
+    { href: '/admin/analytics', label: 'Statistika', icon: BarChart3 },
   ]
   const alerts = pendingJobs + openTickets + pendingAds
 

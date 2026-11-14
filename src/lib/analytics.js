@@ -1,3 +1,5 @@
+import { apiEnabled, fire } from './api'
+
 // Google Analytics 4. Yoqish: VITE_GA_ID=G-XXXXXXXXXX (Vercel → Environment Variables yoki deploy/.env → GA_ID).
 // SPA: sahifa almashganda page_view qo'lda yuboriladi. Inline skript yo'q — CSP bilan mos.
 const GA_ID = import.meta.env.VITE_GA_ID
@@ -20,7 +22,33 @@ export function initAnalytics() {
 
 // Sarlavha sahifa yuklangach o'rnatiladi — shuning uchun biroz kutib yuboriladi
 let timer = 0
+// Ichki statistika (admin panel → Statistika): anonim tashrifchi va tashrif (30 daq. faolsizlik) identifikatorlari
+const rid = () => Math.random().toString(36).slice(2) + Date.now().toString(36)
+function ids() {
+  try {
+    let vid = localStorage.getItem('aq_vid')
+    if (!vid) localStorage.setItem('aq_vid', (vid = rid()))
+    let [sid, at] = (sessionStorage.getItem('aq_sid') || '').split(':')
+    if (!sid || Date.now() - Number(at) > 30 * 60_000) sid = rid()
+    sessionStorage.setItem('aq_sid', `${sid}:${Date.now()}`)
+    return { vid, sid }
+  } catch { return null }
+}
+let lastPath = ''
+let firstRef = document.referrer
+function trackInternal(path) {
+  if (!apiEnabled || path === lastPath) return
+  lastPath = path
+  const id = ids()
+  if (!id) return
+  let tz = ''
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '' } catch { /* eski brauzer */ }
+  fire('/track', { method: 'POST', body: { path, ...id, ref: firstRef, tz, lang: navigator.language || '' } })
+  firstRef = '' // tashqi manba faqat birinchi sahifaga yoziladi
+}
+
 export function trackPage(path) {
+  trackInternal(path.split('?')[0])
   if (!analyticsEnabled) return
   clearTimeout(timer)
   timer = setTimeout(() => {
