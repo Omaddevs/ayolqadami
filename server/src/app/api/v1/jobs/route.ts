@@ -38,7 +38,8 @@ export const GET = api(async (req) => {
   ])
   return json(
     { items: items.map(jobOut), total, page, limit },
-    { headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=120' } },
+    // ko'rishlar/yoqtirishlar soni jonli bo'lishi uchun brauzer keshdan eski ro'yxatni ko'rsatmaydi
+    { headers: { 'Cache-Control': 'no-cache' } },
   )
 })
 

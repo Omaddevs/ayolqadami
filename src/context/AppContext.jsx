@@ -325,9 +325,13 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!apiEnabled) return
     const ctrl = new AbortController()
-    server.jobs(ctrl.signal).then((d) => { if (Array.isArray(d?.items)) setServerJobs(d.items) }).catch(() => {})
+    const loadJobs = () => server.jobs(ctrl.signal).then((d) => { if (Array.isArray(d?.items)) setServerJobs(d.items) }).catch(() => {})
+    loadJobs()
+    // sahifaga qaytilganda ro'yxat (ko'rishlar, yoqtirishlar soni) yangilanadi
+    const onVisible = () => { if (document.visibilityState === 'visible') loadJobs() }
+    document.addEventListener('visibilitychange', onVisible)
     server.content(ctrl.signal).then((d) => { syncCategories(d?.categories); setContent(normalizeContent(d)) }).catch(() => {})
-    return () => ctrl.abort()
+    return () => { ctrl.abort(); document.removeEventListener('visibilitychange', onVisible) }
   }, [])
   // Sessiya tiklanadi: profil, arizalar, kurslar va ish beruvchining vakansiyalari serverdagidek bo'ladi
   const userId = state.user?.id
@@ -400,12 +404,19 @@ export function AppProvider({ children }) {
     setState((s) => ({ ...s, saved: on ? [...s.saved.filter((x) => x !== id), id] : s.saved.filter((x) => x !== id) }))
     setJobStat(id, (j) => ({ likes: Math.max(0, (j.likes || 0) + (on ? 1 : -1)) }))
     if (on) trackEvent('job_like', { job_id: id })
-    if (apiEnabled && !isDemo(id)) server.like(id, on).then((d) => { if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes }) })
+    if (!apiEnabled || isDemo(id)) return Promise.resolve({ on })
+    return server.like(id, on).then((d) => {
+      if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes })
+      return { on, likes: d?.likes }
+    })
   }, [setJobStat])
   // Vakansiya sahifasi ochilganda: server noyob ko'rishni hisoblaydi va joriy sonni qaytaradi
   const viewJob = useCallback((id) => {
-    if (!apiEnabled || !id || isDemo(id)) return
-    server.view(id).then((d) => { if (typeof d?.views === 'number') setJobStat(id, { views: d.views }) })
+    if (!apiEnabled || !id || isDemo(id)) return Promise.resolve(null)
+    return server.view(id).then((d) => {
+      if (typeof d?.views === 'number') setJobStat(id, { views: d.views })
+      return d
+    })
   }, [setJobStat])
   // «Bog'lanish»: qo'ng'iroq (CALL), Telegram (TELEGRAM) yoki savol (MESSAGE) — admin panel statistikasi uchun
   const contactJob = useCallback((id, kind, text) => {

@@ -266,7 +266,18 @@ export function JobDetail() {
     return () => ctrl.abort()
   }, [ref, listed])
   // ko'rish bir marta (sahifa ochilganda) yuboriladi; takroriy ochishlarni server o'zi saralaydi
-  useEffect(() => { if (id && !job?.own) viewJob(id) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // to'g'ridan-to'g'ri havola bilan ochilgan (ro'yxatda yo'q) vakansiyada sonlar shu yerda yangilanadi
+  const patchLoaded = (jid, patch) => setLoaded((l) => (l && l.id === jid ? { ...l, ...(typeof patch === 'function' ? patch(l) : patch) } : l))
+  useEffect(() => {
+    if (!id || job?.own) return
+    viewJob(id).then((d) => { if (typeof d?.views === 'number') patchLoaded(id, { views: d.views }) })
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const like = () => requireAuth(() => {
+    const jid = job.id
+    const on = !saved.includes(jid)
+    patchLoaded(jid, (l) => ({ likes: Math.max(0, (l.likes || 0) + (on ? 1 : -1)) }))
+    toggleSave(jid).then((r) => { if (typeof r?.likes === 'number') patchLoaded(jid, { likes: r.likes }) })
+  })
   // manzil eski yoki nomi o'zgargan bo'lsa — kanonik manzilga (dublikat sahifa bo'lmasin)
   useEffect(() => {
     if (job?.number && decodeURIComponent(window.location.pathname) !== jobPath(job)) nav(jobPath(job), { replace: true })
@@ -360,7 +371,7 @@ export function JobDetail() {
         <button className="jd-round" onClick={back} aria-label={t('Orqaga')}><ArrowLeft size={20} weight="bold" /></button>
         <h1><Info size={18} weight="fill" /> {t('Vakansiya')}</h1>
         <div className="jd-top-right">
-          <button className={`jd-round ${isSaved ? 'saved' : ''}`} onClick={() => requireAuth(() => toggleSave(job.id))} aria-label={t('Saqlash')} aria-pressed={isSaved}>
+          <button className={`jd-round ${isSaved ? 'saved' : ''}`} onClick={like} aria-label={t('Saqlash')} aria-pressed={isSaved}>
             <Heart size={20} weight={isSaved ? 'fill' : 'bold'} />
           </button>
           <button className="jd-round" onClick={share} aria-label={t('Ulashish')}><Export size={20} weight="bold" /></button>
@@ -392,7 +403,7 @@ export function JobDetail() {
                   {contactPhone ? <Phone size={19} weight="bold" /> : <ChatCircleText size={19} weight="bold" />} {t("Bog'lanish")}
                 </button>
               )}
-              <button type="button" className={`jd-sq ${isSaved ? 'saved' : ''}`} onClick={() => requireAuth(() => toggleSave(job.id))} aria-label={t('Saqlash')} aria-pressed={isSaved}>
+              <button type="button" className={`jd-sq ${isSaved ? 'saved' : ''}`} onClick={like} aria-label={t('Saqlash')} aria-pressed={isSaved}>
                 <Heart size={20} weight={isSaved ? 'fill' : 'bold'} />
               </button>
               <div className="jd-more" ref={menuRef}>
