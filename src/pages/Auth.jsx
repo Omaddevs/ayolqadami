@@ -308,7 +308,7 @@ export default function Auth() {
     }
   }
 
-  const infoOk = form.name.trim().length >= 3 && phoneState === 'ok' && (form.google || pwOk) && (!isEmp || form.company.trim())
+  const infoOk = form.name.trim().length >= 3 && (form.google || phoneState === 'ok') && (form.google || pwOk) && (!isEmp || form.company.trim())
   const canNext = [!!form.role, infoOk, !!form.city, form.categories.length > 0 && form.terms][step - 1]
   // birinchi tanlangan soha — asosiy, qolganlari qo'shimcha (jami MAX_CATS tagacha)
   const toggleCat = (id) => {
@@ -329,11 +329,14 @@ export default function Auth() {
     if (step === 2) {
       if (isEmp && !form.company.trim()) return setErr(t.errCompany)
       if (form.name.trim().length < 3) return setErr(t.errName)
-      if (phoneError()) return setErr(phoneError())
-      if (!apiEnabled && findAccount(form.phone)) return setErr(t.errExists)
-      if (!form.google && !pwOk) return setErr(t.errPass)
-      // raqam egasi ekanini kirish boti orqali tasdiqlaymiz (raqam o'zgarsa — qaytadan)
-      if (apiEnabled && form.verifiedPhone !== form.phone) return setVerifying(true)
+      // Google bilan ro'yxatdan o'tishda raqam va tasdiqlash kodi so'ralmaydi (ariza yozishda so'raladi)
+      if (!form.google) {
+        if (phoneError()) return setErr(phoneError())
+        if (!apiEnabled && findAccount(form.phone)) return setErr(t.errExists)
+        if (!pwOk) return setErr(t.errPass)
+        // raqam egasi ekanini kirish boti orqali tasdiqlaymiz (raqam o'zgarsa — qaytadan)
+        if (apiEnabled && form.verifiedPhone !== form.phone) return setVerifying(true)
+      }
     }
     if (step === STEPS && !form.terms) return setErr(t.errTerms)
     if (step === STEPS && !form.google && !pwOk) { setStep(2); return setErr(t.errPass) }
@@ -343,7 +346,7 @@ export default function Auth() {
     const other = data.categories.includes('other') ? otherCategory.trim() : ''
     setBusy(true)
     const r = await signUp({
-      ...data, name: data.name.trim(), company: data.company.trim(), color: isEmp ? '#6366F6' : '#5B57F0',
+      ...data, ...(form.google && { phone: undefined }), name: data.name.trim(), company: data.company.trim(), color: isEmp ? '#6366F6' : '#5B57F0',
       category: data.categories[0], ...(isEmp && { industry: data.categories[0] }), ...(other && { otherCategory: other }),
     }, form.google ? null : password, form.google ? googleToken : undefined, { phoneToken: phoneToken || undefined, acceptTerms: terms })
     setBusy(false)
@@ -597,7 +600,7 @@ export default function Auth() {
                     )}
                     <label className="aw-field"><span>{isEmp ? t.contact : t.fullName}</span>
                       <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={t.namePh} autoComplete="name" /></label>
-                    <PhoneField label={t.phone} value={form.phone} onChange={(v) => set('phone', v)} t={t} />
+                    {!form.google && <PhoneField label={t.phone} value={form.phone} onChange={(v) => set('phone', v)} t={t} />}
                     {!form.google && (
                       <PasswordField label={t.newPassword} value={form.password} onChange={(v) => set('password', v)} placeholder={t.newPasswordPh} autoComplete="new-password" t={t} />
                     )}

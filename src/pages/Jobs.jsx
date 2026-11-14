@@ -251,7 +251,7 @@ function JobMiniMap({ pos }) {
 export function JobDetail() {
   const { id: ref } = useParams()
   const nav = useNavigate()
-  const { jobsAll, allJobs, user, saved, toggleSave, viewJob, contactJob, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth } = useApp()
+  const { jobsAll, allJobs, user, saved, toggleSave, viewJob, contactJob, applications, apply, notify, hiddenJobs, hiddenCompanies, hideJob, hideCompany, requireAuth, requirePhone } = useApp()
   const t = useT()
   // /jobs/1001-nom (raqam) yoki eski /jobs/<id>; ro'yxatda bo'lmasa — serverdan (to'g'ridan-to'g'ri havola, Google)
   const [loaded, setLoaded] = useState(null) // null — kutilmoqda, false — topilmadi
@@ -343,7 +343,7 @@ export function JobDetail() {
     ...jobFacts(job),
   ]
   const applyBtn = (cls = '') => (
-    <button type="button" className={`btn ${applied ? 'btn-done' : 'btn-primary'} ${cls}`} disabled={applied} onClick={() => requireAuth(() => setOpen(true))}>
+    <button type="button" className={`btn ${applied ? 'btn-done' : 'btn-primary'} ${cls}`} disabled={applied} onClick={() => requirePhone(() => setOpen(true))}>
       {applied ? <><CheckCircle size={19} weight="fill" /> {t('Ariza yuborilgan')}</> : t('Ariza topshirish')}
     </button>
   )
@@ -351,7 +351,7 @@ export function JobDetail() {
   // Har bir urinish admin panel statistikasi uchun yoziladi
   const call = () => contactJob(job.id, 'CALL')
   const writeTg = () => contactJob(job.id, 'TELEGRAM')
-  const contact = () => requireAuth(() => {
+  const contact = () => requirePhone(() => {
     setShowContacts(true)
     // kompyuterda tel: ochilmasligi mumkin — raqam ko'rinib turishi uchun kontaktlar bo'limiga ham o'tamiz
     if (hasContacts) document.getElementById('jd-contacts')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -466,7 +466,7 @@ export function JobDetail() {
                   {contactTg && <a className="btn btn-soft" href={tgHref(contactTg)} target="_blank" rel="noreferrer" onClick={writeTg}><TelegramLogo size={18} weight="fill" /> {contactTg}</a>}
                 </div>
               ) : (
-                <button type="button" className="btn btn-soft" onClick={() => requireAuth(() => setShowContacts(true))}><Phone size={18} weight="fill" /> {t("Kontaktlarni ko'rsatish")}</button>
+                <button type="button" className="btn btn-soft" onClick={() => requirePhone(() => setShowContacts(true))}><Phone size={18} weight="fill" /> {t("Kontaktlarni ko'rsatish")}</button>
               )}
             </section>
           )}
@@ -476,8 +476,8 @@ export function JobDetail() {
               <h3>{t('Ish beruvchiga savol bering')}</h3>
               <p className="jd-note">{t("Savolingiz shu vakansiya bo'yicha murojaat sifatida yuboriladi")}</p>
               <div className="jd-questions">
-                {QUESTIONS.map((q) => <button key={q} type="button" onClick={() => requireAuth(() => setAsk(t(q)))}>{t(q)}</button>)}
-                <button type="button" className="alt" onClick={() => requireAuth(() => setAsk(''))}>{t('Boshqa savol')}</button>
+                {QUESTIONS.map((q) => <button key={q} type="button" onClick={() => requirePhone(() => setAsk(t(q)))}>{t(q)}</button>)}
+                <button type="button" className="alt" onClick={() => requirePhone(() => setAsk(''))}>{t('Boshqa savol')}</button>
               </div>
             </section>
           )}
@@ -554,7 +554,7 @@ export function JobDetail() {
               <Sparkle size={22} weight="fill" />
             </Link>
           )}
-          <button className="jd-cta-main" disabled={applied} onClick={() => requireAuth(() => setOpen(true))}>
+          <button className="jd-cta-main" disabled={applied} onClick={() => requirePhone(() => setOpen(true))}>
             {applied ? <><CheckCircle size={20} weight="fill" /> {t('Ariza yuborilgan')}</> : <>{t('Ariza topshirish')} <PaperPlaneTilt size={19} weight="fill" /></>}
           </button>
         </div>

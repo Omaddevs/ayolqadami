@@ -15,7 +15,7 @@ export const POST = api(async (req) => {
   const input = await body(req, registerSchema)
   if (input.acceptTerms !== true) throw new ApiError(400, 'terms', 'Foydalanish shartlari va maxfiylik siyosatiga rozilik bering')
 
-  if (await db.user.findUnique({ where: { phone: input.phone }, select: { id: true } })) {
+  if (input.phone && (await db.user.findUnique({ where: { phone: input.phone }, select: { id: true } }))) {
     throw new ApiError(409, 'exists', "Bu raqam bilan hisob allaqachon ochilgan. Kirish bo'limidan foydalaning")
   }
 
@@ -26,14 +26,16 @@ export const POST = api(async (req) => {
   }
 
   // raqam egasi ekanligi kirish boti orqali isbotlangan bo'lishi kerak (token bir martalik)
-  if (settings.phoneVerification) await consumePhoneToken(input.phoneToken, input.phone, 'register')
+  // Google hisobi bilan raqamsiz ro'yxatdan o'tish mumkin — raqam keyin (ariza yozishda) qo'shiladi
+  const verify = settings.phoneVerification && !!input.phone
+  if (verify) await consumePhoneToken(input.phoneToken, input.phone!, 'register')
 
   const employer = input.role === 'employer'
   const now = new Date()
   const user = await db.user.create({
     data: {
       role: employer ? 'EMPLOYER' : 'SEEKER',
-      phone: input.phone,
+      phone: input.phone ?? null,
       email,
       googleSub: google?.sub ?? null,
       passwordHash: input.password ? await hashPassword(input.password) : null,
@@ -46,7 +48,7 @@ export const POST = api(async (req) => {
       profile: { skills: [], experience: [], languages: ["O'zbek"], ...(input.otherCategory && { otherCategory: input.otherCategory }) },
       lastLoginAt: now,
       termsAcceptedAt: now,
-      phoneVerifiedAt: settings.phoneVerification ? now : null,
+      phoneVerifiedAt: verify ? now : null,
     },
   })
   return json({ token: await issueToken(user, 'app'), user: userOut(user) }, 201)

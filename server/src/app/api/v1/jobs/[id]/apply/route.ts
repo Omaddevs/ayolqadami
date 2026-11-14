@@ -13,6 +13,7 @@ export const POST = api<Ctx>(async (req, { params }) => {
   const user = await requireApiUser(req, ['SEEKER'])
   rateLimit(`apply:${user.id}`, 60, 24 * 3600_000)
   const { letter } = await body(req, applySchema)
+  if (!user.phone) throw new ApiError(400, 'phone_required', 'Ariza yuborish uchun telefon raqamingizni kiriting')
 
   const job = await db.job.findUnique({ where: { id }, select: { status: true } })
   if (!job || job.status !== 'ACTIVE') throw new ApiError(404, 'not_found', 'Vakansiya topilmadi yoki yopilgan')

@@ -25,7 +25,7 @@ export const registerSchema = z
   .object({
     role: z.enum(['seeker', 'employer']),
     name: str(80).min(3, 'Ism kamida 3 harf'),
-    phone: phoneSchema,
+    phone: phoneSchema.optional(), // Google bilan ro'yxatdan o'tishda — ixtiyoriy (keyin, ariza yozishda so'raladi)
     password: passwordSchema.optional(),
     googleAccessToken: z.string().max(4096).optional(),
     email: z.string().trim().toLowerCase().email().max(120).optional().or(z.literal('')),
@@ -39,8 +39,10 @@ export const registerSchema = z
     acceptTerms: z.boolean().optional(),
   })
   .refine((v) => v.password || v.googleAccessToken, { message: 'Parol kiriting', path: ['password'] })
+  .refine((v) => v.phone || v.googleAccessToken, { message: 'Telefon raqamini kiriting', path: ['phone'] })
   .refine((v) => v.role !== 'employer' || (v.company && v.company.length > 0), { message: 'Kompaniya nomini kiriting', path: ['company'] })
 
+export const setPhoneSchema = z.object({ phone: phoneSchema })
 export const phoneStartSchema = z.object({ phone: phoneSchema, purpose: z.enum(['register', 'reset', 'login']) })
 export const phoneLoginSchema = z.object({ phone: phoneSchema, phoneToken: z.string().min(10).max(2000) })
 export const phoneVerifySchema = z.object({ id: z.string().min(1).max(64), code: z.string().trim().regex(/^\d{6}$/, '6 xonali kod') })

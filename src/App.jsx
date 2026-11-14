@@ -5,6 +5,7 @@ import { Layout } from './components/UI'
 import { useTelegramBackButton } from './lib/telegram'
 import { useDesktop } from './lib/media'
 import Auth from './pages/Auth'
+import PhoneAsk from './components/PhoneAsk'
 import Home from './pages/Home'
 import { applySeo, routeSeo } from './lib/seo'
 import { trackPage } from './lib/analytics'
@@ -127,6 +128,7 @@ export default function App() {
       </Routes>
       </Suspense>
       {authOpen && !user && <Auth />}
+      {user && <PhoneAsk />}
     </>
   )
 }

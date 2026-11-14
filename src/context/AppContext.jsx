@@ -202,6 +202,29 @@ export function AppProvider({ children }) {
     setAuthOpen(true)
     return false
   }, [])
+  // Raqamsiz hisob (Google) vakansiyaga ariza / savol yozmoqchi bo'lsa — avval telefon so'raladi, keyin amal davom etadi
+  const [phoneAsk, setPhoneAsk] = useState(false)
+  const phonePending = useRef(null)
+  const requirePhone = useCallback((fn) => requireAuth((u) => {
+    if (!apiEnabled || u.phone) return fn?.(u)
+    phonePending.current = fn || null
+    setPhoneAsk(true)
+  }), [requireAuth])
+  const closePhoneAsk = useCallback(() => { phonePending.current = null; setPhoneAsk(false) }, [])
+  const savePhone = useCallback(async (phone) => {
+    try {
+      const { user } = await server.setPhone(phone)
+      userRef.current = { ...userRef.current, ...user }
+      setState((s) => ({ ...s, user: { ...s.user, ...user } }))
+      setPhoneAsk(false)
+      const fn = phonePending.current
+      phonePending.current = null
+      if (fn) setTimeout(() => fn(userRef.current), 0)
+      return 'ok'
+    } catch (e) {
+      return e.code || 'error'
+    }
+  }, [])
   const closeAuth = useCallback(() => { pending.current = null; clearAuthDraft(); setAuthOpen(false); setAuthMode('welcome') }, [])
   // Kirish botidagi «Saytga o'tish» / «Ro'yxatdan o'tish» havolalari: ?auth=login|signup|code|reset.
   // Havolasiz, lekin tugallanmagan tasdiqlash bo'lsa (Telegram'dan qaytganda sahifa qayta yuklangan) — oyna o'sha joyidan ochiladi
@@ -425,7 +448,7 @@ export function AppProvider({ children }) {
     [jobsAll, state.hiddenJobs, state.hiddenCompanies],
   )
 
-  const value = { ...state, ...api, viewRole, setViewRole: setAudience, toggleSave, viewJob, contactJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
+  const value = { ...state, ...api, viewRole, setViewRole: setAudience, toggleSave, viewJob, contactJob, setTheme, jobsAll, allJobs, content, notify, notifications: notifs.items, unreadNotifs: notifs.unread, markNotifsRead, toast, authOpen, requireAuth, requirePhone, phoneAsk, savePhone, closePhoneAsk, closeAuth, authMode, signUp, signIn, signInGoogle, signInCode, resetPassword }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

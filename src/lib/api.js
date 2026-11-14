@@ -50,6 +50,7 @@ export const api = {
   google: (accessToken) => request('/auth/google', { method: 'POST', body: { accessToken }, auth: false }),
   me: (signal) => request('/me', { signal }),
   deleteMe: () => request('/me', { method: 'DELETE' }),
+  setPhone: (phone) => request('/me/phone', { method: 'POST', body: { phone } }),
   updateMe: (patch) => fire('/me', { method: 'PATCH', body: patch }),
   jobs: (signal) => request('/jobs?limit=500', { signal, auth: false }),
   job: (ref, signal) => request(`/jobs/${encodeURIComponent(ref)}`, { signal }),
