@@ -17,6 +17,7 @@ export function JobForm({ job, companies, categories }: { job?: Job | null; comp
   const str = (v: unknown) => (v == null ? '' : String(v))
   const chosen = new Set(Array.isArray(det.employment) ? (det.employment as string[]) : [])
   const countIn = (items: string[]) => items.filter((t) => chosen.has(t)).length
+  const contact = (det.contact && typeof det.contact === 'object' ? det.contact : {}) as { name?: string; phone?: string; telegram?: string }
   const allTypes = new Set([...JOB_TYPES, ...EMPLOYMENT_GROUPS.flatMap((g) => g.items)])
   const off = (c: { active: boolean }) => (c.active ? '' : " (o'chirilgan)")
   return (
@@ -68,6 +69,10 @@ export function JobForm({ job, companies, categories }: { job?: Job | null; comp
         </div>
         <div className="field"><label htmlFor="expiresAt">Amal qilish muddati</label><input id="expiresAt" className="input" name="expiresAt" type="date" defaultValue={toDateInput(d?.expiresAt)} /></div>
         <div className="field"><label htmlFor="color">Logotip rangi</label><input id="color" className="input" name="color" type="color" defaultValue={d?.color || '#6366F6'} style={{ height: 40, padding: 4 }} /></div>
+        <div className="field full"><label style={{ fontSize: 13 }}>Aloqa (saytdagi «Bog&apos;lanish» tugmasi)</label></div>
+        <div className="field"><label htmlFor="contactName">Mas&apos;ul shaxs</label><input id="contactName" className="input" name="contactName" defaultValue={contact.name || ''} maxLength={80} placeholder="Ism-familiya" /></div>
+        <div className="field"><label htmlFor="contactPhone">Telefon raqami</label><input id="contactPhone" className="input" name="contactPhone" type="tel" inputMode="tel" defaultValue={contact.phone || ''} maxLength={20} placeholder="+998 90 123 45 67" /></div>
+        <div className="field"><label htmlFor="contactTelegram">Telegram username</label><input id="contactTelegram" className="input" name="contactTelegram" defaultValue={contact.telegram || ''} maxLength={64} placeholder="@username" /><small>Ixtiyoriy. @username yoki t.me/username</small></div>
         <div className="field full">
           <label>Bandlik shartlari (bir nechtasini tanlash mumkin)</label>
           {EMPLOYMENT_GROUPS.map((g) => (

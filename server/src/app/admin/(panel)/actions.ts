@@ -14,6 +14,7 @@ import { splitCategoryChoice } from '@/lib/categories'
 import { findRegion } from '@/lib/regions'
 import { EMPLOYMENT_ALL } from '@/lib/employment'
 import { isMapUrl, resolveJobLocation } from '@/lib/geo'
+import { formatUzPhone, normalizeUzPhone } from '@/lib/phone'
 import { autoPostJob, notifyUser } from '@/lib/telegram/service'
 import { esc } from '@/lib/telegram/format'
 
@@ -109,9 +110,17 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
   const loc = await resolveJobLocation(v)
   if ('error' in loc) return { error: loc.error }
   const employment = f.getAll('employment').map(String).filter((t) => EMPLOYMENT_ALL.has(t))
+  const rawPhone = text(f, 'contactPhone'), rawTg = text(f, 'contactTelegram').replace(/^https?:\/\/(www\.)?t\.me\//i, '').replace(/^@/, '').trim()
+  const phone = rawPhone ? normalizeUzPhone(rawPhone) : null
+  if (rawPhone && !phone) return { error: "Telefon raqami noto'g'ri (masalan: +998 90 123 45 67)" }
+  if (rawTg && !/^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(rawTg)) return { error: "Telegram username noto'g'ri (masalan: @ayolqadami)" }
+  const contactName = text(f, 'contactName').slice(0, 80)
+  const contact = phone || rawTg
+    ? { name: contactName || undefined, phone: phone ? formatUzPhone(phone) : undefined, telegram: rawTg ? '@' + rawTg : undefined, ways: [...(phone ? ['phone'] : []), ...(rawTg ? ['telegram'] : [])] }
+    : undefined
   const geo = v.lat || v.lng ? 'manual' : loc.exact ? 'link' : 'district'
   const locDetails = {
-    address: v.address || undefined, mapUrl: v.mapUrl || undefined, employment,
+    address: v.address || undefined, mapUrl: v.mapUrl || undefined, employment, contact,
     lat: loc.pos?.[0], lng: loc.pos?.[1], geo: loc.pos ? geo : undefined,
   }
 
