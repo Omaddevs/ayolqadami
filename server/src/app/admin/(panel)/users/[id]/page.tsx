@@ -8,6 +8,7 @@ import { dateTime, formatSum, timeAgo } from '@/lib/format'
 import { formatUzPhone } from '@/lib/phone'
 import { Avatar, Badge, Card, Logo, PageHead } from '@/components/ui'
 import { Submit } from '@/components/client'
+import { UserProfileForm } from '@/components/user-profile-form'
 import { blockUser, deleteUser, revokeSessions, setUserRole, unblockUser } from '../../actions'
 
 export const metadata = { title: 'Foydalanuvchi' }
@@ -73,6 +74,11 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
               </>
             ) : null}
           </Card>
+          {canManage && (
+            <Card title="Profil va rezyumeni tahrirlash">
+              <UserProfileForm u={u} />
+            </Card>
+          )}
 
           {u.role === 'EMPLOYER' ? (
             <Card title={`Vakansiyalari (${u._count.jobs})`} href={`/admin/jobs?q=${encodeURIComponent(u.company || u.name)}`}>

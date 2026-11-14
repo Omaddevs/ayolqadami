@@ -14,8 +14,8 @@ const norm = (s) => String(s || '').toLowerCase().replace(/[‘’ʼ`ʻ]/g, "'")
 const vacText = (n) => tr('{n} ta vakansiya', { n })
 
 function useCompanies() {
-  const { allJobs, user } = useApp()
-  return useMemo(() => buildCompanies(allJobs, user), [allJobs, user])
+  const { allJobs, user, content } = useApp()
+  return useMemo(() => buildCompanies(allJobs, user, content.companies), [allJobs, user, content.companies])
 }
 
 export function Companies() {

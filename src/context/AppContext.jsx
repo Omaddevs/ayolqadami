@@ -7,9 +7,7 @@ import { clearAuthDraft, loadAuthDraft } from '../lib/authDraft'
 import { normalizeMode, switchTheme, useThemeEffect } from '../lib/theme'
 import { trackEvent } from '../lib/analytics'
 import { normalizeLang, setLang } from '../i18n'
-import { DEMO_JOBS_ENABLED, buildDemoJobs } from '../data/demoJobs'
 import { syncCategories } from '../data/mock'
-import { DEMO_PASSWORD, DEMO_PHONE, DEMO_USER, demoActivity } from '../data/demoUser'
 
 const KEY = 'ayolkaryera_v1'
 // Oflayn rejim (VITE_API_URL yo'q): yaratilgan hisoblar telefon raqami bo'yicha brauzerda saqlanadi, "Kirish" shu yerdan tiklaydi
@@ -31,17 +29,10 @@ function hashPw(str) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
 }
-// Lokal ishlab chiqishda (oflayn) demo hisob tayyor turadi: src/data/demoUser.js
-if (import.meta.env.DEV && !apiEnabled) {
-  try {
-    if (!findAccount(DEMO_PHONE)) localStorage.setItem(ACC_KEY, JSON.stringify({ ...loadAccounts(), [DEMO_PHONE]: DEMO_USER }))
-    if (!loadPw()[DEMO_PHONE]) localStorage.setItem(PW_KEY, JSON.stringify({ ...loadPw(), [DEMO_PHONE]: hashPw(DEMO_PHONE + DEMO_PASSWORD) }))
-  } catch { /* storage yo'q */ }
-}
 const Ctx = createContext(null)
 
 // Kurslar, maqolalar, tadbirlar, bannerlar va hamkorlar — admin paneldan (API) keladi; sohalar (kategoriyalar) — mock.js CATEGORIES'ga
-const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [], partners: [] }
+const STATIC_CONTENT = { courses: [], articles: [], events: [], banners: [], partners: [], companies: [] }
 const listOr = (v, fallback) => (Array.isArray(v) ? v : fallback)
 const normalizeContent = (d) => ({
   courses: listOr(d?.courses, []),
@@ -49,6 +40,7 @@ const normalizeContent = (d) => ({
   events: listOr(d?.events, []),
   banners: listOr(d?.banners, []),
   partners: listOr(d?.partners, []),
+  companies: listOr(d?.companies, []), // admin paneldagi kompaniya profillari
 })
 
 const initial = {
@@ -83,7 +75,6 @@ function load() {
   }
 }
 
-const isDemo = (id) => String(id).startsWith('demo')
 
 // Kirgan foydalanuvchining bosh sahifasi — /dashboard; landing (/ va /ish-beruvchilar) faqat mehmonlar uchun
 export const HOME_AUTHED = '/dashboard'
@@ -157,7 +148,7 @@ export function AppProvider({ children }) {
       // false — ariza yuborilmadi (chaqiruvchi "yuborildi" deb xabar bermasin)
       apply: (jobId, letter) => {
         if (userRef.current?.role !== 'seeker') return false
-        if (apiEnabled && !isDemo(jobId)) server.apply(jobId, letter)
+        if (apiEnabled) server.apply(jobId, letter)
         trackEvent('apply', { job_id: jobId })
         set((s) => ({
           applications: [{ jobId, letter, date: new Date().toISOString(), status: "Ko'rib chiqilmoqda" }, ...s.applications.filter((a) => a.jobId !== jobId)],
@@ -278,8 +269,6 @@ export function AppProvider({ children }) {
     const saved = loadPw()[digits(phone)]
     if (!saved) return acc.google ? 'google' : 'badpass'
     if (saved !== hashPw(digits(phone) + password)) return 'badpass'
-    // demo hisob: dashboard bo'sh bo'lmasin — arizalar va saqlanganlar (avval bo'lmasa) qo'shiladi
-    if (acc.demo) setState((s) => (s.applications.length || s.saved.length ? s : { ...s, ...demoActivity() }))
     finishAuth(acc)
     return 'ok'
   }, [acceptSession, finishAuth])
@@ -404,7 +393,7 @@ export function AppProvider({ children }) {
     setState((s) => ({ ...s, saved: on ? [...s.saved.filter((x) => x !== id), id] : s.saved.filter((x) => x !== id) }))
     setJobStat(id, (j) => ({ likes: Math.max(0, (j.likes || 0) + (on ? 1 : -1)) }))
     if (on) trackEvent('job_like', { job_id: id })
-    if (!apiEnabled || isDemo(id)) return Promise.resolve({ on })
+    if (!apiEnabled) return Promise.resolve({ on })
     return server.like(id, on).then((d) => {
       if (typeof d?.likes === 'number') setJobStat(id, { likes: d.likes })
       return { on, likes: d?.likes }
@@ -412,7 +401,7 @@ export function AppProvider({ children }) {
   }, [setJobStat])
   // Vakansiya sahifasi ochilganda: server noyob ko'rishni hisoblaydi va joriy sonni qaytaradi
   const viewJob = useCallback((id) => {
-    if (!apiEnabled || !id || isDemo(id)) return Promise.resolve(null)
+    if (!apiEnabled || !id) return Promise.resolve(null)
     return server.view(id).then((d) => {
       if (typeof d?.views === 'number') setJobStat(id, { views: d.views })
       return d
@@ -421,15 +410,13 @@ export function AppProvider({ children }) {
   // «Bog'lanish»: qo'ng'iroq (CALL), Telegram (TELEGRAM) yoki savol (MESSAGE) — admin panel statistikasi uchun
   const contactJob = useCallback((id, kind, text) => {
     trackEvent('job_contact', { job_id: id, kind })
-    if (!apiEnabled || !id || isDemo(id)) return
+    if (!apiEnabled || !id) return
     server.contact(id, kind, text).then((d) => { if (typeof d?.calls === 'number') setJobStat(id, { calls: d.calls, writes: d.writes }) })
   }, [setJobStat])
 
   // jobsAll — hammasi (tafsilot, arizalar uchun); allJobs — yashirilganlarsiz (ro'yxatlar uchun)
   const jobsAll = useMemo(() => {
-    const real = [...state.posted, ...botJobs, ...(serverJobs || [])]
-    // vaqtinchalik: haqiqiy e'lonlar bo'lmasa demo vakansiyalar (src/data/demoJobs.js)
-    const list = real.length || !DEMO_JOBS_ENABLED ? real : buildDemoJobs()
+    const list = [...state.posted, ...botJobs, ...(serverJobs || [])]
     const seen = new Set()
     return list.filter((j) => !seen.has(j.id) && seen.add(j.id)) // o'z vakansiyasi umumiy ro'yxatda ham bor
   }, [state.posted, botJobs, serverJobs])

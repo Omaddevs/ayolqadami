@@ -211,6 +211,44 @@ export async function deleteUser(f: FormData) {
   redirect('/admin/users')
 }
 
+// Foydalanuvchi profili va rezyumesi (admin tahriri). Rezyumening qolgan qismlari (tajriba, ta'lim...) saqlanib qoladi
+const userProfileForm = z.object({
+  name: z.string().trim().min(2, 'ism kamida 2 belgi').max(80),
+  city: z.string().trim().max(60),
+  company: z.string().trim().max(120),
+  headline: z.string().trim().max(120),
+  about: z.string().trim().max(3000),
+  skills: z.string().trim().max(1000),
+  salary: z.coerce.number().int().min(0).max(2_000_000_000),
+})
+
+export async function saveUserProfile(_: FormState, f: FormData): Promise<FormState> {
+  const admin = await requireAdmin()
+  let t
+  try { t = await guardTarget(getId(f), admin.id, admin.role) } catch (e) { return { error: (e as Error).message } }
+  const parsed = userProfileForm.safeParse(Object.fromEntries(f))
+  if (!parsed.success) return { error: firstError(parsed.error) }
+  const v = parsed.data
+  const prev = (t.profile && typeof t.profile === 'object' && !Array.isArray(t.profile) ? t.profile : {}) as Record<string, unknown>
+  const skills = list(v.skills).slice(0, 40)
+  const prevDetail = Array.isArray(prev.skillsDetail) ? (prev.skillsDetail as { name: string }[]) : []
+  const profile = {
+    ...prev,
+    headline: v.headline || undefined, about: v.about || undefined, salary: v.salary || undefined, skills,
+    skillsDetail: skills.map((name) => prevDetail.find((d) => d.name === name) || { name }),
+  }
+  if (f.get('clearResume') === 'on') {
+    for (const k of ['headline', 'about', 'salary', 'skills', 'skillsDetail', 'experience', 'education', 'languages', 'courses']) delete (profile as Record<string, unknown>)[k]
+  }
+  await db.user.update({
+    where: { id: t.id },
+    data: { name: v.name, city: v.city || null, company: v.company || null, profile: JSON.parse(JSON.stringify(profile)) as Prisma.InputJsonObject },
+  })
+  await audit(admin.id, f.get('clearResume') === 'on' ? 'user.resume.clear' : 'user.profile', 'user', t.id)
+  revalidatePath('/admin', 'layout')
+  return { ok: f.get('clearResume') === 'on' ? 'Rezyume tozalandi' : 'Profil saqlandi' }
+}
+
 // ================= Arizalar =================
 
 export async function setApplicationStatus(f: FormData) {

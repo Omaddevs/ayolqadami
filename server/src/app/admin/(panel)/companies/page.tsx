@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import type { Prisma } from '@prisma/client'
-import { BadgeCheck, Pencil, Plus } from 'lucide-react'
+import { BadgeCheck, Pencil, Plus, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
+import { getAdmin } from '@/lib/auth'
 import { Badge, Card, Empty, Logo, PageHead, SearchBox, sp, type SearchParams } from '@/components/ui'
 import { Submit } from '@/components/client'
-import { toggleCompanyVerified } from '../actions'
+import { deleteCompany, toggleCompanyVerified } from '../actions'
 
 export const metadata = { title: 'Kompaniyalar' }
 
@@ -16,6 +17,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Se
     db.company.findMany({ where, orderBy: { name: 'asc' } }),
     db.job.groupBy({ by: ['companyName', 'status'], _count: true }),
   ])
+  const isAdmin = (await getAdmin())?.role === 'ADMIN'
   const stat = (name: string, status?: string) =>
     jobStats.filter((s) => s.companyName === name && (!status || s.status === status)).reduce((n, s) => n + s._count, 0)
 
@@ -51,6 +53,9 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Se
                           <Submit className="btn sm" title={c.verified ? 'Belgini olib tashlash' : 'Tasdiqlash'}><BadgeCheck size={14} />{c.verified ? 'Olib tashlash' : 'Tasdiqlash'}</Submit>
                         </form>
                         <Link className="btn sm icon" href={`/admin/companies/${c.id}`} aria-label="Tahrirlash"><Pencil size={14} /></Link>
+                        {isAdmin && (
+                          <form action={deleteCompany}><input type="hidden" name="id" value={c.id} /><Submit className="btn sm icon danger" title="O'chirish" confirm={`«${c.name}» kompaniya profili o'chiriladi (vakansiyalari qoladi). Davom etasizmi?`}><Trash2 size={14} /></Submit></form>
+                        )}
                       </div>
                     </td>
                   </tr>

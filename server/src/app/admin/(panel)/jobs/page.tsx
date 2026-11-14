@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import type { Prisma } from '@prisma/client'
-import { Archive, Check, Download, Pencil, Plus, X } from 'lucide-react'
+import { Archive, Check, Download, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 import { db } from '@/lib/db'
+import { getAdmin } from '@/lib/auth'
 import { CATEGORIES, JOB_STATUS, catName } from '@/lib/catalog'
 import { salaryText, timeAgo } from '@/lib/format'
 import { Badge, Card, Empty, Logo, PageHead, Pager, SearchBox, Tabs, pageOf, qs, sp, type SearchParams } from '@/components/ui'
 import { Submit } from '@/components/client'
-import { approveJob, archiveJob, rejectJob } from '../actions'
+import { approveJob, archiveJob, deleteJob, rejectJob } from '../actions'
 
 export const metadata = { title: 'Vakansiyalar' }
 const LIMIT = 20
@@ -42,6 +43,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
     db.job.groupBy({ by: ['status'], where: base, _count: true }),
   ])
   const now = new Date()
+  const isAdmin = (await getAdmin())?.role === 'ADMIN' // o'chirish — faqat administrator
   const n = (s: string) => counts.find((c) => c.status === s)?._count ?? 0
   const all = counts.reduce((a, c) => a + c._count, 0)
   const link = (o: Record<string, string | number | undefined>) => `/admin/jobs${qs({ status, q, category, sort, ...o })}`
@@ -113,7 +115,13 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
                         {j.status === 'ACTIVE' && (
                           <form action={archiveJob}><input type="hidden" name="id" value={j.id} /><Submit className="btn sm icon" title="Arxivlash" confirm="Vakansiya saytdan olib tashlanadi. Davom etasizmi?"><Archive size={14} /></Submit></form>
                         )}
+                        {(j.status === 'ARCHIVED' || j.status === 'REJECTED' || (j.status === 'ACTIVE' && j.expiresAt && j.expiresAt <= now)) && (
+                          <form action={approveJob}><input type="hidden" name="id" value={j.id} /><Submit className="btn sm green" title="Saytga qayta joylash (30 kunga)"><Upload size={14} /> Joylash</Submit></form>
+                        )}
                         <Link className="btn sm icon" href={`/admin/jobs/${j.id}`} aria-label="Tahrirlash" title="Tahrirlash"><Pencil size={14} /></Link>
+                        {isAdmin && (
+                          <form action={deleteJob}><input type="hidden" name="id" value={j.id} /><Submit className="btn sm icon danger" title="O'chirish" confirm={`«${j.title}» va unga tegishli barcha arizalar butunlay o'chiriladi. Davom etasizmi?`}><Trash2 size={14} /></Submit></form>
+                        )}
                       </div>
                     </td>
                   </tr>

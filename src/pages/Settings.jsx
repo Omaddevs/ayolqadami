@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ArrowsLeftRight, Bell, CalendarBlank, Check, CircleHalf, EyeSlash, FileText, Info, PencilSimple, ShieldCheck, SignOut, SquaresFour, Translate, Trash, UserCircle, WarningCircle,
+  Bell, CalendarBlank, Check, CircleHalf, EyeSlash, FileText, Info, PencilSimple, ShieldCheck, SignOut, SquaresFour, Translate, Trash, UserCircle, WarningCircle,
 } from '@phosphor-icons/react'
 import { Avatar, CompanyLogo, Empty, Sheet, THEME_OPTIONS, TopBar } from '../components/UI'
 import { useApp } from '../context/AppContext'
@@ -104,7 +104,7 @@ export function Settings() {
 }
 
 export function AccountSettings() {
-  const { user, switchRole, notify, logout } = useApp()
+  const { user, notify, logout } = useApp()
   const t = useT()
   // Shaxsiy ma'lumotlar qonuni: foydalanuvchi hisobini va ma'lumotlarini o'zi o'chira oladi
   const removeAccount = async () => {
@@ -143,11 +143,6 @@ export function AccountSettings() {
             { label: isEmp ? t('Mening vakansiyalarim') : t('Mening arizalarim'), icon: SquaresFour, to: '/applications' },
             { label: t('Tadbirlar'), icon: CalendarBlank, to: '/events' },
           ],
-          // demo rejimdagina: serverda rol ro'yxatdan o'tishda belgilanadi
-          ...(apiEnabled ? [] : [[{
-            label: t('Rolni almashtirish (demo)'), icon: ArrowsLeftRight,
-            onClick: () => { switchRole(); notify(isEmp ? t('Ish izlovchi rejimi') : t('Ish beruvchi rejimi')) },
-          }]]),
           [
             { label: t('Maxfiylik siyosati'), icon: ShieldCheck, to: '/privacy' },
             { label: t('Foydalanish shartlari'), icon: FileText, to: '/terms' },

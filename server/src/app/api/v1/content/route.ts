@@ -8,19 +8,20 @@ import { publicOrigin } from '@/lib/media'
 
 export const dynamic = 'force-dynamic'
 
-// Kurslar, maqolalar, tadbirlar, bannerlar, hamkorlar va kategoriyalar — web ilova bitta so'rovda oladi (admin paneldan boshqariladi)
+// Kurslar, maqolalar, tadbirlar, bannerlar, hamkorlar, kategoriyalar va kompaniya profillari — web ilova bitta so'rovda oladi (admin paneldan boshqariladi)
 export const GET = api(async (req) => {
-  const [courses, articles, events, banners, partners, categories] = await Promise.all([
+  const [courses, articles, events, banners, partners, categories, companies] = await Promise.all([
     db.course.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }] }),
     db.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }] }),
     db.event.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ startsAt: 'asc' }, { createdAt: 'asc' }] }),
     activeBanners(),
     activePartners(),
     categoryTree(true),
+    db.company.findMany({ orderBy: { name: 'asc' }, select: { name: true, color: true, about: true, size: true, since: true, verified: true } }),
   ])
   const origin = publicOrigin(req)
   return json(
-    { courses: courses.map(courseOut), articles: articles.map(articleOut), events: events.map(eventOut), banners: banners.map((b) => bannerOut(b, origin)), partners: partners.map((x) => partnerOut(x, origin)), categories: categories.map(categoryOut) },
+    { courses: courses.map(courseOut), articles: articles.map(articleOut), events: events.map(eventOut), banners: banners.map((b) => bannerOut(b, origin)), partners: partners.map((x) => partnerOut(x, origin)), categories: categories.map(categoryOut), companies },
     { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
   )
 })
