@@ -85,7 +85,7 @@ export default async function BotSettingsPage() {
                   <option value="120">Har 2 soatda</option>
                   <option value="180">Har 3 soatda</option>
                 </select>
-                <small>Yangi vakansiyalar navbatga tushadi va shu oraliqda barcha kanallarga tugmalari bilan birga chiqadi</small>
+                <small>Vakansiyalar navbatga tushadi va shu oraliqda bittadan (eng eskisidan boshlab) barcha kanallarga tugmalari bilan chiqadi. Navbatga so&apos;nggi 3 kundagi vakansiyalar kiradi</small>
               </div>
               <label className="check"><input type="checkbox" name="supportViaBot" defaultChecked={cfg.supportViaBot} /> Botga yozilgan xabarlar «Murojaatlar»ga tushsin</label>
               <div className="field full">

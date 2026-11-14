@@ -87,7 +87,7 @@ export const channelMatchesJob = (c: Pick<TelegramChannel, 'categories' | 'citie
  * Vakansiyani kanallarga yuborish.
  * channelIds berilmasa — avtomatik rejim: autoPost yoqilgan, filtri mos va bu vakansiya hali yuborilmagan kanallar.
  */
-export async function postJobToChannels(jobId: string, opts: { channelIds?: string[]; authorId?: string | null } = {}) {
+export async function postJobToChannels(jobId: string, opts: { channelIds?: string[]; authorId?: string | null; skipAttempted?: boolean } = {}) {
   const cfg = await getTelegramConfig()
   if (!cfg.token) return { sent: 0, failed: 0, skipped: 'Bot ulanmagan' }
   const job = await db.job.findUnique({ where: { id: jobId } })
@@ -98,7 +98,7 @@ export async function postJobToChannels(jobId: string, opts: { channelIds?: stri
     channels = await db.telegramChannel.findMany({ where: { id: { in: opts.channelIds }, active: true } })
   } else {
     if (!cfg.autoPostJobs) return { sent: 0, failed: 0, skipped: "Avtomatik yuborish o'chirilgan" }
-    const already = new Set((await db.telegramPost.findMany({ where: { jobId, status: 'SENT' }, select: { channelId: true } })).map((p) => p.channelId))
+    const already = new Set((await db.telegramPost.findMany({ where: { jobId, ...(!opts.skipAttempted && { status: 'SENT' as const }) }, select: { channelId: true } })).map((p) => p.channelId))
     channels = (await db.telegramChannel.findMany({ where: { active: true, autoPost: true } })).filter((c) => !already.has(c.id) && channelMatchesJob(c, job))
   }
 
@@ -128,23 +128,23 @@ export async function autoPostJob(jobId: string): Promise<{ sent: number; failed
   }
 }
 
-// Navbatdagi vakansiyalar: so'nggi 3 kunda chiqqan faol vakansiyalar — har biri hali yuborilmagan mos kanallarga.
-// Eski vakansiyalar (navbat yoqilishidan oldingi) kanallarga to'kilib ketmasligi uchun 3 kun bilan cheklangan
+// Navbat: har aylanishda BITTA vakansiya — eng eskisidan boshlab, hali yuborilmagan mos kanallarga.
+// Kecha-bugungi vakansiyalar soatma-soat ketma-ket chiqadi, yangi qo'shilgani navbat oxiriga tushadi.
+// Urinib ko'rilgan (xato bo'lgan) kanalga qayta yuborilmaydi — bitta buzuq kanal navbatni to'xtatib qo'ymasligi uchun.
+// Eski vakansiyalar kanallarga to'kilib ketmasligi uchun so'nggi 3 kun bilan cheklangan
 export async function postQueuedJobs() {
   const cfg = await getTelegramConfig()
   if (!cfg.token || !cfg.autoPostJobs) return { jobs: 0, sent: 0, failed: 0 }
   const since = new Date(Date.now() - 3 * 86400_000)
   const jobs = await db.job.findMany({
     where: { status: 'ACTIVE', publishedAt: { gte: since }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
-    orderBy: { publishedAt: 'asc' }, select: { id: true }, take: 50,
+    orderBy: { publishedAt: 'asc' }, select: { id: true }, take: 200,
   })
-  let sent = 0, failed = 0, posted = 0
   for (const j of jobs) {
-    const r = await postJobToChannels(j.id)
-    if (r.sent || r.failed) posted++
-    sent += r.sent; failed += r.failed
+    const r = await postJobToChannels(j.id, { skipAttempted: true })
+    if (r.sent || r.failed) return { jobs: 1, sent: r.sent, failed: r.failed }
   }
-  return { jobs: posted, sent, failed }
+  return { jobs: 0, sent: 0, failed: 0 }
 }
 
 // buttons — "Matn | havola | rang" qatorlari (admin paneldagi tugmalar muharriri)

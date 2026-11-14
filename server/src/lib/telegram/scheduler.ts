@@ -1,5 +1,5 @@
 // Kanal postlari navbati: har daqiqada tekshiradi, sozlamadagi oraliq (postIntervalMin) o'tgan bo'lsa —
-// navbatdagi vakansiyalarni barcha mos kanallarga yuboradi. Oxirgi ishga tushish vaqti bazada (server qayta ishga tushsa ham saqlanadi)
+// navbatdagi bitta vakansiyani barcha mos kanallarga yuboradi. Oxirgi ishga tushish vaqti bazada (server qayta ishga tushsa ham saqlanadi)
 import { db } from '../db'
 import { getTelegramConfig } from './config'
 import { postQueuedJobs } from './service'
@@ -13,9 +13,11 @@ async function tick() {
   const row = await db.setting.findUnique({ where: { key: KEY } })
   const last = Number((row?.value as { lastRunAt?: number } | null)?.lastRunAt) || 0
   if (Date.now() - last < cfg.postIntervalMin * 60_000) return
-  await db.setting.upsert({ where: { key: KEY }, create: { key: KEY, value: { lastRunAt: Date.now() } }, update: { value: { lastRunAt: Date.now() } } })
   const r = await postQueuedJobs()
-  if (r.jobs) console.log(`[telegram] navbat: ${r.jobs} vakansiya, ${r.sent} post yuborildi, ${r.failed} xato`)
+  // vaqt faqat post chiqqanda belgilanadi: navbat bo'sh bo'lsa, yangi vakansiya bir daqiqa ichida chiqadi, keyingisi — oraliqdan keyin
+  if (!r.jobs) return
+  await db.setting.upsert({ where: { key: KEY }, create: { key: KEY, value: { lastRunAt: Date.now() } }, update: { value: { lastRunAt: Date.now() } } })
+  console.log(`[telegram] navbat: 1 vakansiya, ${r.sent} kanalga yuborildi, ${r.failed} xato`)
 }
 
 export function startPostScheduler() {
