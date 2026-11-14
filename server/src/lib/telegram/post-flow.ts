@@ -286,7 +286,7 @@ async function submitDraft(cfg: TelegramConfig, chatId: number, from: TgUser, d:
   await saveDraft(String(from.id), null)
   if (job.status === 'ACTIVE') {
     const r = await autoPostJob(job.id)
-    return send(cfg, chatId, `✅ <b>E'lon joylandi!</b>${r.sent ? `\n\n${r.sent} ta kanalga yuborildi.` : ''}\n\nYana bittasi: /post`)
+    return send(cfg, chatId, `✅ <b>E'lon joylandi!</b>${r.sent ? `\n\n${r.sent} ta kanalga yuborildi.` : r.queued ? '\n\nYaqin soat ichida kanallarda chiqadi.' : ''}\n\nYana bittasi: /post`)
   }
   return send(cfg, chatId, `✅ <b>E'lon qabul qilindi!</b>\n\n«${esc(job.title)}» (${esc(catName(job.category))}) moderatsiyaga yuborildi. Tasdiqlangach kanal(lar)da va saytda chiqadi — sizga shu yerda xabar beramiz.\n\nYana bittasi: /post`)
 }

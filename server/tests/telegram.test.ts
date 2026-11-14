@@ -52,12 +52,20 @@ test('kanal posti: skrinshotdagi format, telefon va qisqa havola', () => {
 })
 
 test('rangli tugmalar', () => {
-  const kb = jobKeyboard({ id: 'abc', number: 1001, title: 'Dasturchi', city: 'Toshkent' }, { webAppUrl: 'https://ayolqadami.uz', botUsername: 'ayolqadami_bot', channelButtons: DEFAULT_CHANNEL_BUTTONS })!
+  const cfg = { webAppUrl: 'https://ayolqadami.uz', publicUrl: 'https://api.ayolqadami.uz', botUsername: 'ayolqadami_bot', channelButtons: DEFAULT_CHANNEL_BUTTONS }
+  const contact = { contact: { phone: '+998 50 455 08 51', telegram: '@MioBeautyHR', ways: ['phone', 'telegram'] } }
+  const kb = jobKeyboard({ id: 'abc', number: 1001, title: 'Dasturchi', city: 'Toshkent', details: contact }, cfg)!
   assert.deepEqual(kb.inline_keyboard, [
+    [{ text: '✅ Ishlamoqchiman', url: 'https://api.ayolqadami.uz/l/1001', style: 'success' }],
+    [{ text: '📞 +998 50 455 08 51', url: 'https://api.ayolqadami.uz/call/1001', style: 'primary' }],
+    [{ text: '✍️ Murojaat qilish', url: 'https://t.me/MioBeautyHR', style: 'primary' }],
     [{ text: "📢 E'lon joylash / Разместить вакансию", url: 'https://t.me/ayolqadami_bot?start=post', style: 'primary' }],
     [{ text: '📂 Ish kanallari / Каналы с вакансиями', url: 'https://t.me/addlist/URvgf3qbEus5ZDcy', style: 'danger' }],
     [{ text: '💼 Website AyolQadami', url: 'https://ayolqadami.uz', style: 'success' }],
   ])
+  // kontaktsiz vakansiya — faqat «Ishlamoqchiman» va umumiy tugmalar
+  const plain = jobKeyboard({ id: 'abc', number: 1001, title: 'Dasturchi', city: 'Toshkent', details: {} }, cfg)!
+  assert.equal(plain.inline_keyboard.length, 4)
   const b = parseChannelButtons('A | https://t.me/addlist/x | qizil\nB | {job} |\n# izoh | https://x.uz | red\nC | javascript:x | green', { job: 'https://s.uz/jobs/1' })
   assert.deepEqual(b, [{ text: 'A', url: 'https://t.me/addlist/x', style: 'danger' }, { text: 'B', url: 'https://s.uz/jobs/1' }])
 })

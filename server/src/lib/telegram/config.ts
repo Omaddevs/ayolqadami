@@ -16,6 +16,7 @@ export type TelegramConfig = {
   webAppUrl: string // web ilova manzili — vakansiya havolalari va "Ilovani ochish" tugmasi
   welcomeText: string
   autoPostJobs: boolean // tasdiqlangan vakansiya avtomatik kanallarga
+  postIntervalMin: number // 0 — darhol; aks holda yangi vakansiyalar navbatga tushib, har N daqiqada birga yuboriladi
   supportViaBot: boolean // botga yozilgan matn murojaat sifatida admin panelga tushadi
   jobFooter: string // kanal postlari oxiridagi matn (masalan, kanal havolasi)
   channelButtons: string // kanal postlari ostidagi rangli tugmalar: "Matn | havola | rang" har qatorda
@@ -32,6 +33,7 @@ const DEFAULTS: TelegramConfig = {
   welcomeText:
     "Assalomu alaykum, {name}! 👋\n\nAyolQadami — ayollar uchun ish, rezyume va o'quv kurslari platformasi.\n\n/jobs — so'nggi vakansiyalar\n/help — yordam\n\nSavolingiz bo'lsa, shu yerga yozing — operatorlarimiz javob berishadi.",
   autoPostJobs: true,
+  postIntervalMin: 60,
   supportViaBot: true,
   jobFooter: '',
   channelButtons: DEFAULT_CHANNEL_BUTTONS,

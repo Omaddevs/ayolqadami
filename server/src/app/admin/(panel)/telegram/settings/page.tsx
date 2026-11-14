@@ -76,6 +76,17 @@ export default async function BotSettingsPage() {
                 <small>Vakansiya havolalari va «Ilovani ochish» (Mini App) tugmasi uchun</small>
               </div>
               <label className="check"><input type="checkbox" name="autoPostJobs" defaultChecked={cfg.autoPostJobs} /> Tasdiqlangan vakansiyalarni kanallarga avtomatik yuborish</label>
+              <div className="field">
+                <label htmlFor="postIntervalMin">Kanallarga yuborish oralig&apos;i</label>
+                <select id="postIntervalMin" className="select" name="postIntervalMin" defaultValue={String(cfg.postIntervalMin)}>
+                  <option value="0">Darhol (tasdiqlanishi bilan)</option>
+                  <option value="30">Har 30 daqiqada</option>
+                  <option value="60">Har soatda</option>
+                  <option value="120">Har 2 soatda</option>
+                  <option value="180">Har 3 soatda</option>
+                </select>
+                <small>Yangi vakansiyalar navbatga tushadi va shu oraliqda barcha kanallarga tugmalari bilan birga chiqadi</small>
+              </div>
               <label className="check"><input type="checkbox" name="supportViaBot" defaultChecked={cfg.supportViaBot} /> Botga yozilgan xabarlar «Murojaatlar»ga tushsin</label>
               <div className="field full">
                 <label htmlFor="welcomeText">/start salomlashuvi</label>

@@ -115,12 +115,36 @@ export async function postJobToChannels(jobId: string, opts: { channelIds?: stri
   return { sent, failed }
 }
 
-// Avtomatik yuborish xatosi asosiy amalni (tasdiqlash) to'xtatmasligi kerak
-export function autoPostJob(jobId: string) {
-  return postJobToChannels(jobId).catch((e) => {
+// Avtomatik yuborish xatosi asosiy amalni (tasdiqlash) to'xtatmasligi kerak.
+// Navbat yoqilgan bo'lsa (postIntervalMin > 0) — hozir yuborilmaydi, keyingi soatlik aylanishda chiqadi
+export async function autoPostJob(jobId: string): Promise<{ sent: number; failed: number; queued?: boolean }> {
+  try {
+    const cfg = await getTelegramConfig()
+    if (cfg.postIntervalMin > 0) return { sent: 0, failed: 0, queued: cfg.autoPostJobs && !!cfg.token }
+    return await postJobToChannels(jobId)
+  } catch (e) {
     console.error('[telegram] autopost', jobId, e)
     return { sent: 0, failed: 0 }
+  }
+}
+
+// Navbatdagi vakansiyalar: so'nggi 3 kunda chiqqan faol vakansiyalar — har biri hali yuborilmagan mos kanallarga.
+// Eski vakansiyalar (navbat yoqilishidan oldingi) kanallarga to'kilib ketmasligi uchun 3 kun bilan cheklangan
+export async function postQueuedJobs() {
+  const cfg = await getTelegramConfig()
+  if (!cfg.token || !cfg.autoPostJobs) return { jobs: 0, sent: 0, failed: 0 }
+  const since = new Date(Date.now() - 3 * 86400_000)
+  const jobs = await db.job.findMany({
+    where: { status: 'ACTIVE', publishedAt: { gte: since }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+    orderBy: { publishedAt: 'asc' }, select: { id: true }, take: 50,
   })
+  let sent = 0, failed = 0, posted = 0
+  for (const j of jobs) {
+    const r = await postJobToChannels(j.id)
+    if (r.sent || r.failed) posted++
+    sent += r.sent; failed += r.failed
+  }
+  return { jobs: posted, sent, failed }
 }
 
 // buttons — "Matn | havola | rang" qatorlari (admin paneldagi tugmalar muharriri)

@@ -155,8 +155,27 @@ export function buttonsKeyboard(src: string, cfg: Pick<TelegramConfig, 'webAppUr
   return buttons.length ? colorizeKeyboard({ inline_keyboard: buttons.map((b) => [b]) }) : undefined
 }
 
-export const jobKeyboard = (job: Pick<Job, 'id' | 'number' | 'title' | 'city'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername' | 'channelButtons'>) =>
-  buttonsKeyboard(cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS, cfg, job)
+// Vakansiyaning o'z tugmalari (umumiy tugmalardan oldin): ✅ Ishlamoqchiman — vakansiya sahifasi,
+// 📞 telefon — /call/:raqam orqali qo'ng'iroq (Telegram tugmasida tel: havola ishlamaydi), ✍️ Murojaat qilish — ish beruvchining Telegrami
+export function jobOwnButtons(job: Pick<Job, 'id' | 'number' | 'title' | 'city' | 'details'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'publicUrl'>): TgButton[] {
+  const out: TgButton[] = []
+  const link = jobShareUrl(job, cfg)
+  if (/^https?:\/\//.test(link)) out.push({ text: '✅ Ishlamoqchiman', url: link, style: 'success' })
+  const c = jobContact(job)
+  const digits = (c.phone || '').replace(/\D/g, '')
+  if (/^998\d{9}$/.test(digits) && /^https:\/\//.test(cfg.publicUrl)) {
+    out.push({ text: `📞 ${c.phone}`, url: `${cfg.publicUrl.replace(/\/$/, '')}/call/${job.number}`, style: 'primary' })
+  }
+  const tgUser = c.telegram?.replace(/^@/, '').trim()
+  if (tgUser && /^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(tgUser)) out.push({ text: '✍️ Murojaat qilish', url: `https://t.me/${tgUser}`, style: 'primary' })
+  return out
+}
+
+export const jobKeyboard = (job: Pick<Job, 'id' | 'number' | 'title' | 'city' | 'details'>, cfg: Pick<TelegramConfig, 'webAppUrl' | 'publicUrl' | 'botUsername' | 'channelButtons'>) => {
+  const common = buttonsKeyboard(cfg.channelButtons ?? DEFAULT_CHANNEL_BUTTONS, cfg, job)?.inline_keyboard ?? []
+  const rows = [...jobOwnButtons(job, cfg).map((b) => [b]), ...common]
+  return rows.length ? { inline_keyboard: rows } : undefined
+}
 
 // Qo'lda yozilgan post/tarqatma tugmalari. Eski tarqatmalarda bitta tugma (buttonText/buttonUrl) saqlangan
 export function customKeyboard(cfg: Pick<TelegramConfig, 'webAppUrl' | 'botUsername'>, buttons?: string | null, text?: string | null, url?: string | null) {

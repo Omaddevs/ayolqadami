@@ -1,6 +1,7 @@
 // Server ishga tushganda bir marta bajariladi:
 //  • asosiy Telegram bot polling rejimi (admin panelda yoqilgan bo'lsa)
 //  • kirish boti (TELEGRAM_LOGIN_BOT_TOKEN berilgan bo'lsa) — telefonni tasdiqlash kodlari
+//  • kanal postlari navbati (har soatda yangi vakansiyalar barcha kanallarga)
 //  • birinchi administrator (ADMIN_PHONE + ADMIN_PASSWORD berilgan bo'lsa)
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
@@ -12,5 +13,7 @@ export async function register() {
     startPoller()
     const { startLoginPoller } = await import('./lib/login-bot')
     startLoginPoller()
+    const { startPostScheduler } = await import('./lib/telegram/scheduler')
+    startPostScheduler()
   }
 }

@@ -34,6 +34,7 @@ const settingsForm = z.object({
   welcomeText: z.string().trim().min(1, 'salomlashuv matnini kiriting').max(3000),
   jobFooter: z.string().trim().max(500),
   channelButtons: z.string().trim().max(2000).default(''),
+  postIntervalMin: z.coerce.number().int().min(0).max(1440).default(60),
 })
 
 export async function saveBotSettings(_: FormState, f: FormData): Promise<FormState> {
@@ -45,7 +46,7 @@ export async function saveBotSettings(_: FormState, f: FormData): Promise<FormSt
   const patch: Parameters<typeof saveTelegramConfig>[0] = {
     mode: v.mode as BotMode, publicUrl: v.publicUrl.replace(/\/$/, ''), webAppUrl: v.webAppUrl.replace(/\/$/, ''),
     welcomeText: v.welcomeText, jobFooter: v.jobFooter, channelButtons: v.channelButtons,
-    autoPostJobs: f.get('autoPostJobs') === 'on', supportViaBot: f.get('supportViaBot') === 'on',
+    autoPostJobs: f.get('autoPostJobs') === 'on', postIntervalMin: v.postIntervalMin, supportViaBot: f.get('supportViaBot') === 'on',
   }
 
   // Yangi token — avval Telegram orqali tekshiriladi
