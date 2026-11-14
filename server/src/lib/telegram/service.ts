@@ -83,6 +83,12 @@ export async function postToChannel(cfg: TelegramConfig, channel: TelegramChanne
 export const channelMatchesJob = (c: Pick<TelegramChannel, 'categories' | 'cities'>, job: Pick<Job, 'category' | 'city'>) =>
   (!c.categories.length || c.categories.includes(job.category)) && (!c.cities.length || c.cities.includes(job.city))
 
+// Faqat e'lon qo'shishda «Telegram kanalga joylash» belgilangan vakansiyalar avtomatik kanallarga ketadi
+const wantsChannel = (job: Pick<Job, 'details'>) => {
+  const d = job.details
+  return !!d && typeof d === 'object' && !Array.isArray(d) && (d as Record<string, unknown>).postToChannel === true
+}
+
 /**
  * Vakansiyani kanallarga yuborish.
  * channelIds berilmasa — avtomatik rejim: autoPost yoqilgan, filtri mos va bu vakansiya hali yuborilmagan kanallar.
@@ -98,6 +104,7 @@ export async function postJobToChannels(jobId: string, opts: { channelIds?: stri
     channels = await db.telegramChannel.findMany({ where: { id: { in: opts.channelIds }, active: true } })
   } else {
     if (!cfg.autoPostJobs) return { sent: 0, failed: 0, skipped: "Avtomatik yuborish o'chirilgan" }
+    if (!wantsChannel(job)) return { sent: 0, failed: 0, skipped: 'Kanalga joylash belgilanmagan' }
     const already = new Set((await db.telegramPost.findMany({ where: { jobId, ...(!opts.skipAttempted && { status: 'SENT' as const }) }, select: { channelId: true } })).map((p) => p.channelId))
     channels = (await db.telegramChannel.findMany({ where: { active: true, autoPost: true } })).filter((c) => !already.has(c.id) && channelMatchesJob(c, job))
   }
@@ -137,7 +144,7 @@ export async function postQueuedJobs() {
   if (!cfg.token || !cfg.autoPostJobs) return { jobs: 0, sent: 0, failed: 0 }
   const since = new Date(Date.now() - 3 * 86400_000)
   const jobs = await db.job.findMany({
-    where: { status: 'ACTIVE', publishedAt: { gte: since }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+    where: { status: 'ACTIVE', publishedAt: { gte: since }, details: { path: ['postToChannel'], equals: true }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
     orderBy: { publishedAt: 'asc' }, select: { id: true }, take: 200,
   })
   for (const j of jobs) {

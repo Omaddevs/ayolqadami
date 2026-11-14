@@ -68,6 +68,7 @@ export function JobForm({ job, companies, categories }: { job?: Job | null; comp
           </select>
         </div>
         <div className="field"><label htmlFor="expiresAt">Amal qilish muddati</label><input id="expiresAt" className="input" name="expiresAt" type="date" defaultValue={toDateInput(d?.expiresAt)} /></div>
+        <div className="field"><label className="check" style={{ marginTop: 28 }}><input type="checkbox" name="postToChannel" defaultChecked={det.postToChannel === true} /> Telegram kanalga joylash</label><small>Belgilansa — vakansiya navbat bilan kanallarga yuboriladi</small></div>
         <div className="field"><label htmlFor="color">Logotip rangi</label><input id="color" className="input" name="color" type="color" defaultValue={d?.color || '#6366F6'} style={{ height: 40, padding: 4 }} /></div>
         <div className="field full"><label style={{ fontSize: 13 }}>Aloqa (saytdagi «Bog&apos;lanish» tugmasi)</label></div>
         <div className="field"><label htmlFor="contactName">Mas&apos;ul shaxs</label><input id="contactName" className="input" name="contactName" defaultValue={contact.name || ''} maxLength={80} placeholder="Ism-familiya" /></div>

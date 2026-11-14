@@ -120,7 +120,7 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
     : undefined
   const geo = v.lat || v.lng ? 'manual' : loc.exact ? 'link' : 'district'
   const locDetails = {
-    address: v.address || undefined, mapUrl: v.mapUrl || undefined, employment, contact,
+    address: v.address || undefined, mapUrl: v.mapUrl || undefined, employment, contact, postToChannel: f.get('postToChannel') === 'on',
     lat: loc.pos?.[0], lng: loc.pos?.[1], geo: loc.pos ? geo : undefined,
   }
 
@@ -147,7 +147,7 @@ export async function saveJob(_: FormState, f: FormData): Promise<FormState> {
       data: { ...data, details, ...(v.status === 'ACTIVE' && !prev.publishedAt && { publishedAt: new Date() }) },
     })
     await audit(admin.id, 'job.update', 'job', jobId)
-    if (v.status === 'ACTIVE' && prev.status !== 'ACTIVE') await autoPostJob(jobId)
+    if (v.status === 'ACTIVE') await autoPostJob(jobId) // kanalga joylash belgilangan bo'lsa (allaqachon yuborilgan kanallarga qayta ketmaydi)
   } else {
     const job = await db.job.create({ data: { ...data, details: JSON.parse(JSON.stringify(locDetails)) as Prisma.InputJsonObject, source: 'ADMIN', authorId: null, publishedAt: v.status === 'ACTIVE' ? new Date() : null } })
     await audit(admin.id, 'job.create', 'job', job.id, { title: job.title })
