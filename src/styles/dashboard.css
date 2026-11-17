@@ -131,6 +131,13 @@
 .db-page .topbar { position: static; padding: 22px 26px 8px; background: none; }
 .db-page .topbar > span:first-child { display: none; } /* orqaga tugmasi o'rnidagi bo'sh joy — sarlavha kontent bilan bir chiziqda */
 .db-page .page-body { padding: 8px 26px 26px; }
+/* Xarita bo'limi: ish maydoni ekran balandligida, xarita sarlavha ostidagi joyni to'liq egallaydi (sahifa scroll bo'lmaydi) */
+@media (min-width: 961px) {
+  .db-main:has(> .db-page > .jm) { position: sticky; top: 14px; display: flex; flex-direction: column; height: calc(100dvh - 28px); padding-bottom: 0; overflow: hidden; }
+  .db-main:has(> .db-page > .jm) .db-crumbs { border-bottom: 0; }
+  .db-page:has(> .jm) { flex: 1; min-height: 0; display: flex; padding: 0 14px 14px; background: var(--soft-bg); }
+  .db-page > .jm { flex: 1; height: auto; min-height: 0; border-radius: 18px; }
+}
 .db-sec h3 { margin: 0 0 16px; font-size: 17px; font-weight: 600; }
 .db-empty { margin: 0; color: var(--muted); font-size: 14px; }
 .db-empty.pad { padding: 28px 16px; text-align: center; }
