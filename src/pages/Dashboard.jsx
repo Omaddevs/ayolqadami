@@ -1,13 +1,13 @@
 import { Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import {
-  Baby, Bell, Briefcase, Buildings, CaretDoubleLeft, CaretDown, CaretRight, CaretUp, CheckCircle, Coins, CookingPot, DotsThree, DotsThreeVertical,
+  Article, Baby, Bell, CalendarBlank, CaretUpDown, Lifebuoy, MapTrifold, Briefcase, Buildings, CaretDoubleLeft, CaretDown, CaretRight, CaretUp, CheckCircle, Coins, CookingPot, DotsThree,
   Factory, FlowerLotus, FolderSimple, ForkKnife, GearSix, GlobeHemisphereWest, GraduationCap, HandHeart, House, IdentificationCard, Laptop,
-  MagnifyingGlass, Megaphone, Plus, Scales, ShoppingBag, SignOut, Sparkle, SprayBottle, SquaresFour, Stethoscope, Target, Trash, Tray, UsersThree, Wrench,
+  MagnifyingGlass, Megaphone, Plus, Scales, ShoppingBag, SignOut, Sparkle, SprayBottle, SquaresFour, Stethoscope, Trash, Tray, UsersThree, Wrench,
 } from '@phosphor-icons/react'
 import Icon from '../components/Icons'
 import Icon3D from '../components/Icon3D'
-import { CompanyLogo, JobCard, useCountUp } from '../components/UI'
+import { Avatar, CompanyLogo, JobCard, useCountUp } from '../components/UI'
 import { profileCompletion, profileMissing, useApp } from '../context/AppContext'
 import { CATEGORIES, catIcon, catShort, formatSum, subName } from '../data/mock'
 import { tx, useT } from '../i18n'
@@ -177,7 +177,6 @@ export function DashShell() {
   const isEmp = user.role === 'employer'
   // telefonda yon menyu yopiq holda ochiladi (ustma-ust chiqadi)
   const [collapsed, setCollapsed] = useState(() => window.matchMedia('(max-width: 960px)').matches)
-  const [overviewOpen, setOverviewOpen] = useState(true)
   const [q, setQ] = useState('')
   const [tab, setTab] = useState(isEmp ? 'mine' : 'all')
   const searchRef = useRef(null)
@@ -203,95 +202,101 @@ export function DashShell() {
   const shownPct = useCountUp(pct)
   const nextStep = profileMissing(user)[0]
   const section = sectionOf(pathname)
-  const rail = [
-    { to: '/dashboard', icon: SquaresFour, label: 'Dashboard', end: true },
-    isEmp ? { to: '/candidates', icon: UsersThree, label: t('Nomzodlar') } : { to: '/jobs', icon: Target, label: t('Vakansiyalar') },
-    { to: '/companies', icon: Buildings, label: t('Kompaniyalar') },
-    { to: '/applications', icon: Tray, label: t('Arizalarim') },
-    ...(isEmp ? [{ to: '/qadam-ai', icon: Sparkle, label: 'QadamAI' }] : []),
-    { to: '/settings/hidden', icon: Trash, label: t('Yashirilganlar') },
-    { to: '/notifications', icon: Bell, label: t('Bildirishnomalar'), dot: unreadNotifs > 0 },
+  const [catsOpen, setCatsOpen] = useState(false)
+  const [userMenu, setUserMenu] = useState(false)
+  // telefonda bo'lim tanlangach yon menyu yopiladi
+  useEffect(() => { setUserMenu(false); if (window.matchMedia('(max-width: 960px)').matches) setCollapsed(true) }, [pathname])
+  // Yon menyu bo'limlari (sarlavha + bandlar)
+  const groups = [
+    { title: t('Asosiy'), items: [
+      { to: '/dashboard', icon: SquaresFour, label: 'Dashboard', end: true },
+      { to: '/notifications', icon: Bell, label: t('Bildirishnomalar'), dot: unreadNotifs > 0 },
+      { to: '/profile', icon: IdentificationCard, label: isEmp ? t('Kompaniya profili') : t('Mening profilim'), end: true },
+    ] },
+    { title: t('Ish'), items: isEmp ? [
+      { to: '/candidates', icon: UsersThree, label: t('Nomzodlar') },
+      { to: '/post-job', icon: Plus, label: t('Vakansiya joylash') },
+      { to: '/jobs', icon: Briefcase, label: t('Vakansiyalar') },
+      { to: '/qadam-ai', icon: Sparkle, label: 'QadamAI' },
+    ] : [
+      { to: '/jobs', icon: Briefcase, label: t('Vakansiyalar') },
+      { to: '/applications', icon: Tray, label: t('Arizalarim'), count: applications.length },
+      { to: '/companies', icon: Buildings, label: t('Kompaniyalar') },
+      { to: '/map', icon: MapTrifold, label: t('Xarita') },
+    ] },
+    { title: t("O'rganish"), items: [
+      { to: '/courses', icon: GraduationCap, label: t('Kurslar') },
+      { to: '/events', icon: CalendarBlank, label: t('Tadbirlar') },
+      { to: '/articles', icon: Article, label: t('Maqolalar') },
+    ] },
+    { title: t('Hisob'), items: [
+      { to: '/settings', icon: GearSix, label: t('Sozlamalar'), end: true },
+      { to: '/settings/hidden', icon: Trash, label: t('Yashirilganlar') },
+      { to: '/support', icon: Lifebuoy, label: t('Texnik yordam') },
+    ] },
   ]
 
   return (
     <div className={`db ${collapsed ? 'is-collapsed' : ''}`}>
-      <nav className="db-rail" aria-label={t('Asosiy menyu')}>
-        <Link to="/dashboard" className="db-mark" aria-label="Dashboard"><img src="/ayolqadami-mark.webp" alt="" /></Link>
-        <span className="db-rule" />
-        {rail.map(({ to, icon: I, label, dot, end }) => (
-          <NavLink key={to} to={to} end={end} className="db-rail-btn" title={label} aria-label={label}>
-            {({ isActive }) => <><I size={22} weight={isActive ? 'fill' : 'regular'} />{dot && <span className="db-dot" />}</>}
-          </NavLink>
-        ))}
-        <Link to={isEmp ? '/post-job' : '/profile/edit'} className="db-rail-btn add" title={isEmp ? t('Vakansiya joylash') : t('Rezyumeni tahrirlash')}><Plus size={20} /></Link>
-        <div className="db-rail-end">
-          <span className="db-rule" />
-          <NavLink to="/settings" end className="db-rail-btn" title={t('Sozlamalar')}>
-            {({ isActive }) => <GearSix size={22} weight={isActive ? 'fill' : 'regular'} />}
-          </NavLink>
-          <button type="button" className="db-rail-btn" title={t('Chiqish')} onClick={logout}><SignOut size={22} /></button>
-        </div>
-      </nav>
-
-      <aside className="db-side">
+      <aside className="db-side" aria-label={t('Asosiy menyu')}>
         <div className="db-side-head">
-          <button type="button" className="db-round" onClick={() => setCollapsed(true)} aria-label={t('Yopish')}><CaretDoubleLeft size={16} weight="bold" /></button>
-          <h2>Dashboard</h2>
-          <Link to="/settings" className="db-round ghost" aria-label={t('Sozlamalar')}><GearSix size={17} /></Link>
+          <Link to="/dashboard" className="db-brand"><img src="/ayolqadami-mark.webp" alt="" /> <span>AyolQadami</span></Link>
+          <button type="button" className="db-round" onClick={() => setCollapsed(true)} aria-label={t('Yopish')}><CaretDoubleLeft size={15} weight="bold" /></button>
         </div>
         <label className="db-search">
-          <MagnifyingGlass size={19} />
+          <MagnifyingGlass size={17} />
           <input ref={searchRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onSearchKey} placeholder={t('Qidirish')} />
-          <kbd>⌘ K</kbd>
+          <kbd>⌘K</kbd>
         </label>
 
         <div className="db-scroll">
-          <button type="button" className="db-overview" onClick={() => setOverviewOpen((o) => !o)} aria-expanded={overviewOpen}>
-            <House size={18} weight="fill" /> <span>{t("Umumiy ko'rinish")}</span>
-            {overviewOpen ? <CaretUp size={15} weight="bold" /> : <CaretDown size={15} weight="bold" />}
-          </button>
-          {overviewOpen && (
-            <ul className="db-sub">
-              <li><Link to="/profile" className={`db-sub-item ${pathname === '/profile' ? 'active' : ''}`}>{t('Mening profilim')} <CaretRight size={14} weight="bold" /></Link></li>
-              <li><button type="button" className={`db-sub-item ${overview ? 'active' : ''}`} onClick={() => { setTab(isEmp ? 'mine' : 'apps'); nav('/dashboard') }}>{t("So'nggi faollik")} <em>{activityCount}</em></button></li>
-            </ul>
-          )}
+          {groups.map((g) => (
+            <div key={g.title} className="db-group">
+              <div className="db-label">{g.title}</div>
+              {g.items.map(({ to, icon: I, label, dot, end, count }) => (
+                <NavLink key={to} to={to} end={end} className="db-item">
+                  {({ isActive }) => (
+                    <>
+                      <I size={20} weight={isActive ? 'fill' : 'regular'} /> <span>{label}</span>
+                      {count > 0 && <em className="db-count">{count}</em>}
+                      {dot && <i className="db-dot" aria-label={t('Yangi')} />}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          ))}
 
-          <div className="db-label">
-            <span>{t('Kategoriyalar')}</span>
-            <Link to="/categories" aria-label={t('Barcha kategoriyalar')} title={t('Barcha kategoriyalar')}><SquaresFour size={17} /></Link>
+          <div className="db-group">
+            <button type="button" className="db-label db-label-btn" onClick={() => setCatsOpen((o) => !o)} aria-expanded={catsOpen}>
+              {t('Kategoriyalar')} {catsOpen ? <CaretUp size={12} weight="bold" /> : <CaretDown size={12} weight="bold" />}
+            </button>
+            {catsOpen && <CatTree jobs={allJobs} />}
           </div>
-          <CatTree jobs={allJobs} />
-
-          <Link to={isEmp ? '/post-job' : '/jobs'} className="db-new"><span><Plus size={13} weight="bold" /></span> {isEmp ? t('Yangi vakansiya') : t('Vakansiya qidirish')}</Link>
         </div>
 
-        {isEmp ? (
-          <div className="db-promo">
-            <button type="button" className="db-promo-dots" aria-label={t('Amallar')}><DotsThreeVertical size={18} weight="bold" /></button>
-            <h3>{t('Nomzodlar kutmoqda!')}</h3>
-            <p>{t("Vakansiya joylang — QadamAI mos nomzodlarni darhol tavsiya qiladi.")}</p>
-            <Link to="/post-job" className="db-promo-btn"><Sparkle size={16} /> {t('Vakansiya joylash')}</Link>
-          </div>
-        ) : (
-          <div className={`db-promo ${pct < 100 ? 'is-nudge' : 'is-done'}`}>
-            <button type="button" className="db-promo-dots" aria-label={t('Amallar')}><DotsThreeVertical size={18} weight="bold" /></button>
-            <h3>{pct === 0 ? t("Rezyumeingiz hali bo'sh") : pct < 100 ? t("Profilingiz {n}% to'liq!", { n: shownPct }) : t('Profilingiz tayyor!')}</h3>
-            <div className="db-promo-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t("Profil to'liqligi")}>
-              <s style={{ width: `${pct}%` }} />
-            </div>
-            <p>
-              {pct === 100
-                ? t('Ish beruvchilar sizni QadamAI orqali topishadi')
-                : pct === 0
-                  ? t("To'liq rezyume ish beruvchilarga 3 barobar ko'proq ko'rinadi.")
-                  : <>{t('Keyingi qadam')}: <b>{t(nextStep.label)}</b></>}
-            </p>
-            <Link to="/profile/edit" className="db-promo-btn">
-              <Sparkle size={16} weight={pct < 100 ? 'fill' : 'regular'} /> {pct === 0 ? t('Rezyume yaratish') : pct < 100 ? t("Rezyumeni to'ldirish") : t('Rezyumeni tahrirlash')}
-            </Link>
-          </div>
+        {!isEmp && pct < 100 && (
+          <Link to="/profile/edit" className="db-progress">
+            <div><b>{t("Profilingiz {n}% to'liq!", { n: shownPct })}</b><Sparkle size={15} weight="fill" /></div>
+            <i role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t("Profil to'liqligi")}><s style={{ width: `${pct}%` }} /></i>
+            {nextStep && <small>{t('Keyingi qadam')}: {t(nextStep.label)}</small>}
+          </Link>
         )}
+
+        <div className="db-user">
+          <button type="button" className="db-user-btn" onClick={() => setUserMenu((o) => !o)} aria-expanded={userMenu}>
+            <Avatar name={isEmp ? user.company || user.name : user.name} color={user.color} photo={user.photo} size={36} radius={18} silhouette={!isEmp} />
+            <span><b>{user.name}</b><small>{isEmp ? user.company || t('Ish beruvchi') : user.email || user.phone || t('Ish izlovchi')}</small></span>
+            <CaretUpDown size={16} />
+          </button>
+          {userMenu && (
+            <div className="db-user-menu" role="menu">
+              <Link to="/profile" role="menuitem" onClick={() => setUserMenu(false)}><IdentificationCard size={17} /> {t('Mening profilim')}</Link>
+              <Link to="/settings" role="menuitem" onClick={() => setUserMenu(false)}><GearSix size={17} /> {t('Sozlamalar')}</Link>
+              <button type="button" role="menuitem" onClick={logout}><SignOut size={17} /> {t('Chiqish')}</button>
+            </div>
+          )}
+        </div>
       </aside>
 
       {!collapsed && <button type="button" className="db-backdrop" aria-label={t('Yopish')} onClick={() => setCollapsed(true)} />}
@@ -308,7 +313,7 @@ export function DashShell() {
         {overview ? (
           <div className="db-crumbs">
             <Link to="/dashboard">Dashboard</Link> <span>/</span>
-            <button type="button" onClick={() => setOverviewOpen((o) => !o)}>{t("Umumiy ko'rinish")} <CaretDown size={13} weight="bold" /></button> <span>/</span>
+            <span className="db-crumb-here">{t("Umumiy ko'rinish")}</span> <span>/</span>
             <b>{t("So'nggi faollik")}</b> <em>{activityCount}</em>
           </div>
         ) : (
